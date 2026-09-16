@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-
+from app.models.localization import LocalizationEvidence
 
 @dataclass
 class ProteinAnalysisResult:
@@ -13,6 +13,8 @@ class ProteinAnalysisResult:
     hydropathy_profile: list[dict]
     hydrophobic_regions: list[dict]
     transmembrane_candidates: list[dict]
+    localization_evidence: list[LocalizationEvidence]
+
 
     def to_dict(self) -> dict:
         """
@@ -34,4 +36,8 @@ class ProteinAnalysisResult:
             "transmembrane_candidates": (
                 self.transmembrane_candidates
             ),
+            "localization_evidence": [
+                evidence.to_dict()
+                for evidence in self.localization_evidence
+            ],
         }

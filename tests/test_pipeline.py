@@ -1,4 +1,7 @@
 from app.analysis.pipeline import analyze_protein
+from app.analysis.localization import (
+    create_localization_evidence,
+)
 
 
 def test_pipeline_normalizes_sequence():
@@ -117,4 +120,58 @@ def test_hydropathy_profile_is_in_to_dict():
     assert isinstance(
         data["hydropathy_profile"],
         list,
+    )
+
+def test_pipeline_accepts_localization_evidence():
+    evidence = create_localization_evidence(
+        location="outer_membrane",
+        source="PredictionTool",
+        confidence="high",
+        description="Predicted outer-membrane localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFADYKDDDDK",
+        localization_evidence=[evidence],
+    )
+
+    assert len(result.localization_evidence) == 1
+
+    assert (
+        result.localization_evidence[0].location
+        == "outer_membrane"
+    )
+
+
+def test_pipeline_has_empty_localization_evidence_by_default():
+    result = analyze_protein("MKTIIALSYIFCLVFADYKDDDDK")
+
+    assert result.localization_evidence == []
+
+
+def test_localization_evidence_is_in_to_dict():
+    evidence = create_localization_evidence(
+        location="periplasm",
+        source="PredictionTool",
+        confidence="medium",
+        description="Predicted periplasmic localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFADYKDDDDK",
+        localization_evidence=[evidence],
+    )
+
+    data = result.to_dict()
+
+    assert len(data["localization_evidence"]) == 1
+
+    assert (
+        data["localization_evidence"][0]["location"]
+        == "periplasm"
+    )
+
+    assert (
+        data["localization_evidence"][0]["source"]
+        == "PredictionTool"
     )

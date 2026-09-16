@@ -16,6 +16,7 @@ from app.analysis.properties import (
 )
 from app.models.analysis_result import ProteinAnalysisResult
 from app.utils.validation import validate_protein_sequence
+from app.models.localization import LocalizationEvidence
 
 
 def analyze_protein(
@@ -26,6 +27,7 @@ def analyze_protein(
     tm_min_length: int = 18,
     tm_max_length: int = 25,
     tm_min_hydropathy: float = 1.6,
+    localization_evidence: list[LocalizationEvidence] | None = None,
 ) -> ProteinAnalysisResult:
     """
     Run the complete protein analysis pipeline.
@@ -55,7 +57,8 @@ def analyze_protein(
     isoelectric_point = calculate_isoelectric_point(
         cleaned_sequence
     )
-
+    if localization_evidence is None:
+        localization_evidence = []
 
 
     if len(cleaned_sequence) >= hydropathy_window_size:
@@ -110,4 +113,5 @@ def analyze_protein(
         transmembrane_candidates=(
             transmembrane_candidates
         ),
+        localization_evidence=localization_evidence,
     )
