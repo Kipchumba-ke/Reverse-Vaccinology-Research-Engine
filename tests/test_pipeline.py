@@ -2,6 +2,9 @@ from app.analysis.pipeline import analyze_protein
 from app.analysis.localization import (
     create_localization_evidence,
 )
+from app.analysis.essentiality import (
+    create_essentiality_evidence
+)
 
 
 def test_pipeline_normalizes_sequence():
@@ -175,3 +178,29 @@ def test_localization_evidence_is_in_to_dict():
         data["localization_evidence"][0]["source"]
         == "PredictionTool"
     )
+
+def test_pipeline_accepts_essentiality_evidence():
+    evidence = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Example bacterium",
+        essentiality_status="essential",
+        source="Experimental knockout study",
+        confidence="high",
+        description="Loss of the gene prevented viable growth.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        essentiality_evidence=[evidence],
+    )
+
+    assert len(result.essentiality_evidence) == 1
+    assert (
+        result.essentiality_evidence[0].essentiality_status
+        == "essential"
+    )
+
+def test_pipeline_defaults_to_empty_essentiality_evidence():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    assert result.essentiality_evidence == []

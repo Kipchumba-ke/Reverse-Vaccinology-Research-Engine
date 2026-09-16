@@ -28,6 +28,7 @@ def analyze_protein(
     tm_max_length: int = 25,
     tm_min_hydropathy: float = 1.6,
     localization_evidence: list[LocalizationEvidence] | None = None,
+    essentiality_evidence = None,
 ) -> ProteinAnalysisResult:
     """
     Run the complete protein analysis pipeline.
@@ -59,6 +60,9 @@ def analyze_protein(
     )
     if localization_evidence is None:
         localization_evidence = []
+
+    if essentiality_evidence is None:
+        essentiality_evidence = []
 
 
     if len(cleaned_sequence) >= hydropathy_window_size:
@@ -114,4 +118,5 @@ def analyze_protein(
             transmembrane_candidates
         ),
         localization_evidence=localization_evidence,
+        essentiality_evidence=essentiality_evidence,
     )
