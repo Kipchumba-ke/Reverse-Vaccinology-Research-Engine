@@ -296,3 +296,78 @@ def test_invalid_minimum_region_length_is_rejected():
             [],
             min_length=0,
         )
+
+def test_pairwise_identity_ignores_gap_positions():
+    result = calculate_pairwise_identity(
+        "MKTIIALS",
+        "MKT-IALS",
+    )
+
+    assert result == pytest.approx(100.0)
+
+def test_pairwise_identity_rejects_only_gap_comparison():
+    with pytest.raises(ValueError):
+        calculate_pairwise_identity(
+            "----",
+            "----",
+        )
+
+def test_gap_information_is_recorded():
+    sequences = [
+        "MKTIIALS",
+        "MKT-IALS",
+        "MKTIIALS",
+        "MKTIIALS",
+    ]
+
+    result = calculate_conserved_columns(sequences)
+
+    gap_column = result[3]
+
+    assert gap_column["gap_count"] == 1
+    assert gap_column["gap_percentage"] == 25.0
+
+def test_gap_prevents_full_conservation():
+    sequences = [
+        "MKTIIALS",
+        "MKT-IALS",
+        "MKTIIALS",
+        "MKTIIALS",
+    ]
+
+    result = calculate_conserved_columns(sequences)
+
+    gap_column = result[3]
+
+    assert gap_column["conserved"] is False
+
+def test_consensus_ignores_gaps():
+    sequences = [
+        "MKTIIALS",
+        "MKT-IALS",
+        "MKTIIALS",
+        "MKTIIALS",
+    ]
+
+    result = calculate_conserved_columns(sequences)
+
+    gap_column = result[3]
+
+    assert gap_column["consensus"] == "I"
+    assert gap_column["conservation_percentage"] == 100.0
+
+def test_entirely_gapped_column_has_no_consensus():
+    sequences = [
+        "MKT-",
+        "MKT-",
+        "MKT-",
+    ]
+
+    result = calculate_conserved_columns(sequences)
+
+    gap_column = result[3]
+
+    assert gap_column["consensus"] is None
+    assert gap_column["conservation_percentage"] == 0.0
+    assert gap_column["gap_percentage"] == 100.0
+    assert gap_column["conserved"] is False
