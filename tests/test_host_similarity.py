@@ -170,3 +170,4 @@ def test_subject_coverage_must_be_between_zero_and_one_hundred():
             confidence="medium",
             description="Test evidence.",
         )
+

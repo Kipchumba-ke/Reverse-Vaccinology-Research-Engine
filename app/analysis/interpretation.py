@@ -144,6 +144,8 @@ def interpret_host_similarity(
     strongest_match = max(
         evidence,
         key=lambda item: (
+            item["query_coverage_percentage"],
+            item["subject_coverage_percentage"],
             item["identity_percentage"],
             -item["e_value"],
         ),
@@ -151,18 +153,33 @@ def interpret_host_similarity(
 
     identity = strongest_match["identity_percentage"]
     e_value = strongest_match["e_value"]
+    query_coverage = strongest_match["query_coverage_percentage"]
+    subject_coverage = strongest_match["subject_coverage_percentage"]
 
-    if identity >= 50 and e_value <= 1e-5:
+    if identity >= 50 and e_value <= 1e-5 and query_coverage >= 70 and subject_coverage >= 70:
         interpretation = (
             "The supplied results include a relatively strong "
-            "sequence-similarity match to a host protein. "
-            "This warrants further investigation."
+            "sequence-similarity match to a host protein with broad "
+            "query and subject coverage. This warrants further "
+            "investigation. Sequence similarity alone does not "
+            "establish biological safety."
         )
         confidence = "high"
+    elif (identity >= 50 and e_value <= 1e-5 and (query_coverage < 70 or subject_coverage < 70)):
+        interpretation = (
+            "The supplied results include high sequence identity "
+            "and a strong E-value, but the aligned region does not "
+            "cover both sequences broadly. This may represent a "
+            "local or partial similarity and warrants further "
+            "investigation."
+        )
+        confidence = "medium"
     elif identity >= 25:
         interpretation = (
             "The supplied results include moderate sequence "
-            "similarity to a host protein."
+            "similarity to a host protein. The result should be "
+            "interpreted alongside alignment coverage and other "
+            "biological evidence."
         )
         confidence = "medium"
     else:
@@ -176,6 +193,8 @@ def interpret_host_similarity(
     finding = (
         f"Strongest reported host match: "
         f"{identity:.1f}% identity, "
+        f"query coverage={query_coverage:.1f}%, "
+        f"subject coverage={subject_coverage:.1f}%, "
         f"E-value={e_value:g}"
     )
 

@@ -73,3 +73,57 @@ def test_multiple_host_similarity_records_are_summarized():
     assert evidence.category == "host_similarity"
     assert "45.0%" in evidence.finding
     assert "1e-10" in evidence.finding
+
+def test_high_identity_with_low_coverage_is_partial_similarity():
+    records = [
+        {
+            "identity_percentage": 95.0,
+            "alignment_length": 20,
+            "query_coverage_percentage": 5.0,
+            "subject_coverage_percentage": 4.0,
+            "e_value": 1e-50,
+        }
+    ]
+
+    evidence = interpret_host_similarity(records)
+
+    assert evidence.category == "host_similarity"
+    assert "high sequence identity" in evidence.interpretation
+    assert "partial" in evidence.interpretation.lower()
+    assert "safety" not in evidence.interpretation.lower()
+
+
+def test_high_identity_with_broad_coverage_is_strong_similarity():
+    records = [
+        {
+            "identity_percentage": 95.0,
+            "alignment_length": 1500,
+            "query_coverage_percentage": 92.0,
+            "subject_coverage_percentage": 88.0,
+            "e_value": 1e-50,
+        }
+    ]
+
+    evidence = interpret_host_similarity(records)
+
+    assert evidence.category == "host_similarity"
+    assert "strong" in evidence.interpretation.lower()
+    assert "broad" in evidence.interpretation.lower()
+    assert "safety" in evidence.interpretation.lower()
+
+
+def test_finding_includes_coverage():
+    records = [
+        {
+            "identity_percentage": 95.0,
+            "alignment_length": 1500,
+            "query_coverage_percentage": 92.0,
+            "subject_coverage_percentage": 88.0,
+            "e_value": 1e-50,
+        }
+    ]
+
+    evidence = interpret_host_similarity(records)
+
+    assert "query coverage=92.0%" in evidence.finding
+    assert "subject coverage=88.0%" in evidence.finding
