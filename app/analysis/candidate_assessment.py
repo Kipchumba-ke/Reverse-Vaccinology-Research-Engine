@@ -44,9 +44,29 @@ def assess_candidate(
 
     # Host similarity evidence
     if result.host_similarity_evidence:
+        strongest_host_match = max(
+            result.host_similarity_evidence,
+            key=lambda item: (
+                item.query_coverage_percentage,
+                item.subject_coverage_percentage,
+                item.identity_percentage,
+                -item.e_value,
+            ),
+        )
+
         concerns.append(
             "Host-similarity evidence requires biological and "
             "alignment-level review."
+        )
+
+        concerns.append(
+            "Strongest reported host match: "
+            f"{strongest_host_match.identity_percentage:.1f}% identity, "
+            f"query coverage="
+            f"{strongest_host_match.query_coverage_percentage:.1f}%, "
+            f"subject coverage="
+            f"{strongest_host_match.subject_coverage_percentage:.1f}%, "
+            f"E-value={strongest_host_match.e_value:g}."
         )
     else:
         missing_evidence.append(
