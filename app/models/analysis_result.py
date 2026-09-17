@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from app.models.localization import LocalizationEvidence
 from app.models.essentiality import EssentialityEvidence
+from app.models.host_similarity import HostSimilarityEvidence
 
 @dataclass
 class ProteinAnalysisResult:
@@ -16,6 +17,7 @@ class ProteinAnalysisResult:
     transmembrane_candidates: list[dict]
     localization_evidence: list[LocalizationEvidence]
     essentiality_evidence : list[EssentialityEvidence]
+    host_similarity_evidence: list[HostSimilarityEvidence]
 
 
     def to_dict(self) -> dict:
@@ -45,5 +47,9 @@ class ProteinAnalysisResult:
             "essentiality_evidence" : [
                 evidence.to_dict()
                 for evidence in self.essentiality_evidence
-            ]
+            ],
+            "host_similarity_evidence": [
+                evidence.to_dict()
+                for evidence in self.host_similarity_evidence
+            ],
         }

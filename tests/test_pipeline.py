@@ -5,6 +5,9 @@ from app.analysis.localization import (
 from app.analysis.essentiality import (
     create_essentiality_evidence
 )
+from app.analysis.host_similarity import (
+    create_host_similarity_evidence
+)
 
 
 def test_pipeline_normalizes_sequence():
@@ -204,3 +207,32 @@ def test_pipeline_defaults_to_empty_essentiality_evidence():
     result = analyze_protein("MKTIIALSYIFCLVFAD")
 
     assert result.essentiality_evidence == []
+
+def test_pipeline_accepts_host_similarity_evidence():
+    evidence = create_host_similarity_evidence(
+        target_id="pathogen_gene_A",
+        host_id="host_protein_123",
+        similarity_method="BLASTP",
+        identity_percentage=18.5,
+        alignment_length=142,
+        e_value=0.42,
+        source="Host protein database",
+        confidence="medium",
+        description="Low sequence similarity was observed.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[evidence],
+    )
+
+    assert len(result.host_similarity_evidence) == 1
+    assert (
+        result.host_similarity_evidence[0].target_id
+        == "pathogen_gene_A"
+    )
+
+def test_pipeline_defaults_to_empty_host_similarity_evidence():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    assert result.host_similarity_evidence == []

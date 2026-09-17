@@ -29,6 +29,7 @@ def analyze_protein(
     tm_min_hydropathy: float = 1.6,
     localization_evidence: list[LocalizationEvidence] | None = None,
     essentiality_evidence = None,
+    host_similarity_evidence = None
 ) -> ProteinAnalysisResult:
     """
     Run the complete protein analysis pipeline.
@@ -63,6 +64,9 @@ def analyze_protein(
 
     if essentiality_evidence is None:
         essentiality_evidence = []
+
+    if host_similarity_evidence is None:
+        host_similarity_evidence = []
 
 
     if len(cleaned_sequence) >= hydropathy_window_size:
@@ -119,4 +123,5 @@ def analyze_protein(
         ),
         localization_evidence=localization_evidence,
         essentiality_evidence=essentiality_evidence,
+        host_similarity_evidence=host_similarity_evidence,
     )

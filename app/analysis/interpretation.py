@@ -119,3 +119,69 @@ def interpret_conserved_regions(
         interpretation=interpretation,
         confidence=confidence,
     ) 
+
+def interpret_host_similarity(
+    evidence: list[dict],
+) -> Evidence:
+    """
+    Interpret supplied host-similarity evidence.
+
+    This function does not establish safety.
+    It summarizes the supplied similarity results.
+    """
+
+    if not evidence:
+        return Evidence(
+            category="host_similarity",
+            finding="No host-similarity evidence supplied.",
+            interpretation=(
+                "Host-similarity assessment is unavailable "
+                "for the current candidate."
+            ),
+            confidence="low",
+        )
+
+    strongest_match = max(
+        evidence,
+        key=lambda item: (
+            item["identity_percentage"],
+            -item["e_value"],
+        ),
+    )
+
+    identity = strongest_match["identity_percentage"]
+    e_value = strongest_match["e_value"]
+
+    if identity >= 50 and e_value <= 1e-5:
+        interpretation = (
+            "The supplied results include a relatively strong "
+            "sequence-similarity match to a host protein. "
+            "This warrants further investigation."
+        )
+        confidence = "high"
+    elif identity >= 25:
+        interpretation = (
+            "The supplied results include moderate sequence "
+            "similarity to a host protein."
+        )
+        confidence = "medium"
+    else:
+        interpretation = (
+            "The supplied results show relatively low sequence "
+            "similarity to the referenced host proteins. "
+            "This does not independently establish safety."
+        )
+        confidence = "medium"
+
+    finding = (
+        f"Strongest reported host match: "
+        f"{identity:.1f}% identity, "
+        f"E-value={e_value:g}"
+    )
+
+    return Evidence(
+        category="host_similarity",
+        finding=finding,
+        interpretation=interpretation,
+        confidence=confidence,
+    )

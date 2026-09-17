@@ -1,0 +1,195 @@
+from app.analysis.pipeline import analyze_protein
+from app.analysis.essentiality import (
+    create_essentiality_evidence,
+)
+from app.analysis.localization import (
+    create_localization_evidence,
+)
+from app.reporting.report import generate_protein_report
+from app.analysis.host_similarity import create_host_similarity_evidence
+
+
+def test_generate_basic_report():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD"
+    )
+
+    report = generate_protein_report(result)
+
+    assert "protein" in report
+    assert "measurements" in report
+    assert "evidence" in report
+    assert "interpretations" in report
+    assert "limitations" in report
+
+
+def test_report_contains_external_evidence():
+    localization = create_localization_evidence(
+        location="outer_membrane",
+        source="Prediction database",
+        confidence="medium",
+        description="Evidence supports outer membrane localization.",
+    )
+
+    essentiality = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Example bacterium",
+        essentiality_status="essential",
+        source="Knockout study",
+        confidence="high",
+        description="Gene disruption prevented viable growth.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+        essentiality_evidence=[essentiality],
+    )
+
+    report = generate_protein_report(result)
+
+    assert len(report["evidence"]["localization"]) == 1
+    assert len(report["evidence"]["essentiality"]) == 1
+    assert (
+        report["evidence"]["essentiality"][0]
+        ["essentiality_status"]
+        == "essential"
+    )
+
+
+def test_report_accepts_conservation_data():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD"
+    )
+
+    conservation_summary = {
+        "conservation_percentage": 85.0,
+        "alignment_length": 17,
+        "sequence_count": 3,
+    }
+
+    conserved_regions = [
+        {
+            "start": 2,
+            "end": 8,
+            "length": 7,
+        }
+    ]
+
+    report = generate_protein_report(
+        result,
+        conservation_summary=conservation_summary,
+        conserved_regions=conserved_regions,
+    )
+
+    assert (
+        report["conservation"]["summary"]
+        ["conservation_percentage"]
+        == 85.0
+    )
+
+    assert len(report["conservation"]["regions"]) == 1
+
+def test_report_contains_hydrophobicity_interpretation():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    report = generate_protein_report(result)
+
+    hydrophobicity = next(
+        item
+        for item in report["interpretations"]
+        if item["category"] == "hydrophobicity"
+    )
+
+    assert "GRAVY" in hydrophobicity["finding"]
+    assert hydrophobicity["interpretation"]
+
+
+def test_report_contains_transmembrane_interpretation():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    report = generate_protein_report(result)
+
+    membrane = next(
+        item
+        for item in report["interpretations"]
+        if item["category"] == "membrane_topology"
+    )
+
+    assert "Transmembrane candidates" in membrane["finding"]
+    assert membrane["interpretation"]
+
+
+def test_report_contains_conservation_interpretation():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    report = generate_protein_report(
+        result,
+        conservation_summary={
+            "conservation_percentage": 90.0,
+            "alignment_length": 17,
+            "sequence_count": 4,
+        },
+    )
+
+    conservation = next(
+        item
+        for item in report["interpretations"]
+        if item["category"] == "conservation"
+    )
+
+    assert "90.0%" in conservation["finding"]
+    assert "strong conservation" in conservation["interpretation"]
+
+def test_report_contains_host_similarity_evidence():
+    evidence = create_host_similarity_evidence(
+        target_id="target_A",
+        host_id="host_A",
+        similarity_method="BLASTP",
+        identity_percentage=12.0,
+        alignment_length=100,
+        e_value=1.5,
+        source="Database",
+        confidence="low",
+        description="Low similarity.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[evidence],
+    )
+
+    report = generate_protein_report(result)
+
+    assert len(report["evidence"]["host_similarity"]) == 1
+    assert (
+        report["evidence"]["host_similarity"][0]["host_id"]
+        == "host_A"
+    )
+
+def test_report_contains_host_similarity_interpretation():
+    evidence = create_host_similarity_evidence(
+        target_id="pathogen_protein_1",
+        host_id="human_protein_1",
+        similarity_method="BLASTP",
+        identity_percentage=12.0,
+        alignment_length=180,
+        e_value=0.01,
+        source="Example database",
+        confidence="medium",
+        description="Low-identity match recorded for review.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[evidence],
+    )
+
+    report = generate_protein_report(result)
+
+    categories = [
+        item["category"]
+        for item in report["interpretations"]
+    ]
+
+    assert "host_similarity" in categories
