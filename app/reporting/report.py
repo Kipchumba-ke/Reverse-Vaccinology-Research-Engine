@@ -6,6 +6,7 @@ from app.analysis.interpretation import (
     interpret_transmembrane_candidates,
     interpret_host_similarity,
 )
+from app.analysis.candidate_assessment import assess_candidate
 
 
 def generate_protein_report(
@@ -43,7 +44,11 @@ def generate_protein_report(
                 conservation_summary["conservation_percentage"]
             )
         )
-
+    candidate_assessment = assess_candidate(
+        result=result,
+        conservation_summary=conservation_summary,
+        conserved_regions=conserved_regions,
+    )
     
 
     return {
@@ -87,6 +92,7 @@ def generate_protein_report(
             interpretation.to_dict()
             for interpretation in interpretations
         ],
+        "candidate_assessment": candidate_assessment.to_dict(),
         "limitations": [
             (
                 "Hydrophobic regions and transmembrane candidates "
