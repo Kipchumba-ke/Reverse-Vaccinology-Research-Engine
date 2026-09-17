@@ -14,6 +14,8 @@ def test_low_host_similarity_does_not_claim_safety():
         {
             "identity_percentage": 12.0,
             "alignment_length": 180,
+            "query_coverage_percentage": 80.0,
+            "subject_coverage_percentage": 75.0,
             "e_value": 0.01,
         }
     ]
@@ -33,6 +35,8 @@ def test_high_host_similarity_requires_further_review():
         {
             "identity_percentage": 67.0,
             "alignment_length": 240,
+            "query_coverage_percentage": 90.0,
+            "subject_coverage_percentage": 85.0,
             "e_value": 1e-20,
         }
     ]
@@ -51,11 +55,15 @@ def test_multiple_host_similarity_records_are_summarized():
         {
             "identity_percentage": 12.0,
             "alignment_length": 180,
+            "query_coverage_percentage": 80.0,
+            "subject_coverage_percentage": 75.0,
             "e_value": 0.01,
         },
         {
             "identity_percentage": 45.0,
             "alignment_length": 220,
+            "query_coverage_percentage": 85.0,
+            "subject_coverage_percentage": 80.0,
             "e_value": 1e-10,
         },
     ]

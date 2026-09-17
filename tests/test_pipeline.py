@@ -215,6 +215,8 @@ def test_pipeline_accepts_host_similarity_evidence():
         similarity_method="BLASTP",
         identity_percentage=18.5,
         alignment_length=142,
+        query_coverage_percentage=80.0,
+        subject_coverage_percentage=75.0,
         e_value=0.42,
         source="Host protein database",
         confidence="medium",

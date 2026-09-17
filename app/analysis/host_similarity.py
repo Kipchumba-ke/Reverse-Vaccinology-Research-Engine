@@ -14,6 +14,8 @@ def create_host_similarity_evidence(
     similarity_method: str,
     identity_percentage: float,
     alignment_length: int,
+    query_coverage_percentage: float,
+    subject_coverage_percentage: float,
     e_value: float,
     source: str,
     confidence: str,
@@ -34,6 +36,16 @@ def create_host_similarity_evidence(
     if not 0 <= identity_percentage <= 100:
         raise ValueError(
             "Identity percentage must be between 0 and 100."
+        )
+
+    if not 0 <= query_coverage_percentage <= 100:
+        raise ValueError(
+            "Query coverage percentage must be between 0 and 100."
+        )
+
+    if not 0 <= subject_coverage_percentage <= 100:
+        raise ValueError(
+            "Subject coverage percentage must be between 0 and 100."
         )
 
     if alignment_length <= 0:
@@ -67,6 +79,8 @@ def create_host_similarity_evidence(
         similarity_method=similarity_method,
         identity_percentage=identity_percentage,
         alignment_length=alignment_length,
+        query_coverage_percentage=query_coverage_percentage,
+        subject_coverage_percentage=subject_coverage_percentage,
         e_value=e_value,
         source=source,
         confidence=confidence,

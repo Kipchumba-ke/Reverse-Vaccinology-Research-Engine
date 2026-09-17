@@ -44,6 +44,8 @@ def test_candidate_assessment_records_host_similarity_concern():
         similarity_method="BLASTP",
         identity_percentage=45.0,
         alignment_length=220,
+        query_coverage_percentage=80.0,
+        subject_coverage_percentage=75.0,
         e_value=1e-10,
         source="Example database",
         confidence="medium",
