@@ -6,6 +6,9 @@ from app.analysis.host_similarity import (
 from app.analysis.localization import (
     create_localization_evidence,
 )
+from app.analysis.essentiality import create_essentiality_evidence
+import pytest
+
 def test_candidate_assessment_reports_missing_evidence():
     result = analyze_protein("MKTIIALSYIFCLVFAD")
 
@@ -111,4 +114,479 @@ def test_candidate_assessment_reports_strongest_host_match():
         "query coverage=90.0%, subject coverage=85.0%, "
         "E-value=1e-20."
         in assessment.concerns
+    )
+
+def test_candidate_assessment_rejects_missing_conservation_percentage():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    with pytest.raises(
+        ValueError,
+        match="conservation_percentage",
+    ):
+        assess_candidate(
+            result,
+            conservation_summary={},
+        )
+
+
+def test_candidate_assessment_rejects_invalid_conservation_percentage():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    with pytest.raises(
+        ValueError,
+        match="between 0 and 100",
+    ):
+        assess_candidate(
+            result,
+            conservation_summary={
+                "conservation_percentage": 120.0,
+            },
+        )
+
+
+def test_candidate_assessment_rejects_non_numeric_conservation_percentage():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    with pytest.raises(
+        ValueError,
+        match="must be numeric",
+    ):
+        assess_candidate(
+            result,
+            conservation_summary={
+                "conservation_percentage": "high",
+            },
+        )
+
+def test_candidate_assessment_treats_zero_conservation_as_limited():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    assessment = assess_candidate(
+        result,
+        conservation_summary={"conservation_percentage": 0.0},
+    )
+
+    assert (
+        "limited exact conservation"
+        in assessment.concerns[0].lower()
+    )
+
+
+def test_candidate_assessment_treats_fifty_percent_as_supporting():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    assessment = assess_candidate(
+        result,
+        conservation_summary={"conservation_percentage": 50.0},
+    )
+
+    assert (
+        "conserved positions"
+        in assessment.supporting_evidence[0].lower()
+    )
+
+
+def test_candidate_assessment_treats_one_hundred_percent_as_supporting():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    assessment = assess_candidate(
+        result,
+        conservation_summary={"conservation_percentage": 100.0},
+    )
+
+    assert (
+        "conserved positions"
+        in assessment.supporting_evidence[0].lower()
+    )
+
+def test_candidate_assessment_treats_values_below_fifty_as_limited():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    assessment = assess_candidate(
+        result,
+        conservation_summary={"conservation_percentage": 49.9},
+    )
+
+    assert (
+        "limited exact conservation"
+        in assessment.concerns[0].lower()
+    )
+
+def test_candidate_assessment_rejects_boolean_conservation_percentage():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    with pytest.raises(
+        ValueError,
+        match="must be numeric",
+    ):
+        assess_candidate(
+            result,
+            conservation_summary={
+                "conservation_percentage": True
+            },
+        )
+
+def test_candidate_assessment_describes_high_confidence_extracellular_localization():
+    localization = create_localization_evidence(
+        location="extracellular",
+        source="PredictionTool",
+        confidence="high",
+        description="Predicted extracellular localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "extracellular" in evidence.lower()
+        for evidence in assessment.supporting_evidence
+    )
+
+def test_candidate_assessment_preserves_localization_confidence():
+    localization = create_localization_evidence(
+        location="outer_membrane",
+        source="PredictionTool",
+        confidence="medium",
+        description="Predicted outer-membrane localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "medium" in evidence.lower()
+        for evidence in assessment.supporting_evidence
+    )
+
+def test_candidate_assessment_reports_unknown_localization():
+    localization = create_localization_evidence(
+        location="unknown",
+        source="PredictionTool",
+        confidence="low",
+        description="Localization could not be confidently assigned.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "unknown" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_records_multiple_localization_predictions():
+    extracellular = create_localization_evidence(
+        location="extracellular",
+        source="PredictorA",
+        confidence="high",
+        description="Predicted extracellular localization.",
+    )
+
+    outer_membrane = create_localization_evidence(
+        location="outer_membrane",
+        source="PredictorB",
+        confidence="medium",
+        description="Predicted outer-membrane localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[
+            extracellular,
+            outer_membrane,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert (
+        "Localization evidence has been supplied."
+        in assessment.supporting_evidence
+    )
+
+    assert any(
+        "extracellular" in evidence.lower()
+        and "high" in evidence.lower()
+        and "PredictorA" in evidence
+        for evidence in assessment.supporting_evidence
+    )
+
+    assert any(
+        "outer_membrane" in evidence.lower()
+        and "medium" in evidence.lower()
+        and "PredictorB" in evidence
+        for evidence in assessment.supporting_evidence
+    )
+
+def test_candidate_assessment_reports_conflicting_localization_predictions():
+    extracellular = create_localization_evidence(
+        location="extracellular",
+        source="PredictorA",
+        confidence="high",
+        description="Predicted extracellular localization.",
+    )
+
+    cytoplasm = create_localization_evidence(
+        location="cytoplasm",
+        source="PredictorB",
+        confidence="high",
+        description="Predicted cytoplasmic localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[
+            extracellular,
+            cytoplasm,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "conflicting localization" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_does_not_report_conflict_for_agreeing_predictions():
+    predictor_a = create_localization_evidence(
+        location="outer_membrane",
+        source="PredictorA",
+        confidence="high",
+        description="Predicted outer-membrane localization.",
+    )
+
+    predictor_b = create_localization_evidence(
+        location="outer_membrane",
+        source="PredictorB",
+        confidence="medium",
+        description="Predicted outer-membrane localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[
+            predictor_a,
+            predictor_b,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert not any(
+        "conflicting localization" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_preserves_localization_description():
+    localization = create_localization_evidence(
+        location="extracellular",
+        source="PredictionTool",
+        confidence="high",
+        description=(
+            "Signal peptide detected; predicted "
+            "extracellular localization."
+        ),
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "Signal peptide detected" in evidence
+        for evidence in assessment.supporting_evidence
+    )
+
+def test_candidate_assessment_describes_essentiality_evidence():
+    essentiality = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Example bacterium",
+        essentiality_status="essential",
+        source="Knockout study",
+        confidence="high",
+        description="Gene is essential for bacterial growth.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        essentiality_evidence=[essentiality],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert (
+        "Essentiality evidence has been supplied."
+        in assessment.supporting_evidence
+    )
+
+    assert any(
+        "essential" in evidence.lower()
+        and "geneA" in evidence
+        and "Example bacterium" in evidence
+        and "high" in evidence.lower()
+        for evidence in assessment.supporting_evidence
+    )
+
+@pytest.mark.parametrize(
+    "essentiality_status",
+    [
+        "non-essential",
+        "conditionally_essential",
+    ],
+)
+def test_candidate_assessment_reports_essentiality_status(
+    essentiality_status,
+):
+    essentiality = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Example bacterium",
+        essentiality_status=essentiality_status,
+        source="Essentiality database",
+        confidence="medium",
+        description="External essentiality evidence.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        essentiality_evidence=[essentiality],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        essentiality_status in evidence
+        for evidence in assessment.supporting_evidence
+    )
+
+def test_candidate_assessment_reports_unknown_essentiality():
+    essentiality = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Example bacterium",
+        essentiality_status="unknown",
+        source="Essentiality database",
+        confidence="low",
+        description="Essentiality could not be established.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        essentiality_evidence=[essentiality],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "unknown" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_records_multiple_essentiality_evidence():
+    essential = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Organism A",
+        essentiality_status="essential",
+        source="Study A",
+        confidence="high",
+        description="Gene required for growth.",
+    )
+
+    conditional = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Organism A",
+        essentiality_status="conditionally_essential",
+        source="Study B",
+        confidence="medium",
+        description="Gene required under specific conditions.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        essentiality_evidence=[
+            essential,
+            conditional,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "essential" in evidence.lower()
+        and "Study A" in evidence
+        for evidence in assessment.supporting_evidence
+    )
+
+    assert any(
+        "conditionally_essential" in evidence
+        and "Study B" in evidence
+        for evidence in assessment.supporting_evidence
+    )
+
+def test_candidate_assessment_identifies_broad_host_similarity():
+    host_match = create_host_similarity_evidence(
+        target_id="candidate_protein",
+        host_id="human_protein",
+        similarity_method="BLASTP",
+        identity_percentage=72.0,
+        alignment_length=320,
+        query_coverage_percentage=96.0,
+        subject_coverage_percentage=94.0,
+        e_value=1e-40,
+        source="BLASTP",
+        confidence="high",
+        description="Strong broad host-protein similarity.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_match],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "broad" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_distinguishes_partial_host_similarity():
+    host_match = create_host_similarity_evidence(
+        target_id="candidate_protein",
+        host_id="human_protein",
+        similarity_method="BLASTP",
+        identity_percentage=85.0,
+        alignment_length=90,
+        query_coverage_percentage=22.0,
+        subject_coverage_percentage=18.0,
+        e_value=1e-25,
+        source="BLASTP",
+        confidence="high",
+        description="High identity in a limited aligned region.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_match],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "partial" in evidence.lower()
+        for evidence in assessment.concerns
     )

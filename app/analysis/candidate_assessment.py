@@ -1,48 +1,156 @@
 from app.models.analysis_result import ProteinAnalysisResult
 from app.models.candidate_assessment import CandidateAssessment
+from app.models.evidence_assessment import EvidenceAssessment
 
 
-def assess_candidate(
+def _get_conservation_percentage(
+    conservation_summary: dict,
+) -> float:
+    """
+    Extract and validate conservation percentage.
+
+    Candidate assessment currently accepts serialized conservation
+    summaries represented as dictionaries.
+    """
+
+    if "conservation_percentage" not in conservation_summary:
+        raise ValueError(
+            "Conservation summary must contain "
+            "'conservation_percentage'."
+        )
+
+    conservation_percentage = (
+        conservation_summary["conservation_percentage"]
+    )
+
+    if (
+        isinstance(conservation_percentage, bool)
+        or not isinstance(conservation_percentage, int | float)
+    ):
+        raise ValueError(
+            "Conservation percentage must be numeric."
+        )
+
+    if not 0 <= conservation_percentage <= 100:
+        raise ValueError(
+            "Conservation percentage must be between 0 and 100."
+        )
+
+    return float(conservation_percentage)
+
+def _assess_localization_evidence(
     result: ProteinAnalysisResult,
-    conservation_summary: dict | None = None,
-    conserved_regions: list[dict] | None = None,
-) -> CandidateAssessment:
-    """
-    Create a transparent evidence summary for a protein candidate.
-
-    This function does not establish vaccine safety, antigenicity,
-    or final vaccine candidacy.
-    """
-
-    if conserved_regions is None:
-        conserved_regions = []
-
+) -> EvidenceAssessment:
     supporting_evidence = []
     concerns = []
     missing_evidence = []
 
-    # Localization evidence
-    if result.localization_evidence:
-        supporting_evidence.append(
-            "Localization evidence has been supplied."
-        )
-    else:
+    if not result.localization_evidence:
         missing_evidence.append(
             "Localization evidence from a prediction tool, database, "
             "or experiment."
         )
 
-    # Essentiality evidence
-    if result.essentiality_evidence:
-        supporting_evidence.append(
-            "Essentiality evidence has been supplied."
+        return EvidenceAssessment(
+            supporting_evidence=supporting_evidence,
+            concerns=concerns,
+            missing_evidence=missing_evidence,
         )
-    else:
+
+    supporting_evidence.append(
+        "Localization evidence has been supplied."
+    )
+    locations = {
+        evidence.location
+        for evidence in result.localization_evidence
+        if evidence.location != "unknown"
+    }
+
+    if len(locations) > 1:
+        concerns.append(
+            "Conflicting localization predictions were supplied "
+            f"for: {', '.join(sorted(locations))}."
+        )
+
+    for evidence in result.localization_evidence:
+        if evidence.location == "unknown":
+            concerns.append(
+                "Localization is unknown "
+                f"(confidence={evidence.confidence}, "
+                f"source={evidence.source})."
+            )
+            continue
+
+        supporting_evidence.append(
+            "Predicted localization: "
+            f"{evidence.location} "
+            f"(confidence={evidence.confidence}, "
+            f"source={evidence.source})."
+            f"Description: {evidence.description}"
+        )
+
+    return EvidenceAssessment(
+        supporting_evidence=supporting_evidence,
+        concerns=concerns,
+        missing_evidence=missing_evidence,
+    )
+
+def _assess_essentiality_evidence(
+    result: ProteinAnalysisResult,
+) -> EvidenceAssessment:
+    supporting_evidence = []
+    concerns = []
+    missing_evidence = []
+
+    if not result.essentiality_evidence:
         missing_evidence.append(
             "Essentiality evidence from an appropriate external source."
         )
 
-    # Host similarity evidence
+        return EvidenceAssessment(
+            supporting_evidence=supporting_evidence,
+            concerns=concerns,
+            missing_evidence=missing_evidence,
+        )
+
+    supporting_evidence.append(
+        "Essentiality evidence has been supplied."
+    )
+
+    for evidence in result.essentiality_evidence:
+        if evidence.essentiality_status == "unknown":
+            concerns.append(
+                "Essentiality status is unknown "
+                f"(gene={evidence.gene_id}, "
+                f"organism={evidence.organism}, "
+                f"confidence={evidence.confidence}, "
+                f"source={evidence.source})."
+            )
+            continue
+
+        supporting_evidence.append(
+            "Essentiality status: "
+            f"{evidence.essentiality_status} "
+            f"(gene={evidence.gene_id}, "
+            f"organism={evidence.organism}, "
+            f"confidence={evidence.confidence}, "
+            f"source={evidence.source}). "
+            f"Description: {evidence.description}"
+        )
+
+    return EvidenceAssessment(
+        supporting_evidence=supporting_evidence,
+        concerns=concerns,
+        missing_evidence=missing_evidence,
+    )
+
+def _assess_host_similarity_evidence(
+    result: ProteinAnalysisResult,
+) -> EvidenceAssessment:
+    supporting_evidence = []
+    concerns = []
+    missing_evidence = []
+
     if result.host_similarity_evidence:
         strongest_host_match = max(
             result.host_similarity_evidence,
@@ -68,15 +176,50 @@ def assess_candidate(
             f"{strongest_host_match.subject_coverage_percentage:.1f}%, "
             f"E-value={strongest_host_match.e_value:g}."
         )
+
+        if (
+            strongest_host_match.identity_percentage >= 70
+            and strongest_host_match.query_coverage_percentage >= 80
+            and strongest_host_match.subject_coverage_percentage >= 80
+        ):
+            concerns.append(
+                "Broad host-protein similarity was reported "
+                "across most of both aligned proteins."
+            )
+
+        elif (
+            strongest_host_match.identity_percentage >= 70
+            and strongest_host_match.query_coverage_percentage < 80
+            and strongest_host_match.subject_coverage_percentage < 80
+        ):
+            concerns.append(
+                "Partial host-protein similarity was reported "
+                "within a limited aligned region."
+            )
+
     else:
         missing_evidence.append(
             "Host-protein similarity analysis."
         )
 
-    # Conservation
+    return EvidenceAssessment(
+        supporting_evidence=supporting_evidence,
+        concerns=concerns,
+        missing_evidence=missing_evidence,
+    )
+
+def _assess_conservation_evidence(
+    conservation_summary: dict | None,
+) -> EvidenceAssessment:
+    supporting_evidence = []
+    concerns = []
+    missing_evidence = []
+
     if conservation_summary is not None:
         conservation_percentage = (
-            conservation_summary["conservation_percentage"]
+            _get_conservation_percentage(
+                conservation_summary
+            )
         )
 
         if conservation_percentage >= 50:
@@ -92,7 +235,18 @@ def assess_candidate(
             "Multiple-sequence alignment and conservation analysis."
         )
 
-    # Conserved regions
+    return EvidenceAssessment(
+        supporting_evidence=supporting_evidence,
+        concerns=concerns,
+        missing_evidence=missing_evidence,
+    )
+
+def _assess_conserved_regions(
+    conserved_regions: list[dict],
+) -> EvidenceAssessment:
+    supporting_evidence = []
+    concerns = []
+
     if conserved_regions:
         supporting_evidence.append(
             "One or more conserved regions were detected."
@@ -102,11 +256,85 @@ def assess_candidate(
             "No conserved regions were supplied or detected."
         )
 
-    # Hydrophobicity and transmembrane candidates
+    return EvidenceAssessment(
+        supporting_evidence=supporting_evidence,
+        concerns=concerns,
+        missing_evidence=[],
+    )
+
+def _assess_transmembrane_candidates(
+    result: ProteinAnalysisResult,
+) -> EvidenceAssessment:
+    concerns = []
+
     if result.transmembrane_candidates:
         concerns.append(
             "Possible transmembrane segments were detected using "
             "sequence-based heuristics."
+        )
+    return EvidenceAssessment(
+        supporting_evidence=[],
+        concerns=concerns,
+        missing_evidence=[],
+    )
+
+def _merge_evidence_assessment(
+    assessment: EvidenceAssessment,
+    supporting_evidence: list[str],
+    concerns: list[str],
+    missing_evidence: list[str],
+) -> None:
+    supporting_evidence.extend(
+        assessment.supporting_evidence
+    )
+    concerns.extend(
+        assessment.concerns
+    )
+    missing_evidence.extend(
+        assessment.missing_evidence
+    )
+
+def assess_candidate(
+    result: ProteinAnalysisResult,
+    conservation_summary: dict | None = None,
+    conserved_regions: list[dict] | None = None,
+) -> CandidateAssessment:
+    """
+    Create a transparent evidence summary for a protein candidate.
+
+    This function does not establish vaccine safety, antigenicity,
+    or final vaccine candidacy.
+    """
+
+    if conserved_regions is None:
+        conserved_regions = []
+
+    supporting_evidence = []
+    concerns = []
+    missing_evidence = []
+
+    localization = _assess_localization_evidence(result)
+    essentiality = _assess_essentiality_evidence(result)
+    host_similarity = _assess_host_similarity_evidence(result)
+    conservation = _assess_conservation_evidence(
+        conservation_summary
+    )
+    regions = _assess_conserved_regions(conserved_regions)
+    transmembrane = _assess_transmembrane_candidates(result)
+
+    for assessment in (
+        localization,
+        essentiality,
+        host_similarity,
+        conservation,
+        regions,
+        transmembrane,
+    ):
+        _merge_evidence_assessment(
+            assessment,
+            supporting_evidence,
+            concerns,
+            missing_evidence,
         )
 
     # Status
@@ -123,3 +351,4 @@ def assess_candidate(
         concerns=concerns,
         missing_evidence=missing_evidence,
     )
+

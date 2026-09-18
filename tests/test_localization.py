@@ -71,3 +71,50 @@ def test_empty_description_is_rejected():
             confidence="high",
             description="",
         )
+
+def test_localization_strips_are_not_accepted_as_valid_source():
+    with pytest.raises(
+        ValueError,
+        match="source cannot be empty",
+    ):
+        create_localization_evidence(
+            location="outer_membrane",
+            source="   ",
+            confidence="high",
+            description="Some evidence.",
+        )
+
+
+def test_localization_strips_are_not_accepted_as_valid_description():
+    with pytest.raises(
+        ValueError,
+        match="description cannot be empty",
+    ):
+        create_localization_evidence(
+            location="outer_membrane",
+            source="PredictionTool",
+            confidence="high",
+            description="   ",
+        )
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        "cytoplasm",
+        "inner_membrane",
+        "periplasm",
+        "outer_membrane",
+        "extracellular",
+        "unknown",
+    ],
+)
+def test_all_supported_localizations_are_accepted(location):
+    evidence = create_localization_evidence(
+        location=location,
+        source="PredictionTool",
+        confidence="medium",
+        description="Localization prediction.",
+    )
+
+    assert evidence.location == location
+
