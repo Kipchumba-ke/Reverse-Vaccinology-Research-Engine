@@ -198,3 +198,25 @@ def test_report_contains_host_similarity_interpretation():
 
     assert "host_similarity" in categories
 
+def test_report_contains_candidate_assessment():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD"
+    )
+
+    report = generate_protein_report(result)
+
+    assessment = report["candidate_assessment"]
+
+    assert assessment["status"] == "requires_further_review"
+    assert isinstance(
+        assessment["supporting_evidence"],
+        list,
+    )
+    assert isinstance(
+        assessment["concerns"],
+        list,
+    )
+    assert isinstance(
+        assessment["missing_evidence"],
+        list,
+    )
