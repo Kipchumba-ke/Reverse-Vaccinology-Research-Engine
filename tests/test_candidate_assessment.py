@@ -788,3 +788,33 @@ def test_candidate_assessment_reports_localization_finding():
         "Predicted localization: extracellular." in evidence
         for evidence in assessment.supporting_evidence
     )
+
+def test_candidate_assessment_reports_agreeing_localization_predictions():
+    extracellular_a = create_localization_evidence(
+        location="extracellular",
+        source="PredictorA",
+        confidence="high",
+        description="Predicted extracellular localization.",
+    )
+
+    extracellular_b = create_localization_evidence(
+        location="extracellular",
+        source="PredictorB",
+        confidence="medium",
+        description="Predicted extracellular localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[
+            extracellular_a,
+            extracellular_b,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "multiple localization predictions agree" in evidence.lower()
+        for evidence in assessment.supporting_evidence
+    )

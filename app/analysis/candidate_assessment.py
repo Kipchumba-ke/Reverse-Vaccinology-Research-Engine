@@ -66,6 +66,13 @@ def _assess_localization_evidence(
         for evidence in result.localization_evidence
         if evidence.location != "unknown"
     }
+    if (
+        len(result.localization_evidence) > 1
+        and len(locations) == 1
+    ):
+        supporting_evidence.append(
+            "Multiple localization predictions agree on the same location."
+        )
 
     if len(locations) > 1:
         concerns.append(
