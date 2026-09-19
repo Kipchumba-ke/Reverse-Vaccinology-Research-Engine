@@ -11,7 +11,8 @@ def analyze_fasta_file(path: str | Path):
     record = load_fasta_file(path)
 
     return analyze_protein(
-        record["sequence"]
+        record["sequence"],
+        protein_id=record["id"],
     )
 
 def parse_fasta(fasta_text: str) -> dict:

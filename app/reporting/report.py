@@ -58,6 +58,7 @@ def generate_protein_report(
             "analysis_pipeline": "protein_sequence_analysis",
         },
         "protein": {
+            "id": result.protein_id,
             "sequence": result.sequence,
             "length": result.length,
             "molecular_weight": result.molecular_weight,

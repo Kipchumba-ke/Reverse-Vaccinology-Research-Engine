@@ -18,6 +18,7 @@ class ProteinAnalysisResult:
     localization_evidence: list[LocalizationEvidence]
     essentiality_evidence : list[EssentialityEvidence]
     host_similarity_evidence: list[HostSimilarityEvidence]
+    protein_id: str | None = None
 
 
     def to_dict(self) -> dict:
@@ -52,4 +53,5 @@ class ProteinAnalysisResult:
                 evidence.to_dict()
                 for evidence in self.host_similarity_evidence
             ],
+            "protein_id": self.protein_id,
         }

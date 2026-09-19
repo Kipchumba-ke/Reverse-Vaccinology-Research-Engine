@@ -29,7 +29,8 @@ def analyze_protein(
     tm_min_hydropathy: float = 1.6,
     localization_evidence: list[LocalizationEvidence] | None = None,
     essentiality_evidence = None,
-    host_similarity_evidence = None
+    host_similarity_evidence = None,
+    protein_id: str | None = None,
 ) -> ProteinAnalysisResult:
     """
     Run the complete protein analysis pipeline.
@@ -124,4 +125,5 @@ def analyze_protein(
         localization_evidence=localization_evidence,
         essentiality_evidence=essentiality_evidence,
         host_similarity_evidence=host_similarity_evidence,
+        protein_id=protein_id,
     )

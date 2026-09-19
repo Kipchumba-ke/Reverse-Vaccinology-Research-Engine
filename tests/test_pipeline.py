@@ -238,3 +238,21 @@ def test_pipeline_defaults_to_empty_host_similarity_evidence():
     result = analyze_protein("MKTIIALSYIFCLVFAD")
 
     assert result.host_similarity_evidence == []
+
+def test_pipeline_preserves_protein_id():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        protein_id="protein_1",
+    )
+
+    assert result.protein_id == "protein_1"
+
+def test_pipeline_to_dict_preserves_protein_id():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        protein_id="protein_1",
+    )
+
+    data = result.to_dict()
+
+    assert data["protein_id"] == "protein_1"

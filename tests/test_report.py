@@ -242,3 +242,13 @@ def test_report_contains_analysis_pipeline_metadata():
         report["metadata"]["analysis_pipeline"]
         == "protein_sequence_analysis"
     )
+
+def test_report_contains_protein_id():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        protein_id="protein_1",
+    )
+
+    report = generate_protein_report(result)
+
+    assert report["protein"]["id"] == "protein_1"
