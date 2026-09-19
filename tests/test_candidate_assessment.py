@@ -990,3 +990,66 @@ def test_candidate_assessment_high_identity_with_poor_coverage_is_not_broad():
         in evidence.lower()
         for evidence in assessment.concerns
     )
+
+def test_candidate_assessment_high_identity_with_broad_coverage_is_not_partial():
+    host_match = create_host_similarity_evidence(
+        target_id="target-1",
+        host_id="host-1",
+        similarity_method="BLASTP",
+        identity_percentage=90.0,
+        alignment_length=300,
+        query_coverage_percentage=95.0,
+        subject_coverage_percentage=92.0,
+        e_value=1e-50,
+        source="DatabaseA",
+        confidence="high",
+        description="High-identity broad match.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_match],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "broad host-protein similarity"
+        in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+    assert not any(
+        "partial host-protein similarity"
+        in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_requires_review_when_host_similarity_is_supplied():
+    host_match = create_host_similarity_evidence(
+        target_id="target-1",
+        host_id="host-1",
+        similarity_method="BLASTP",
+        identity_percentage=45.0,
+        alignment_length=200,
+        query_coverage_percentage=80.0,
+        subject_coverage_percentage=75.0,
+        e_value=1e-10,
+        source="DatabaseA",
+        confidence="medium",
+        description="Host similarity detected.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_match],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert assessment.status == "requires_further_review"
+    assert any(
+        "host-similarity evidence requires biological and alignment-level review"
+        in evidence.lower()
+        for evidence in assessment.concerns
+    )
