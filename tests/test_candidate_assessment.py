@@ -911,3 +911,48 @@ def test_candidate_assessment_reports_conflicting_essentiality_evidence():
         in evidence.lower()
         for evidence in assessment.concerns
     )
+
+def test_candidate_assessment_reports_multiple_host_similarity_records():
+    first_match = create_host_similarity_evidence(
+        target_id="target-1",
+        host_id="host-1",
+        similarity_method="BLASTP",
+        identity_percentage=45.0,
+        alignment_length=200,
+        query_coverage_percentage=80.0,
+        subject_coverage_percentage=75.0,
+        e_value=1e-10,
+        source="DatabaseA",
+        confidence="medium",
+        description="Host similarity detected.",
+    )
+
+    second_match = create_host_similarity_evidence(
+        target_id="target-1",
+        host_id="host-2",
+        similarity_method="BLASTP",
+        identity_percentage=38.0,
+        alignment_length=180,
+        query_coverage_percentage=70.0,
+        subject_coverage_percentage=65.0,
+        e_value=1e-8,
+        source="DatabaseB",
+        confidence="medium",
+        description="Another host similarity detected.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[
+            first_match,
+            second_match,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "2 host-protein similarity records were supplied"
+        in evidence
+        for evidence in assessment.concerns
+    )

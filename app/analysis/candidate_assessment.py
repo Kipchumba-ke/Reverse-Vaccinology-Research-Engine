@@ -276,6 +276,10 @@ def _assess_host_similarity_evidence(
             "Host-similarity evidence requires biological and "
             "alignment-level review."
         )
+        concerns.append(
+            f"{len(result.host_similarity_evidence)} "
+            "host-protein similarity records were supplied."
+        )
 
         concerns.append(
             "Strongest reported host match: "
