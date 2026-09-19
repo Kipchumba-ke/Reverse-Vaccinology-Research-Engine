@@ -220,3 +220,13 @@ def test_report_contains_candidate_assessment():
         assessment["missing_evidence"],
         list,
     )
+
+def test_report_contains_metadata():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD"
+    )
+
+    report = generate_protein_report(result)
+
+    assert report["metadata"]["report_type"] == "reverse_vaccinology"
+    assert report["metadata"]["report_version"] == "1.0"
