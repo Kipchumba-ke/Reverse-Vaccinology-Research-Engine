@@ -55,6 +55,7 @@ def generate_protein_report(
         "metadata": {
             "report_type": "reverse_vaccinology",
             "report_version": "1.0",
+            "analysis_pipeline": "protein_sequence_analysis",
         },
         "protein": {
             "sequence": result.sequence,

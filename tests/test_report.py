@@ -230,3 +230,15 @@ def test_report_contains_metadata():
 
     assert report["metadata"]["report_type"] == "reverse_vaccinology"
     assert report["metadata"]["report_version"] == "1.0"
+
+def test_report_contains_analysis_pipeline_metadata():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD"
+    )
+
+    report = generate_protein_report(result)
+
+    assert (
+        report["metadata"]["analysis_pipeline"]
+        == "protein_sequence_analysis"
+    )
