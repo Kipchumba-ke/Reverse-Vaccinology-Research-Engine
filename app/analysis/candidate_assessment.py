@@ -158,6 +158,19 @@ def _get_highest_identity_host_match(
         ),
     )
 
+def _get_strongest_host_match(
+    evidence: list[HostSimilarityEvidence],
+) -> HostSimilarityEvidence:
+    return max(
+        evidence,
+        key=lambda item: (
+            item.query_coverage_percentage,
+            item.subject_coverage_percentage,
+            item.identity_percentage,
+            -item.e_value,
+        ),
+    )
+
 def _interpret_host_similarity(
     evidence,
 ) -> str:
@@ -221,14 +234,12 @@ def _assess_host_similarity_evidence(
     missing_evidence = []
 
     if result.host_similarity_evidence:
-        strongest_host_match = max(
-            result.host_similarity_evidence,
-            key=lambda item: (
-                item.query_coverage_percentage,
-                item.subject_coverage_percentage,
-                item.identity_percentage,
-                -item.e_value,
-            ),
+        strongest_host_match = _get_strongest_host_match(
+            result.host_similarity_evidence
+        )
+
+        highest_identity_match = _get_highest_identity_host_match(
+            result.host_similarity_evidence
         )
 
         concerns.append(
@@ -246,9 +257,6 @@ def _assess_host_similarity_evidence(
             f"E-value={strongest_host_match.e_value:g}."
         )
 
-        highest_identity_match = _get_highest_identity_host_match(
-            result.host_similarity_evidence
-        )
 
         concerns.append(
             "Highest-identity host match: "
