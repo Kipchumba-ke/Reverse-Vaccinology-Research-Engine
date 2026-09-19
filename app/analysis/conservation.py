@@ -219,6 +219,7 @@ def find_conserved_regions(
     regions = []
     current_start = None
     current_end = None
+    current_consensus = []
 
     for column in conserved_columns:
         position = column["position"]
@@ -229,6 +230,7 @@ def find_conserved_regions(
                 current_start = position
 
             current_end = position
+            current_consensus.append(column["consensus"])
 
         else:
             if current_start is not None:
@@ -241,10 +243,12 @@ def find_conserved_regions(
                         "start": current_start,
                         "end": current_end,
                         "length": region_length,
+                        "consensus": "".join(current_consensus),
                     })
 
                 current_start = None
                 current_end = None
+                current_consensus = []
 
     if current_start is not None:
         region_length = (
@@ -256,6 +260,7 @@ def find_conserved_regions(
                 "start": current_start,
                 "end": current_end,
                 "length": region_length,
+                "consensus": "".join(current_consensus),
             })
 
     return regions

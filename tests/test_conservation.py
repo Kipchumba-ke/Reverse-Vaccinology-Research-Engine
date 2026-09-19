@@ -228,11 +228,13 @@ def test_conserved_regions_are_identified():
             "start": 1,
             "end": 4,
             "length": 4,
+            "consensus" : "MKTI",
         },
         {
             "start": 6,
             "end": 8,
             "length": 3,
+            "consensus": "ALS",
         },
     ]
 
@@ -252,6 +254,7 @@ def test_all_conserved_positions_form_one_region():
             "start": 1,
             "end": 8,
             "length": 8,
+            "consensus": "MKTIIALS",
         }
     ]
 
@@ -287,6 +290,7 @@ def test_minimum_region_length_filters_short_regions():
             "start": 1,
             "end": 4,
             "length": 4,
+            "consensus": "MKTI",
         }
     ]
 
@@ -371,3 +375,54 @@ def test_entirely_gapped_column_has_no_consensus():
     assert gap_column["conservation_percentage"] == 0.0
     assert gap_column["gap_percentage"] == 100.0
     assert gap_column["conserved"] is False
+
+def test_conserved_regions_include_consensus_sequence():
+    columns = [
+        {
+            "position": 1,
+            "amino_acids": ["M", "M", "M"],
+            "consensus": "M",
+            "conserved": True,
+            "conservation_percentage": 100.0,
+            "gap_count": 0,
+            "gap_percentage": 0.0,
+        },
+        {
+            "position": 2,
+            "amino_acids": ["K", "K", "K"],
+            "consensus": "K",
+            "conserved": True,
+            "conservation_percentage": 100.0,
+            "gap_count": 0,
+            "gap_percentage": 0.0,
+        },
+        {
+            "position": 3,
+            "amino_acids": ["T", "T", "T"],
+            "consensus": "T",
+            "conserved": True,
+            "conservation_percentage": 100.0,
+            "gap_count": 0,
+            "gap_percentage": 0.0,
+        },
+        {
+            "position": 4,
+            "amino_acids": ["A", "A", "G"],
+            "consensus": "A",
+            "conserved": False,
+            "conservation_percentage": 66.7,
+            "gap_count": 0,
+            "gap_percentage": 0.0,
+        },
+    ]
+
+    regions = find_conserved_regions(columns)
+
+    assert regions == [
+        {
+            "start": 1,
+            "end": 3,
+            "length": 3,
+            "consensus": "MKT",
+        }
+    ]

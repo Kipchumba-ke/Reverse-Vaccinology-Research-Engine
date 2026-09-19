@@ -768,3 +768,4 @@ def test_candidate_assessment_reports_high_identity_host_match():
         "90.0% identity" in evidence
         for evidence in assessment.concerns
     )
+
