@@ -1,6 +1,7 @@
 from app.models.analysis_result import ProteinAnalysisResult
 from app.models.candidate_assessment import CandidateAssessment
 from app.models.evidence_assessment import EvidenceAssessment
+from app.models.host_similarity import HostSimilarityEvidence
 
 
 def _get_conservation_percentage(
@@ -144,6 +145,74 @@ def _assess_essentiality_evidence(
         missing_evidence=missing_evidence,
     )
 
+def _get_highest_identity_host_match(
+    evidence: list[HostSimilarityEvidence],
+) -> HostSimilarityEvidence:
+    return max(
+        evidence,
+        key=lambda item: (
+            item.identity_percentage,
+            item.query_coverage_percentage,
+            item.subject_coverage_percentage,
+            -item.e_value,
+        ),
+    )
+
+def _interpret_host_similarity(
+    evidence,
+) -> str:
+    if (
+        (
+            evidence.query_coverage_percentage >= 80
+            and evidence.subject_coverage_percentage < 80
+        )
+        or (
+            evidence.query_coverage_percentage < 80
+            and evidence.subject_coverage_percentage >= 80
+        )
+    ):
+        return (
+            "Asymmetric host-protein similarity coverage "
+            "was reported."
+        )
+
+    if (
+        evidence.identity_percentage >= 70
+        and evidence.query_coverage_percentage >= 80
+        and evidence.subject_coverage_percentage >= 80
+    ):
+        return (
+            "Broad host-protein similarity was reported "
+            "across most of both aligned proteins."
+        )
+
+    if (
+        evidence.identity_percentage >= 70
+        and evidence.query_coverage_percentage < 80
+        and evidence.subject_coverage_percentage < 80
+    ):
+        return (
+            "Partial host-protein similarity was reported "
+            "within a limited aligned region."
+        )
+
+    if (
+        evidence.identity_percentage >= 30
+        and evidence.identity_percentage < 70
+    ):
+        return (
+            "Moderate host-protein sequence similarity "
+            "was reported."
+        )
+
+    if evidence.identity_percentage < 30:
+        return (
+            "Relatively low sequence similarity was reported "
+            "against the supplied host protein."
+        )
+
+    return "Host-protein similarity was reported."
+
 def _assess_host_similarity_evidence(
     result: ProteinAnalysisResult,
 ) -> EvidenceAssessment:
@@ -177,39 +246,23 @@ def _assess_host_similarity_evidence(
             f"E-value={strongest_host_match.e_value:g}."
         )
 
-        if (
-            strongest_host_match.identity_percentage >= 70
-            and strongest_host_match.query_coverage_percentage >= 80
-            and strongest_host_match.subject_coverage_percentage >= 80
-        ):
-            concerns.append(
-                "Broad host-protein similarity was reported "
-                "across most of both aligned proteins."
-            )
+        highest_identity_match = _get_highest_identity_host_match(
+            result.host_similarity_evidence
+        )
 
-        elif (
-            strongest_host_match.identity_percentage >= 70
-            and strongest_host_match.query_coverage_percentage < 80
-            and strongest_host_match.subject_coverage_percentage < 80
-        ):
-            concerns.append(
-                "Partial host-protein similarity was reported "
-                "within a limited aligned region."
-            )
+        concerns.append(
+            "Highest-identity host match: "
+            f"{highest_identity_match.identity_percentage:.1f}% identity, "
+            f"query coverage="
+            f"{highest_identity_match.query_coverage_percentage:.1f}%, "
+            f"subject coverage="
+            f"{highest_identity_match.subject_coverage_percentage:.1f}%, "
+            f"E-value={highest_identity_match.e_value:g}."
+        )
 
-        elif (
-            strongest_host_match.identity_percentage >= 30
-            and strongest_host_match.identity_percentage < 70
-        ):
-            concerns.append(
-                "Moderate host-protein sequence similarity was reported."
-            )
-
-        elif strongest_host_match.identity_percentage < 30:
-            concerns.append(
-                "Relatively low sequence similarity was reported "
-                "against the supplied host protein."
-            )
+        concerns.append(
+            _interpret_host_similarity(strongest_host_match)
+        )
 
     else:
         missing_evidence.append(

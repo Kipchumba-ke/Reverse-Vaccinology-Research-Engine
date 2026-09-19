@@ -650,3 +650,121 @@ def test_candidate_assessment_low_host_similarity_does_not_claim_safety():
         for evidence in assessment.supporting_evidence
         + assessment.concerns
     )
+
+def test_candidate_assessment_identifies_asymmetric_host_similarity():
+    host_match = create_host_similarity_evidence(
+        target_id="candidate_protein",
+        host_id="human_protein",
+        similarity_method="BLASTP",
+        identity_percentage=82.0,
+        alignment_length=180,
+        query_coverage_percentage=92.0,
+        subject_coverage_percentage=35.0,
+        e_value=1e-25,
+        source="BLASTP",
+        confidence="high",
+        description=(
+            "High identity with asymmetric sequence coverage."
+        ),
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_match],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "asymmetric" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_reports_broadest_host_match():
+    broad_match = create_host_similarity_evidence(
+        target_id="candidate_protein",
+        host_id="host_protein_broad",
+        similarity_method="BLASTP",
+        identity_percentage=55.0,
+        alignment_length=300,
+        query_coverage_percentage=95.0,
+        subject_coverage_percentage=90.0,
+        e_value=1e-10,
+        source="BLASTP",
+        confidence="medium",
+        description="Broad host-protein match.",
+    )
+
+    high_identity_match = create_host_similarity_evidence(
+        target_id="candidate_protein",
+        host_id="host_protein_local",
+        similarity_method="BLASTP",
+        identity_percentage=90.0,
+        alignment_length=100,
+        query_coverage_percentage=70.0,
+        subject_coverage_percentage=70.0,
+        e_value=1e-30,
+        source="BLASTP",
+        confidence="high",
+        description="High identity but narrower match.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[
+            broad_match,
+            high_identity_match,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "55.0% identity" in evidence
+        and "query coverage=95.0%" in evidence
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_reports_high_identity_host_match():
+    broad_match = create_host_similarity_evidence(
+        target_id="candidate_protein",
+        host_id="host_protein_broad",
+        similarity_method="BLASTP",
+        identity_percentage=55.0,
+        alignment_length=300,
+        query_coverage_percentage=95.0,
+        subject_coverage_percentage=90.0,
+        e_value=1e-10,
+        source="BLASTP",
+        confidence="medium",
+        description="Broad host-protein match.",
+    )
+
+    high_identity_match = create_host_similarity_evidence(
+        target_id="candidate_protein",
+        host_id="host_protein_identity",
+        similarity_method="BLASTP",
+        identity_percentage=90.0,
+        alignment_length=100,
+        query_coverage_percentage=70.0,
+        subject_coverage_percentage=70.0,
+        e_value=1e-30,
+        source="BLASTP",
+        confidence="high",
+        description="High identity host-protein match.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[
+            broad_match,
+            high_identity_match,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "90.0% identity" in evidence
+        for evidence in assessment.concerns
+    )
