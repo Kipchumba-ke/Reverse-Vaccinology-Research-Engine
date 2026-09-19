@@ -134,6 +134,11 @@ def _assess_essentiality_evidence(
         for evidence in result.essentiality_evidence
         if evidence.essentiality_status != "unknown"
     }
+    if len(statuses) > 1:
+        concerns.append(
+            "Conflicting essentiality evidence was supplied for: "
+            f"{', '.join(sorted(statuses))}."
+        )
 
     if (
         len(result.essentiality_evidence) > 1
