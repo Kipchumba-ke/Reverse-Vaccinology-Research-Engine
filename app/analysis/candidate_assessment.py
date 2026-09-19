@@ -129,6 +129,20 @@ def _assess_essentiality_evidence(
         "Essentiality evidence has been supplied."
     )
 
+    statuses = {
+        evidence.essentiality_status
+        for evidence in result.essentiality_evidence
+        if evidence.essentiality_status != "unknown"
+    }
+
+    if (
+        len(result.essentiality_evidence) > 1
+        and len(statuses) == 1
+    ):
+        supporting_evidence.append(
+            "Multiple essentiality records agree on the same status."
+        )
+
     for evidence in result.essentiality_evidence:
         if evidence.essentiality_status == "unknown":
             concerns.append(

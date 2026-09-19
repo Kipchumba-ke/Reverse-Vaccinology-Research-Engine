@@ -841,3 +841,38 @@ def test_candidate_assessment_reports_essentiality_finding():
         in evidence
         for evidence in assessment.supporting_evidence
     )
+
+def test_candidate_assessment_reports_agreeing_essentiality_evidence():
+    essentiality_a = create_essentiality_evidence(
+        gene_id="gene-123",
+        organism="Example organism",
+        essentiality_status="essential",
+        source="DatabaseA",
+        confidence="high",
+        description="Gene is essential.",
+    )
+
+    essentiality_b = create_essentiality_evidence(
+        gene_id="gene-123",
+        organism="Example organism",
+        essentiality_status="essential",
+        source="DatabaseB",
+        confidence="medium",
+        description="Gene is required for survival.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        essentiality_evidence=[
+            essentiality_a,
+            essentiality_b,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "multiple essentiality records agree on the same status"
+        in evidence.lower()
+        for evidence in assessment.supporting_evidence
+    )
