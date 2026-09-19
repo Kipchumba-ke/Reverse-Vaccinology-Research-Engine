@@ -83,6 +83,10 @@ def _assess_localization_evidence(
             continue
 
         supporting_evidence.append(
+            f"Predicted localization: {evidence.location}."
+        )
+
+        supporting_evidence.append(
             "Predicted localization: "
             f"{evidence.location} "
             f"(confidence={evidence.confidence}, "

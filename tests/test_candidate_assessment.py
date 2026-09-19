@@ -769,3 +769,22 @@ def test_candidate_assessment_reports_high_identity_host_match():
         for evidence in assessment.concerns
     )
 
+def test_candidate_assessment_reports_localization_finding():
+    localization = create_localization_evidence(
+        location="extracellular",
+        source="Example prediction tool",
+        confidence="high",
+        description="Protein is predicted to be extracellular.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "Predicted localization: extracellular." in evidence
+        for evidence in assessment.supporting_evidence
+    )
