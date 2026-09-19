@@ -197,6 +197,20 @@ def _assess_host_similarity_evidence(
                 "within a limited aligned region."
             )
 
+        elif (
+            strongest_host_match.identity_percentage >= 30
+            and strongest_host_match.identity_percentage < 70
+        ):
+            concerns.append(
+                "Moderate host-protein sequence similarity was reported."
+            )
+
+        elif strongest_host_match.identity_percentage < 30:
+            concerns.append(
+                "Relatively low sequence similarity was reported "
+                "against the supplied host protein."
+            )
+
     else:
         missing_evidence.append(
             "Host-protein similarity analysis."

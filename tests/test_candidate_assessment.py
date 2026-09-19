@@ -590,3 +590,63 @@ def test_candidate_assessment_distinguishes_partial_host_similarity():
         "partial" in evidence.lower()
         for evidence in assessment.concerns
     )
+
+def test_candidate_assessment_identifies_moderate_host_similarity():
+    host_match = create_host_similarity_evidence(
+        target_id="candidate_protein",
+        host_id="human_protein",
+        similarity_method="BLASTP",
+        identity_percentage=45.0,
+        alignment_length=210,
+        query_coverage_percentage=70.0,
+        subject_coverage_percentage=65.0,
+        e_value=1e-8,
+        source="BLASTP",
+        confidence="medium",
+        description="Moderate sequence similarity to a host protein.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_match],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "moderate" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_low_host_similarity_does_not_claim_safety():
+    host_match = create_host_similarity_evidence(
+        target_id="candidate_protein",
+        host_id="human_protein",
+        similarity_method="BLASTP",
+        identity_percentage=12.0,
+        alignment_length=180,
+        query_coverage_percentage=60.0,
+        subject_coverage_percentage=55.0,
+        e_value=0.01,
+        source="BLASTP",
+        confidence="low",
+        description="Relatively low sequence similarity to a host protein.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_match],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "relatively low sequence similarity" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+    assert not any(
+        "safe" in evidence.lower()
+        for evidence in assessment.supporting_evidence
+        + assessment.concerns
+    )
