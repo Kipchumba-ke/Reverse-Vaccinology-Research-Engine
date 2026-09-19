@@ -818,3 +818,26 @@ def test_candidate_assessment_reports_agreeing_localization_predictions():
         "multiple localization predictions agree" in evidence.lower()
         for evidence in assessment.supporting_evidence
     )
+
+def test_candidate_assessment_reports_essentiality_finding():
+    essentiality = create_essentiality_evidence(
+        gene_id="gene-123",
+        organism="Example organism",
+        essentiality_status="essential",
+        source="Example essentiality database",
+        confidence="high",
+        description="Gene is essential for survival under the tested conditions.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        essentiality_evidence=[essentiality],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "Essentiality status: essential"
+        in evidence
+        for evidence in assessment.supporting_evidence
+    )
