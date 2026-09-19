@@ -197,3 +197,4 @@ def test_report_contains_host_similarity_interpretation():
     ]
 
     assert "host_similarity" in categories
+
