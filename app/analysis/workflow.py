@@ -1,6 +1,7 @@
 from app.analysis.conservation import calculate_conservation_summary
 from app.analysis.msa import align_sequences
 from app.models.workflow_result import AnalysisWorkflowResult
+from app.input.fasta import parse_fasta_records
 
 
 def analyze_fasta_records(records: list[dict]) -> AnalysisWorkflowResult:
@@ -23,3 +24,8 @@ def analyze_fasta_records(records: list[dict]) -> AnalysisWorkflowResult:
         alignment=alignment,
         conservation=conservation,
     )
+
+def analyze_fasta(fasta_text: str) -> AnalysisWorkflowResult:
+    records = parse_fasta_records(fasta_text)
+
+    return analyze_fasta_records(records)
