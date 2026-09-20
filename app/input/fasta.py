@@ -30,15 +30,72 @@ def parse_fasta(fasta_text: str) -> dict:
             "Multiple FASTA records are not supported."
         )
 
-    sequence_id = lines[0][1:].strip()
-    if not sequence_id:
-        raise ValueError("FASTA identifier cannot be empty.")
+    records = parse_fasta_records(fasta_text)
 
-    sequence = "".join(lines[1:])
-    if not sequence:
+    return records[0]
+
+
+def parse_fasta_records(fasta_text: str) -> list[dict]:
+    lines = [
+        line.strip()
+        for line in fasta_text.splitlines()
+        if line.strip()
+    ]
+
+    if not lines or not lines[0].startswith(">"):
+        raise ValueError("Invalid FASTA input.")
+
+    records = []
+    current_id = None
+    current_sequence = []
+
+    for line in lines:
+        if line.startswith(">"):
+            if current_id is not None:
+                records.append(
+                    _build_fasta_record(
+                        current_id,
+                        current_sequence,
+                    )
+                )
+
+            current_id = line[1:].strip()
+
+            if not current_id:
+                raise ValueError(
+                    "FASTA identifier cannot be empty."
+                )
+
+            current_sequence = []
+        else:
+            if current_id is None:
+                raise ValueError("Invalid FASTA input.")
+
+            current_sequence.append(line)
+
+    if current_id is None:
+        raise ValueError("Invalid FASTA input.")
+
+    records.append(
+        _build_fasta_record(
+            current_id,
+            current_sequence,
+        )
+    )
+
+    return records
+
+
+def _build_fasta_record(
+    sequence_id: str,
+    sequence_parts: list[str],
+) -> dict:
+    if not sequence_parts:
         raise ValueError("FASTA sequence cannot be empty.")
 
-    sequence = validate_protein_sequence(sequence)
+    sequence = validate_protein_sequence(
+        "".join(sequence_parts)
+    )
 
     return {
         "id": sequence_id,

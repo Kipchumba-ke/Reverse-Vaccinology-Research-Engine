@@ -3,6 +3,7 @@ import pytest
 from app.input.fasta import (
     load_fasta_file,
     parse_fasta,
+    parse_fasta_records,
 )
 
 def test_parse_single_protein_fasta():
@@ -96,3 +97,102 @@ def test_parse_fasta_rejects_empty_identifier():
 
     with pytest.raises(ValueError, match="FASTA identifier cannot be empty"):
         parse_fasta(fasta)
+
+def test_parse_fasta_records_multiple_records():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+>protein_3
+MKT
+"""
+
+    result = parse_fasta_records(fasta_text)
+
+    assert result == [
+        {"id": "protein_1", "sequence": "MKT"},
+        {"id": "protein_2", "sequence": "MKTT"},
+        {"id": "protein_3", "sequence": "MKT"},
+    ]
+
+def test_parse_fasta_records_rejects_missing_sequence():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+"""
+
+    with pytest.raises(
+        ValueError,
+        match="FASTA sequence cannot be empty",
+    ):
+        parse_fasta_records(fasta_text)
+
+def test_parse_fasta_records_rejects_empty_identifier():
+    fasta_text = """>
+MKT
+"""
+
+    with pytest.raises(
+        ValueError,
+        match="FASTA identifier cannot be empty",
+    ):
+        parse_fasta_records(fasta_text)
+
+def test_parse_fasta_records_rejects_invalid_sequence():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKXZ
+"""
+
+    with pytest.raises(
+        ValueError,
+        match="Invalid amino acid characters found",
+    ):
+        parse_fasta_records(fasta_text)
+
+def test_parse_fasta_records_can_feed_msa():
+    from app.analysis.msa import align_sequences
+
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+>protein_3
+MKT
+"""
+
+    records = parse_fasta_records(fasta_text)
+    sequences = [record["sequence"] for record in records]
+
+    alignment = align_sequences(sequences)
+
+    assert alignment == [
+        "MK-T",
+        "MKTT",
+        "MK-T",
+    ]
+
+def test_parse_fasta_records_can_feed_msa_and_conservation():
+    from app.analysis.conservation import calculate_conservation_summary
+    from app.analysis.msa import align_sequences
+
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+>protein_3
+MKT
+"""
+
+    records = parse_fasta_records(fasta_text)
+    sequences = [record["sequence"] for record in records]
+
+    alignment = align_sequences(sequences)
+    summary = calculate_conservation_summary(alignment)
+
+    assert summary.sequence_count == 3
+    assert summary.alignment_length == 4
+    assert summary.conserved_positions == 3
+    assert summary.conservation_percentage == 75.0
+    assert summary.mean_identity == 100.0
