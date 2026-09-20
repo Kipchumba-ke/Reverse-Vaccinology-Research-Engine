@@ -1,8 +1,9 @@
 from app.analysis.conservation import calculate_conservation_summary
 from app.analysis.msa import align_sequences
+from app.models.workflow_result import AnalysisWorkflowResult
 
 
-def analyze_fasta_records(records: list[dict]) -> dict:
+def analyze_fasta_records(records: list[dict]) -> AnalysisWorkflowResult:
     if not records:
         raise ValueError(
             "At least one FASTA record is required."
@@ -17,8 +18,8 @@ def analyze_fasta_records(records: list[dict]) -> dict:
     alignment = align_sequences(sequences)
     conservation = calculate_conservation_summary(alignment)
 
-    return {
-        "records": records,
-        "alignment": alignment,
-        "conservation": conservation,
-    }
+    return AnalysisWorkflowResult(
+        records=records,
+        alignment=alignment,
+        conservation=conservation,
+    )

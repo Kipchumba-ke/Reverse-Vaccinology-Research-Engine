@@ -1,5 +1,6 @@
 import pytest
 from app.analysis.workflow import analyze_fasta_records
+from app.models.workflow_result import AnalysisWorkflowResult
 
 
 def test_analyze_fasta_records_returns_alignment_and_conservation():
@@ -11,19 +12,19 @@ def test_analyze_fasta_records_returns_alignment_and_conservation():
 
     result = analyze_fasta_records(records)
 
-    assert result["records"] == records
+    assert result.records == records
 
-    assert result["alignment"] == [
+    assert result.alignment == [
         "MK-T",
         "MKTT",
         "MK-T",
     ]
 
-    assert result["conservation"].sequence_count == 3
-    assert result["conservation"].alignment_length == 4
-    assert result["conservation"].conserved_positions == 3
-    assert result["conservation"].conservation_percentage == 75.0
-    assert result["conservation"].mean_identity == 100.0
+    assert result.conservation.sequence_count == 3
+    assert result.conservation.alignment_length == 4
+    assert result.conservation.conserved_positions == 3
+    assert result.conservation.conservation_percentage == 75.0
+    assert result.conservation.mean_identity == 100.0
 
 def test_analyze_fasta_records_rejects_empty_records():
     with pytest.raises(
@@ -54,3 +55,41 @@ def test_analyze_fasta_records_rejects_invalid_sequence():
         match="Invalid amino acid characters found",
     ):
         analyze_fasta_records(records)
+
+def test_analysis_workflow_result_stores_analysis_outputs():
+    records = [
+        {"id": "protein_1", "sequence": "MKT"},
+        {"id": "protein_2", "sequence": "MKTT"},
+        {"id": "protein_3", "sequence": "MKT"},
+    ]
+
+    result = analyze_fasta_records(records)
+
+    assert isinstance(result, AnalysisWorkflowResult)
+    assert result.records == records
+    assert result.alignment == [
+        "MK-T",
+        "MKTT",
+        "MK-T",
+    ]
+    assert result.conservation.sequence_count == 3
+
+def test_analysis_workflow_result_can_be_serialized():
+    records = [
+        {"id": "protein_1", "sequence": "MKT"},
+        {"id": "protein_2", "sequence": "MKTT"},
+        {"id": "protein_3", "sequence": "MKT"},
+    ]
+
+    result = analyze_fasta_records(records)
+
+    serialized = result.to_dict()
+
+    assert serialized["records"] == records
+    assert serialized["alignment"] == [
+        "MK-T",
+        "MKTT",
+        "MK-T",
+    ]
+    assert serialized["conservation"]["sequence_count"] == 3
+    assert serialized["conservation"]["alignment_length"] == 4
