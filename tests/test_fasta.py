@@ -87,3 +87,12 @@ def test_load_fasta_file(tmp_path):
 
     assert record["id"] == "protein_1"
     assert record["sequence"] == "MKTIIALSYIFCLVFAD"
+
+def test_parse_fasta_rejects_empty_identifier():
+    fasta = (
+        ">\n"
+        "MKTIIALSYIFCLVFAD\n"
+    )
+
+    with pytest.raises(ValueError, match="FASTA identifier cannot be empty"):
+        parse_fasta(fasta)

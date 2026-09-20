@@ -31,6 +31,9 @@ def parse_fasta(fasta_text: str) -> dict:
         )
 
     sequence_id = lines[0][1:].strip()
+    if not sequence_id:
+        raise ValueError("FASTA identifier cannot be empty.")
+
     sequence = "".join(lines[1:])
     if not sequence:
         raise ValueError("FASTA sequence cannot be empty.")
