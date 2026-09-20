@@ -187,3 +187,9 @@ def test_alignment_can_produce_conserved_regions():
             "consensus": "MK",
         }
     ]
+
+def test_align_pair_handles_insertion_at_beginning():
+    result = align_pair("MKT", "MMKT")
+
+    assert result["sequence_a"] == "-MKT"
+    assert result["sequence_b"] == "MMKT"
