@@ -2,6 +2,7 @@ from app.analysis.conservation import calculate_conservation_summary
 from app.analysis.msa import align_sequences
 from app.models.workflow_result import AnalysisWorkflowResult
 from app.input.fasta import parse_fasta_records
+from app.analysis.pipeline import analyze_protein
 
 
 def analyze_fasta_records(records: list[dict]) -> AnalysisWorkflowResult:
@@ -16,11 +17,19 @@ def analyze_fasta_records(records: list[dict]) -> AnalysisWorkflowResult:
             )       
     sequences = [record["sequence"] for record in records]
 
+    protein_analyses = [
+        analyze_protein(
+            record["sequence"],
+            protein_id=record["id"],
+        )
+        for record in records
+    ]
     alignment = align_sequences(sequences)
     conservation = calculate_conservation_summary(alignment)
 
     return AnalysisWorkflowResult(
         records=records,
+        protein_analyses=protein_analyses,
         alignment=alignment,
         conservation=conservation,
     )

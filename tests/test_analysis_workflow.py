@@ -4,6 +4,7 @@ from app.analysis.workflow import (
     analyze_fasta_records,
 )
 from app.models.workflow_result import AnalysisWorkflowResult
+from app.models.analysis_result import ProteinAnalysisResult
 
 
 def test_analyze_fasta_records_returns_alignment_and_conservation():
@@ -96,6 +97,16 @@ def test_analysis_workflow_result_can_be_serialized():
     ]
     assert serialized["conservation"]["sequence_count"] == 3
     assert serialized["conservation"]["alignment_length"] == 4
+    assert len(serialized["protein_analyses"]) == 3
+
+    assert [
+        analysis["protein_id"]
+        for analysis in serialized["protein_analyses"]
+    ] == [
+        "protein_1",
+        "protein_2",
+        "protein_3",
+    ]
 
 def test_analyze_fasta_parses_and_analyzes_multiple_records():
     fasta_text = """>protein_1
@@ -139,3 +150,30 @@ def test_analyze_fasta_rejects_empty_input():
         match="Invalid FASTA input",
     ):
         analyze_fasta("")
+
+def test_analyze_fasta_includes_protein_analyses():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+>protein_3
+MKT
+"""
+
+    result = analyze_fasta(fasta_text)
+
+    assert len(result.protein_analyses) == 3
+
+    assert all(
+        isinstance(analysis, ProteinAnalysisResult)
+        for analysis in result.protein_analyses
+    )
+
+    assert [
+        analysis.protein_id
+        for analysis in result.protein_analyses
+    ] == [
+        "protein_1",
+        "protein_2",
+        "protein_3",
+    ]
