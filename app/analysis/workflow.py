@@ -5,7 +5,7 @@ from app.input.fasta import parse_fasta_records
 from app.analysis.pipeline import analyze_protein
 
 
-def analyze_fasta_records(records: list[dict]) -> AnalysisWorkflowResult:
+def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, list] | None = None,) -> AnalysisWorkflowResult:
     if not records:
         raise ValueError(
             "At least one FASTA record is required."
@@ -14,12 +14,18 @@ def analyze_fasta_records(records: list[dict]) -> AnalysisWorkflowResult:
         if "id" not in record or "sequence" not in record:
             raise ValueError(
                 "FASTA record must contain id and sequence."
-            )       
+            )
+        if localization_evidence is None:
+            localization_evidence = {}
     sequences = [record["sequence"] for record in records]
 
     protein_analyses = [
         analyze_protein(
             record["sequence"],
+            localization_evidence=localization_evidence.get(
+                record["id"],
+                [],
+            ),
             protein_id=record["id"],
         )
         for record in records
@@ -34,7 +40,10 @@ def analyze_fasta_records(records: list[dict]) -> AnalysisWorkflowResult:
         conservation=conservation,
     )
 
-def analyze_fasta(fasta_text: str) -> AnalysisWorkflowResult:
+def analyze_fasta(fasta_text: str, localization_evidence: dict[str, list] | None = None,) -> AnalysisWorkflowResult:
     records = parse_fasta_records(fasta_text)
 
-    return analyze_fasta_records(records)
+    return analyze_fasta_records(
+        records,
+        localization_evidence=localization_evidence
+        )

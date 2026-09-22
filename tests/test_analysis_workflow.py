@@ -5,6 +5,7 @@ from app.analysis.workflow import (
 )
 from app.models.workflow_result import AnalysisWorkflowResult
 from app.models.analysis_result import ProteinAnalysisResult
+from app.models.localization import LocalizationEvidence
 
 
 def test_analyze_fasta_records_returns_alignment_and_conservation():
@@ -177,3 +178,112 @@ MKT
         "protein_2",
         "protein_3",
     ]
+
+def test_analyze_fasta_records_attaches_localization_evidence():
+    records = [
+        {"id": "protein_1", "sequence": "MKT"},
+        {"id": "protein_2", "sequence": "MKTT"},
+    ]
+
+    localization_evidence = {
+        "protein_1": [],
+        "protein_2": [],
+    }
+
+    result = analyze_fasta_records(
+        records,
+        localization_evidence=localization_evidence,
+    )
+
+    assert result.protein_analyses[0].localization_evidence == []
+    assert result.protein_analyses[1].localization_evidence == []
+
+def test_analyze_fasta_records_keeps_localization_evidence_with_correct_protein():
+    records = [
+        {"id": "protein_1", "sequence": "MKT"},
+        {"id": "protein_2", "sequence": "MKTT"},
+    ]
+
+    evidence = LocalizationEvidence(
+        location="surface",
+        source="experimental",
+        confidence="high",
+        description="Located on the cell surface.",
+    )
+
+    localization_evidence = {
+        "protein_1": [evidence],
+        "protein_2": [],
+    }
+
+    result = analyze_fasta_records(
+        records,
+        localization_evidence=localization_evidence,
+    )
+
+    assert result.protein_analyses[0].localization_evidence == [evidence]
+    assert result.protein_analyses[1].localization_evidence == []
+
+def test_analyze_fasta_accepts_localization_evidence():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+"""
+
+    evidence = LocalizationEvidence(
+        location="surface",
+        source="experimental",
+        confidence="high",
+        description="Located on the cell surface.",
+    )
+
+    result = analyze_fasta(
+        fasta_text,
+        localization_evidence={
+            "protein_1": [evidence],
+            "protein_2": [],
+        },
+    )
+
+    assert result.protein_analyses[0].localization_evidence == [evidence]
+    assert result.protein_analyses[1].localization_evidence == []
+
+def test_analyze_fasta_serializes_localization_evidence():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+"""
+
+    evidence = LocalizationEvidence(
+        location="surface",
+        source="experimental",
+        confidence="high",
+        description="Located on the cell surface.",
+    )
+
+    result = analyze_fasta(
+        fasta_text,
+        localization_evidence={
+            "protein_1": [evidence],
+            "protein_2": [],
+        },
+    )
+
+    serialized = result.to_dict()
+
+    assert serialized["protein_analyses"][0][
+        "localization_evidence"
+    ] == [
+        {
+            "location": "surface",
+            "source": "experimental",
+            "confidence": "high",
+            "description": "Located on the cell surface.",
+        }
+    ]
+
+    assert serialized["protein_analyses"][1][
+        "localization_evidence"
+    ] == []
