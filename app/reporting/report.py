@@ -5,6 +5,8 @@ from app.analysis.interpretation import (
     interpret_hydrophobicity,
     interpret_transmembrane_candidates,
     interpret_host_similarity,
+    interpret_localization,
+    interpret_essentiality,
 )
 from app.analysis.candidate_assessment import assess_candidate
 
@@ -30,6 +32,18 @@ def generate_protein_report(
             result.transmembrane_candidates
         ),
         interpret_conserved_regions(conserved_regions),
+        interpret_localization(
+            [
+                evidence.to_dict()
+                for evidence in result.localization_evidence
+            ]
+        ),
+        interpret_essentiality(
+            [
+                evidence.to_dict()
+                for evidence in result.essentiality_evidence
+            ]
+        ),
         interpret_host_similarity(
             [
                 evidence.to_dict()

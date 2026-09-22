@@ -204,3 +204,96 @@ def interpret_host_similarity(
         interpretation=interpretation,
         confidence=confidence,
     )
+
+def interpret_localization(
+    evidence: list[dict],
+) -> Evidence:
+    if not evidence:
+        return Evidence(
+            category="localization",
+            finding="No localization evidence supplied.",
+            interpretation=(
+                "Localization assessment is unavailable "
+                "for the current candidate."
+            ),
+            confidence="low",
+        )
+
+    strongest_evidence = max(
+        evidence,
+        key=lambda item: {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+        }.get(item["confidence"], 0),
+    )
+
+    location = strongest_evidence["location"]
+    confidence = strongest_evidence["confidence"]
+    source = strongest_evidence["source"]
+    description = strongest_evidence["description"]
+
+    interpretation = (
+        f"The supplied evidence reports "
+        f"{location.replace('_', ' ')} localization with "
+        f"{confidence} confidence. "
+        f"{description}"
+    )
+
+    finding = (
+        f"Reported localization: "
+        f"{location}; source={source}"
+    )
+
+    return Evidence(
+        category="localization",
+        finding=finding,
+        interpretation=interpretation,
+        confidence=confidence,
+    )
+
+def interpret_essentiality(
+    evidence: list[dict],
+) -> Evidence:
+    if not evidence:
+        return Evidence(
+            category="essentiality",
+            finding="No essentiality evidence supplied.",
+            interpretation=(
+                "Essentiality assessment is unavailable "
+                "for the current candidate."
+            ),
+            confidence="low",
+        )
+
+    strongest_evidence = max(
+        evidence,
+        key=lambda item: {
+            "low": 1,
+            "medium": 2,
+            "high": 3,
+        }.get(item["confidence"], 0),
+    )
+
+    status = strongest_evidence["essentiality_status"]
+    confidence = strongest_evidence["confidence"]
+    source = strongest_evidence["source"]
+    description = strongest_evidence["description"]
+
+    interpretation = (
+        f"The supplied evidence reports the protein as "
+        f"{status.replace('_', ' ')} with {confidence} confidence. "
+        f"{description}"
+    )
+
+    finding = (
+        f"Reported essentiality: "
+        f"{status}; source={source}"
+    )
+
+    return Evidence(
+        category="essentiality",
+        finding=finding,
+        interpretation=interpretation,
+        confidence=confidence,
+    )

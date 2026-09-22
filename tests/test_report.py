@@ -252,3 +252,57 @@ def test_report_contains_protein_id():
     report = generate_protein_report(result)
 
     assert report["protein"]["id"] == "protein_1"
+
+def test_report_contains_localization_interpretation():
+    localization = create_localization_evidence(
+        location="outer_membrane",
+        source="Prediction database",
+        confidence="high",
+        description="Evidence supports outer membrane localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+    )
+
+    report = generate_protein_report(result)
+
+    localization_interpretation = next(
+        item
+        for item in report["interpretations"]
+        if item["category"] == "localization"
+    )
+
+    assert "outer_membrane" in localization_interpretation["finding"]
+    assert "outer membrane" in (
+        localization_interpretation["interpretation"].lower()
+    )
+
+def test_report_contains_essentiality_interpretation():
+    essentiality = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Example bacterium",
+        essentiality_status="essential",
+        source="Knockout study",
+        confidence="high",
+        description="Gene disruption prevented viable growth.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        essentiality_evidence=[essentiality],
+    )
+
+    report = generate_protein_report(result)
+
+    essentiality_interpretation = next(
+        item
+        for item in report["interpretations"]
+        if item["category"] == "essentiality"
+    )
+
+    assert "essential" in essentiality_interpretation["finding"]
+    assert "essential" in (
+        essentiality_interpretation["interpretation"].lower()
+    )
