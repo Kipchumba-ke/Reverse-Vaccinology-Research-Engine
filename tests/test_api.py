@@ -1,4 +1,5 @@
 from app import create_app
+import io
 
 
 def test_create_app_returns_flask_application():
@@ -101,3 +102,88 @@ def test_analyze_endpoint_preserves_protein_id():
     data = response.get_json()
 
     assert data["protein"]["id"] == "protein_123"
+
+def test_analyze_endpoint_accepts_fasta_file():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(
+                    b">protein_123\nMKTIIALSYIFCLVFAD\n"
+                ),
+                "protein.fasta",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["protein"]["id"] == "protein_123"
+    assert data["protein"]["sequence"] == "MKTIIALSYIFCLVFAD"
+
+def test_analyze_endpoint_rejects_invalid_fasta_file():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(b"this is not fasta"),
+                "protein.fasta",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert "error" in data
+    assert data["error"]
+
+def test_analyze_endpoint_rejects_empty_fasta_file():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(b""),
+                "protein.fasta",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert "error" in data
+    assert data["error"]
+
+def test_analyze_endpoint_rejects_missing_fasta_file():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert "error" in data
+    assert data["error"]
