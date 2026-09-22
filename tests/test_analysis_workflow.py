@@ -7,6 +7,7 @@ from app.models.workflow_result import AnalysisWorkflowResult
 from app.models.analysis_result import ProteinAnalysisResult
 from app.models.localization import LocalizationEvidence
 from app.models.essentiality import EssentialityEvidence
+from app.models.host_similarity import HostSimilarityEvidence
 
 
 def test_analyze_fasta_records_returns_alignment_and_conservation():
@@ -411,4 +412,159 @@ MKTT
 
     assert serialized["protein_analyses"][1][
         "essentiality_evidence"
+    ] == []
+
+def test_analyze_fasta_records_attaches_host_similarity_evidence():
+    records = [
+        {"id": "protein_1", "sequence": "MKT"},
+        {"id": "protein_2", "sequence": "MKTT"},
+    ]
+
+    evidence = HostSimilarityEvidence(
+        target_id="protein_1",
+        host_id="host_protein_1",
+        similarity_method="BLAST",
+        identity_percentage=12.0,
+        alignment_length=180,
+        query_coverage_percentage=90.0,
+        subject_coverage_percentage=88.0,
+        e_value=0.01,
+        source="host_database",
+        confidence="low",
+        description="Relatively low sequence similarity.",
+    )
+
+    host_similarity_evidence = {
+        "protein_1": [evidence],
+        "protein_2": [],
+    }
+
+    result = analyze_fasta_records(
+        records,
+        host_similarity_evidence=host_similarity_evidence,
+    )
+
+    assert result.protein_analyses[0].host_similarity_evidence == [
+        evidence
+    ]
+    assert result.protein_analyses[1].host_similarity_evidence == []
+
+def test_analyze_fasta_records_keeps_host_similarity_evidence_with_correct_protein():
+    records = [
+        {"id": "protein_1", "sequence": "MKT"},
+        {"id": "protein_2", "sequence": "MKTT"},
+    ]
+
+    evidence = HostSimilarityEvidence(
+        target_id="protein_1",
+        host_id="host_protein_1",
+        similarity_method="BLAST",
+        identity_percentage=12.0,
+        alignment_length=180,
+        query_coverage_percentage=90.0,
+        subject_coverage_percentage=88.0,
+        e_value=0.01,
+        source="host_database",
+        confidence="low",
+        description="Relatively low sequence similarity.",
+    )
+
+    result = analyze_fasta_records(
+        records,
+        host_similarity_evidence={
+            "protein_1": [evidence],
+            "protein_2": [],
+        },
+    )
+
+    assert result.protein_analyses[0].host_similarity_evidence == [
+        evidence
+    ]
+    assert result.protein_analyses[1].host_similarity_evidence == []
+
+def test_analyze_fasta_accepts_host_similarity_evidence():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+"""
+
+    evidence = HostSimilarityEvidence(
+        target_id="protein_1",
+        host_id="host_protein_1",
+        similarity_method="BLAST",
+        identity_percentage=12.0,
+        alignment_length=180,
+        query_coverage_percentage=90.0,
+        subject_coverage_percentage=88.0,
+        e_value=0.01,
+        source="host_database",
+        confidence="low",
+        description="Relatively low sequence similarity.",
+    )
+
+    result = analyze_fasta(
+        fasta_text,
+        host_similarity_evidence={
+            "protein_1": [evidence],
+            "protein_2": [],
+        },
+    )
+
+    assert result.protein_analyses[0].host_similarity_evidence == [
+        evidence
+    ]
+    assert result.protein_analyses[1].host_similarity_evidence == []
+
+def test_analyze_fasta_serializes_host_similarity_evidence():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+"""
+
+    evidence = HostSimilarityEvidence(
+        target_id="protein_1",
+        host_id="host_protein_1",
+        similarity_method="BLAST",
+        identity_percentage=12.0,
+        alignment_length=180,
+        query_coverage_percentage=90.0,
+        subject_coverage_percentage=88.0,
+        e_value=0.01,
+        source="host_database",
+        confidence="low",
+        description="Relatively low sequence similarity.",
+    )
+
+    result = analyze_fasta(
+        fasta_text,
+        host_similarity_evidence={
+            "protein_1": [evidence],
+            "protein_2": [],
+        },
+    )
+
+    serialized = result.to_dict()
+
+    assert serialized["protein_analyses"][0][
+        "host_similarity_evidence"
+    ] == [
+        {
+            "target_id": "protein_1",
+            "host_id": "host_protein_1",
+            "similarity_method": "BLAST",
+            "identity_percentage": 12.0,
+            "alignment_length": 180,
+            "query_coverage_percentage": 90.0,
+            "subject_coverage_percentage": 88.0,
+            "e_value": 0.01,
+            "source": "host_database",
+            "confidence": "low",
+            "description": "Relatively low sequence similarity.",
+        }
+    ]
+
+    assert serialized["protein_analyses"][1][
+        "host_similarity_evidence"
     ] == []
