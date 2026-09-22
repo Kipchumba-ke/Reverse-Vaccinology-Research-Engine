@@ -1252,3 +1252,62 @@ def test_candidate_assessment_explains_concerns_status():
 
     assert assessment.status == "requires_further_review"
     assert "identified concerns" in assessment.rationale.lower()
+
+def test_candidate_assessment_distinguishes_low_host_similarity_from_meaningful_match():
+    host_similarity = create_host_similarity_evidence(
+        target_id="pathogen_protein_1",
+        host_id="human_protein_1",
+        similarity_method="BLASTP",
+        identity_percentage=12.0,
+        alignment_length=180,
+        query_coverage_percentage=85.0,
+        subject_coverage_percentage=80.0,
+        e_value=0.01,
+        source="Example database",
+        confidence="medium",
+        description="Relatively low sequence similarity.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_similarity],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "low" in evidence.lower()
+        and "host" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+    assert not any(
+        "broad host match" in evidence.lower()
+        for evidence in assessment.concerns
+    )
+
+def test_candidate_assessment_identifies_broad_high_identity_host_similarity():
+    host_similarity = create_host_similarity_evidence(
+        target_id="pathogen_protein_1",
+        host_id="human_protein_1",
+        similarity_method="BLASTP",
+        identity_percentage=85.0,
+        alignment_length=300,
+        query_coverage_percentage=90.0,
+        subject_coverage_percentage=88.0,
+        e_value=1e-50,
+        source="Example database",
+        confidence="high",
+        description="Broad high-identity host similarity.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_similarity],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "broad host-protein similarity" in concern.lower()
+        for concern in assessment.concerns
+    )
