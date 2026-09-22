@@ -316,3 +316,26 @@ def test_report_contains_candidate_assessment_rationale():
     assert "missing evidence" in (
         report["candidate_assessment"]["rationale"].lower()
     )
+
+def test_report_preserves_interpretation_confidence():
+    localization = create_localization_evidence(
+        location="outer_membrane",
+        source="Prediction database",
+        confidence="high",
+        description="Evidence supports outer membrane localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+    )
+
+    report = generate_protein_report(result)
+
+    localization_interpretation = next(
+        item
+        for item in report["interpretations"]
+        if item["category"] == "localization"
+    )
+
+    assert localization_interpretation["confidence"] == "high"
