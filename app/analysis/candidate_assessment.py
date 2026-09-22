@@ -447,15 +447,34 @@ def assess_candidate(
         )
 
     # Status
-    if missing_evidence:
+    if missing_evidence and concerns:
         status = "requires_further_review"
+        rationale = (
+            "The assessment requires further review because "
+            "identified concerns and missing evidence remain."
+        )
+    elif missing_evidence:
+        status = "requires_further_review"
+        rationale = (
+            "The assessment requires further review because "
+            "missing evidence remains."
+        )
     elif concerns:
         status = "requires_further_review"
+        rationale = (
+            "The assessment requires further review because "
+            "identified concerns remain."
+        )
     else:
         status = "evidence_compiled"
+        rationale = (
+            "The currently assessed evidence was compiled without "
+            "identified concerns or missing evidence."
+        )
 
     return CandidateAssessment(
         status=status,
+        rationale=rationale,
         supporting_evidence=supporting_evidence,
         concerns=concerns,
         missing_evidence=missing_evidence,

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class CandidateAssessment:
     status: str
+    rationale: str
     supporting_evidence: list[str]
     concerns: list[str]
     missing_evidence: list[str]
@@ -11,6 +12,7 @@ class CandidateAssessment:
     def to_dict(self) -> dict:
         return {
             "status": self.status,
+            "rationale": self.rationale,
             "supporting_evidence": self.supporting_evidence,
             "concerns": self.concerns,
             "missing_evidence": self.missing_evidence,

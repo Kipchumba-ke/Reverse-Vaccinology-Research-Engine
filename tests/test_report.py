@@ -306,3 +306,13 @@ def test_report_contains_essentiality_interpretation():
     assert "essential" in (
         essentiality_interpretation["interpretation"].lower()
     )
+
+def test_report_contains_candidate_assessment_rationale():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    report = generate_protein_report(result)
+
+    assert "rationale" in report["candidate_assessment"]
+    assert "missing evidence" in (
+        report["candidate_assessment"]["rationale"].lower()
+    )

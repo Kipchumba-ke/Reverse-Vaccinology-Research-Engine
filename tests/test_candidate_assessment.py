@@ -1053,3 +1053,202 @@ def test_candidate_assessment_requires_review_when_host_similarity_is_supplied()
         in evidence.lower()
         for evidence in assessment.concerns
     )
+
+def test_candidate_assessment_requires_review_when_localization_conflicts():
+    extracellular = create_localization_evidence(
+        location="extracellular",
+        source="PredictorA",
+        confidence="high",
+        description="Predicted extracellular localization.",
+    )
+
+    cytoplasm = create_localization_evidence(
+        location="cytoplasm",
+        source="PredictorB",
+        confidence="high",
+        description="Predicted cytoplasmic localization.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[
+            extracellular,
+            cytoplasm,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert assessment.status == "requires_further_review"
+    assert any(
+        "conflicting localization" in concern.lower()
+        for concern in assessment.concerns
+    )
+
+def test_candidate_assessment_requires_review_when_essentiality_conflicts():
+    essential = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Example bacterium",
+        essentiality_status="essential",
+        source="StudyA",
+        confidence="high",
+        description="Gene disruption prevented viable growth.",
+    )
+
+    non_essential = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Example bacterium",
+        essentiality_status="non-essential",
+        source="StudyB",
+        confidence="high",
+        description="Gene disruption did not affect viability.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        essentiality_evidence=[
+            essential,
+            non_essential,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert assessment.status == "requires_further_review"
+    assert any(
+        "conflicting essentiality" in concern.lower()
+        for concern in assessment.concerns
+    )
+
+def test_candidate_assessment_does_not_treat_short_high_identity_match_as_broad_similarity():
+    host_similarity = create_host_similarity_evidence(
+        target_id="pathogen_protein_1",
+        host_id="human_protein_1",
+        similarity_method="BLASTP",
+        identity_percentage=95.0,
+        alignment_length=20,
+        query_coverage_percentage=5.0,
+        subject_coverage_percentage=4.0,
+        e_value=1e-50,
+        source="Example database",
+        confidence="medium",
+        description="Short high-identity match.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        host_similarity_evidence=[host_similarity],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert any(
+        "5.0%" in concern
+        and "4.0%" in concern
+        for concern in assessment.concerns
+    )
+
+def test_candidate_assessment_combines_supporting_evidence_and_concerns():
+    localization = create_localization_evidence(
+        location="extracellular",
+        source="PredictionTool",
+        confidence="high",
+        description="Predicted extracellular localization.",
+    )
+
+    essentiality = create_essentiality_evidence(
+        gene_id="geneA",
+        organism="Example bacterium",
+        essentiality_status="essential",
+        source="KnockoutStudy",
+        confidence="high",
+        description="Gene disruption prevented viable growth.",
+    )
+
+    host_similarity = create_host_similarity_evidence(
+        target_id="pathogen_protein_1",
+        host_id="human_protein_1",
+        similarity_method="BLASTP",
+        identity_percentage=45.0,
+        alignment_length=220,
+        query_coverage_percentage=80.0,
+        subject_coverage_percentage=75.0,
+        e_value=1e-10,
+        source="Example database",
+        confidence="medium",
+        description="Reported host similarity.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+        essentiality_evidence=[essentiality],
+        host_similarity_evidence=[host_similarity],
+    )
+
+    assessment = assess_candidate(
+        result,
+        conservation_summary={
+            "conservation_percentage": 50.0,
+        },
+    )
+
+    assert assessment.status == "requires_further_review"
+
+    assert any(
+        "extracellular" in evidence.lower()
+        for evidence in assessment.supporting_evidence
+    )
+
+    assert any(
+        "essentiality" in evidence.lower()
+        for evidence in assessment.supporting_evidence
+    )
+
+    assert any(
+        "host match" in concern.lower()
+        for concern in assessment.concerns
+    )
+
+    assert not assessment.missing_evidence
+
+def test_candidate_assessment_explains_requires_review_status():
+    result = analyze_protein("MKTIIALSYIFCLVFAD")
+
+    assessment = assess_candidate(result)
+
+    assert assessment.status == "requires_further_review"
+    assert "missing evidence" in assessment.rationale.lower()
+
+def test_candidate_assessment_explains_concerns_status():
+    localization = create_localization_evidence(
+        location="extracellular",
+        source="PredictionTool",
+        confidence="high",
+        description="Predicted extracellular localization.",
+    )
+
+    host_similarity = create_host_similarity_evidence(
+        target_id="pathogen_protein_1",
+        host_id="human_protein_1",
+        similarity_method="BLASTP",
+        identity_percentage=45.0,
+        alignment_length=220,
+        query_coverage_percentage=80.0,
+        subject_coverage_percentage=75.0,
+        e_value=1e-10,
+        source="Example database",
+        confidence="medium",
+        description="Reported host similarity.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[localization],
+        host_similarity_evidence=[host_similarity],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert assessment.status == "requires_further_review"
+    assert "identified concerns" in assessment.rationale.lower()
