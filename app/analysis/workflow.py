@@ -5,7 +5,7 @@ from app.input.fasta import parse_fasta_records
 from app.analysis.pipeline import analyze_protein
 
 
-def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, list] | None = None,) -> AnalysisWorkflowResult:
+def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, list] | None = None,essentiality_evidence: dict[str, list] | None = None,) -> AnalysisWorkflowResult:
     if not records:
         raise ValueError(
             "At least one FASTA record is required."
@@ -17,12 +17,19 @@ def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, 
             )
         if localization_evidence is None:
             localization_evidence = {}
+
+        if essentiality_evidence is None:
+            essentiality_evidence = {}
     sequences = [record["sequence"] for record in records]
 
     protein_analyses = [
         analyze_protein(
             record["sequence"],
             localization_evidence=localization_evidence.get(
+                record["id"],
+                [],
+            ),
+            essentiality_evidence=essentiality_evidence.get(
                 record["id"],
                 [],
             ),
@@ -40,10 +47,11 @@ def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, 
         conservation=conservation,
     )
 
-def analyze_fasta(fasta_text: str, localization_evidence: dict[str, list] | None = None,) -> AnalysisWorkflowResult:
+def analyze_fasta(fasta_text: str, localization_evidence: dict[str, list] | None = None,essentiality_evidence: dict[str, list] | None = None,) -> AnalysisWorkflowResult:
     records = parse_fasta_records(fasta_text)
 
     return analyze_fasta_records(
         records,
-        localization_evidence=localization_evidence
+        localization_evidence=localization_evidence,
+        essentiality_evidence=essentiality_evidence
         )

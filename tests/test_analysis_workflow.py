@@ -6,6 +6,7 @@ from app.analysis.workflow import (
 from app.models.workflow_result import AnalysisWorkflowResult
 from app.models.analysis_result import ProteinAnalysisResult
 from app.models.localization import LocalizationEvidence
+from app.models.essentiality import EssentialityEvidence
 
 
 def test_analyze_fasta_records_returns_alignment_and_conservation():
@@ -286,4 +287,128 @@ MKTT
 
     assert serialized["protein_analyses"][1][
         "localization_evidence"
+    ] == []
+
+def test_analyze_fasta_records_attaches_essentiality_evidence():
+    records = [
+        {"id": "protein_1", "sequence": "MKT"},
+        {"id": "protein_2", "sequence": "MKTT"},
+    ]
+
+    evidence = EssentialityEvidence(
+        gene_id="gene_1",
+        organism="Test organism",
+        essentiality_status="essential",
+        source="experimental",
+        confidence="high",
+        description="Required for survival.",
+    )
+
+    essentiality_evidence = {
+        "protein_1": [evidence],
+        "protein_2": [],
+    }
+
+    result = analyze_fasta_records(
+        records,
+        essentiality_evidence=essentiality_evidence,
+    )
+
+    assert result.protein_analyses[0].essentiality_evidence == [evidence]
+    assert result.protein_analyses[1].essentiality_evidence == []
+
+def test_analyze_fasta_records_keeps_essentiality_evidence_with_correct_protein():
+    records = [
+        {"id": "protein_1", "sequence": "MKT"},
+        {"id": "protein_2", "sequence": "MKTT"},
+    ]
+
+    evidence = EssentialityEvidence(
+        gene_id="gene_1",
+        organism="Test organism",
+        essentiality_status="essential",
+        source="experimental",
+        confidence="high",
+        description="Required for survival.",
+    )
+
+    result = analyze_fasta_records(
+        records,
+        essentiality_evidence={
+            "protein_1": [evidence],
+            "protein_2": [],
+        },
+    )
+
+    assert result.protein_analyses[0].essentiality_evidence == [evidence]
+    assert result.protein_analyses[1].essentiality_evidence == []
+
+def test_analyze_fasta_accepts_essentiality_evidence():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+"""
+
+    evidence = EssentialityEvidence(
+        gene_id="gene_1",
+        organism="Test organism",
+        essentiality_status="essential",
+        source="experimental",
+        confidence="high",
+        description="Required for survival.",
+    )
+
+    result = analyze_fasta(
+        fasta_text,
+        essentiality_evidence={
+            "protein_1": [evidence],
+            "protein_2": [],
+        },
+    )
+
+    assert result.protein_analyses[0].essentiality_evidence == [evidence]
+    assert result.protein_analyses[1].essentiality_evidence == []
+
+def test_analyze_fasta_serializes_essentiality_evidence():
+    fasta_text = """>protein_1
+MKT
+>protein_2
+MKTT
+"""
+
+    evidence = EssentialityEvidence(
+        gene_id="gene_1",
+        organism="Test organism",
+        essentiality_status="essential",
+        source="experimental",
+        confidence="high",
+        description="Required for survival.",
+    )
+
+    result = analyze_fasta(
+        fasta_text,
+        essentiality_evidence={
+            "protein_1": [evidence],
+            "protein_2": [],
+        },
+    )
+
+    serialized = result.to_dict()
+
+    assert serialized["protein_analyses"][0][
+        "essentiality_evidence"
+    ] == [
+        {
+            "gene_id": "gene_1",
+            "organism": "Test organism",
+            "essentiality_status": "essential",
+            "source": "experimental",
+            "confidence": "high",
+            "description": "Required for survival.",
+        }
+    ]
+
+    assert serialized["protein_analyses"][1][
+        "essentiality_evidence"
     ] == []
