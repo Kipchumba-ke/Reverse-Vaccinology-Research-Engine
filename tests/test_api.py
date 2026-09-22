@@ -187,3 +187,29 @@ def test_analyze_endpoint_rejects_missing_fasta_file():
 
     assert "error" in data
     assert data["error"]
+
+def test_analyze_endpoint_accepts_multi_record_fasta_file():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(
+                    b">protein_1\nMKTIIALSYIFCLVFAD\n"
+                    b">protein_2\nMKTIIALSYIFCLVFAG\n"
+                ),
+                "proteins.fasta",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert len(data["protein_analyses"]) == 2
+    assert data["protein_analyses"][0]["protein_id"] == "protein_1"
+    assert data["protein_analyses"][1]["protein_id"] == "protein_2"
