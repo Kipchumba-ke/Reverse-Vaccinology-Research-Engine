@@ -28,3 +28,6 @@ Thumbs.db
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
+
+# Alembic local configuration
+alembic.ini
