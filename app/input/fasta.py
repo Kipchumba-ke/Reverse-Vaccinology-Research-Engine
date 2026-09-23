@@ -27,6 +27,14 @@ def _extract_organism(description: str) -> str | None:
     return organism or None
 
 
+def _extract_accession(sequence_id: str) -> str | None:
+    parts = sequence_id.split("|")
+
+    if len(parts) == 3 and parts[0] == "sp":
+        return parts[1]
+
+    return None
+
 def parse_fasta(fasta_text: str) -> dict:
     lines = [
         line.strip()
@@ -125,5 +133,6 @@ def _build_fasta_record(
         "id": sequence_id,
         "description": description,
         "organism": _extract_organism(description),
+        "accession": _extract_accession(sequence_id),
         "sequence": sequence,
     }

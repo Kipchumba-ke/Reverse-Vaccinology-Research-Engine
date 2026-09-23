@@ -127,18 +127,21 @@ MKT
             "id": "protein_1",
             "description": "",
             "organism": None,
+            "accession": None,
             "sequence": "MKT"
         },
         {
             "id": "protein_2",
             "description": "",
             "organism": None,
+            "accession": None,
             "sequence": "MKTT"
         },
         {
             "id": "protein_3",
             "description": "",
             "organism": None,
+            "accession": None,
             "sequence": "MKT"
         },
     ]
@@ -583,3 +586,23 @@ MKTT
     assert serialized["protein_analyses"][1][
         "host_similarity_evidence"
     ] == []
+
+def test_analyze_fasta_records_preserves_protein_metadata():
+    records = [
+        {
+            "id": "sp|P12345|EXAMPLE_PROTEIN",
+            "description": "Example protein OS=Escherichia coli",
+            "organism": "Escherichia coli",
+            "accession": "P12345",
+            "sequence": "MKTIIALSYIFCLVFAD",
+        },
+    ]
+
+    result = analyze_fasta_records(records)
+
+    analysis = result.protein_analyses[0]
+
+    assert analysis.protein_id == "sp|P12345|EXAMPLE_PROTEIN"
+    assert analysis.protein_name == "Example protein OS=Escherichia coli"
+    assert analysis.organism == "Escherichia coli"
+    assert analysis.accession == "P12345"

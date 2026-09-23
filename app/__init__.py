@@ -28,6 +28,7 @@ def create_app():
                         protein_id=record["id"],
                         protein_name=record["description"],
                         organism=record["organism"],
+                        accession=record["accession"],
                     )
                     report = generate_protein_report(result)
                     return report, 200

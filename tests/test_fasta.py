@@ -114,17 +114,21 @@ MKT
             "id": "protein_1",
             "description": "",
             "organism": None,
-            "sequence": "MKT"},
+            "accession": None,
+            "sequence": "MKT"
+        },
         {
             "id": "protein_2",
             "description": "",
             "organism": None,
+            "accession": None,
             "sequence": "MKTT",
         },
         {
             "id": "protein_3",
             "description": "",
             "organism": None,
+            "accession": None,
             "sequence": "MKT"
         },
     ]
@@ -152,6 +156,7 @@ MKT
     ):
         parse_fasta_records(fasta_text)
 
+
 def test_parse_fasta_records_rejects_invalid_sequence():
     fasta_text = """>protein_1
 MKT
@@ -164,6 +169,7 @@ MKXZ
         match="Invalid amino acid characters found",
     ):
         parse_fasta_records(fasta_text)
+
 
 def test_parse_fasta_records_can_feed_msa():
     from app.analysis.msa import align_sequences
@@ -186,6 +192,7 @@ MKT
         "MKTT",
         "MK-T",
     ]
+
 
 def test_parse_fasta_records_can_feed_msa_and_conservation():
     from app.analysis.conservation import calculate_conservation_summary
@@ -223,6 +230,7 @@ def test_parse_fasta_preserves_header_description():
     assert record["id"] == "protein_123"
     assert record["description"] == "Example protein"
 
+
 def test_parse_fasta_extracts_organism_from_description():
     fasta_text = (
         ">protein_123 Example protein OS=Escherichia coli\n"
@@ -234,3 +242,17 @@ def test_parse_fasta_extracts_organism_from_description():
     assert record["id"] == "protein_123"
     assert record["description"] == "Example protein OS=Escherichia coli"
     assert record["organism"] == "Escherichia coli"
+
+
+def test_parse_fasta_extracts_accession_from_uniprot_style_header():
+    fasta_text = (
+        ">sp|P12345|EXAMPLE_PROTEIN Example protein OS=Escherichia coli\n"
+        "MKTIIALSYIFCLVFAD\n"
+    )
+
+    record = parse_fasta(fasta_text)
+
+    assert record["id"] == "sp|P12345|EXAMPLE_PROTEIN"
+    assert record["description"] == "Example protein OS=Escherichia coli"
+    assert record["organism"] == "Escherichia coli"
+    assert record["accession"] == "P12345"

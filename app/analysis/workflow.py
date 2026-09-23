@@ -41,6 +41,9 @@ def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, 
                 [],
             ),
             protein_id=record["id"],
+            protein_name=record.get("description"),
+            organism=record.get("organism"),
+            accession=record.get("accession"),
         )
         for record in records
     ]
