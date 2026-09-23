@@ -1,5 +1,6 @@
 from app import create_app
 import io
+import pytest
 
 
 def test_create_app_returns_flask_application():
@@ -353,3 +354,297 @@ def test_analyze_endpoint_preserves_fasta_accession():
 
     assert data["protein"]["id"] == "sp|P12345|EXAMPLE_PROTEIN"
     assert data["protein"]["accession"] == "P12345"
+
+def test_analyze_endpoint_rejects_non_string_sequence():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": 12345},
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert "error" in data
+    assert data["error"] == "Protein sequence must be a string."
+
+def test_analyze_endpoint_rejects_null_sequence():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": None},
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert "error" in data
+    assert data["error"] == "Protein sequence must be a string."
+
+def test_analyze_endpoint_rejects_unsupported_content_type():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data="MKTIIALSYIFCLVFAD",
+        content_type="text/plain",
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert data["error"] == "JSON request body is required."
+
+def test_analyze_endpoint_rejects_malformed_json():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data='{"sequence": ',
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert data["error"] == "JSON request body is required."
+
+def test_analyze_endpoint_rejects_fasta_file_without_filename():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(b">protein_123\nMKTIIALSYIFCLVFAD\n"),
+                "",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert data["error"] == "FASTA file is required."
+
+def test_analyze_endpoint_returns_consistent_error_structure_for_invalid_json():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": "MKTIIALSYIFCLVF1D"},
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert set(data) == {"error"}
+    assert isinstance(data["error"], str)
+    assert data["error"]
+
+def test_analyze_endpoint_returns_stable_protein_response_structure():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": "MKTIIALSYIFCLVFAD"},
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert set(data) == {
+        "protein",
+        "measurements",
+        "evidence",
+        "interpretations",
+        "candidate_assessment",
+        "limitations",
+        "conservation",
+        "metadata",
+    }
+
+def test_analyze_endpoint_rejects_oversized_upload():
+    app = create_app()
+    app.config["MAX_CONTENT_LENGTH"] = 100
+
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(
+                    b">protein_123\n"
+                    b"MKTIIALSYIFCLVFAD\n"
+                ),
+                "protein.fasta",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 413
+
+    data = response.get_json()
+
+    assert data["error"]
+
+def test_analyze_endpoint_rejects_unsupported_file_type():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(b">protein_123\nMKTIIALSYIFCLVFAD\n"),
+                "protein.txt",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert data["error"] == "Unsupported file type. FASTA files are required."
+
+@pytest.mark.parametrize(
+    "filename",
+    ["protein.fasta", "protein.fa", "protein.fna"],
+)
+def test_analyze_endpoint_accepts_supported_fasta_extensions(filename):
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(
+                    b">protein_123\n"
+                    b"MKTIIALSYIFCLVFAD\n"
+                ),
+                filename,
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["protein"]["id"] == "protein_123"
+
+@pytest.mark.parametrize(
+    "filename",
+    ["protein.FASTA", "protein.Fa", "protein.FNA"],
+)
+def test_analyze_endpoint_accepts_case_insensitive_fasta_extensions(filename):
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(
+                    b">protein_123\n"
+                    b"MKTIIALSYIFCLVFAD\n"
+                ),
+                filename,
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["protein"]["id"] == "protein_123"
+
+def test_analyze_v1_endpoint_returns_protein_report():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/v1/analyze",
+        json={"sequence": "MKTIIALSYIFCLVFAD"},
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert "protein" in data
+    assert "measurements" in data
+    assert "evidence" in data
+    assert "interpretations" in data
+    assert "candidate_assessment" in data
+    assert "limitations" in data
+    assert "conservation" in data
+    assert "metadata" in data
+
+def test_analyze_endpoint_remains_available_after_api_versioning():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": "MKTIIALSYIFCLVFAD"},
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert "protein" in data
+    assert "measurements" in data
+    assert "evidence" in data
+    assert "interpretations" in data
+    assert "candidate_assessment" in data
+    assert "limitations" in data
+    assert "conservation" in data
+    assert "metadata" in data
+
+def test_analyze_api_versions_return_equivalent_responses():
+    app = create_app()
+    client = app.test_client()
+
+    payload = {"sequence": "MKTIIALSYIFCLVFAD"}
+
+    legacy_response = client.post(
+        "/api/analyze",
+        json=payload,
+    )
+
+    v1_response = client.post(
+        "/api/v1/analyze",
+        json=payload,
+    )
+
+    assert legacy_response.status_code == 200
+    assert v1_response.status_code == 200
+
+    assert legacy_response.get_json() == v1_response.get_json()

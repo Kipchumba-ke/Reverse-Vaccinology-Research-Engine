@@ -2,20 +2,31 @@ from flask import Flask, request
 
 from app.analysis.pipeline import analyze_protein
 from app.reporting.report import generate_protein_report
-from app.input.fasta import parse_fasta, parse_fasta_records
+from app.input.fasta import parse_fasta_records
 from app.analysis.workflow import analyze_fasta_records
+from werkzeug.exceptions import RequestEntityTooLarge
 
 
 def create_app():
     app = Flask(__name__)
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_request_entity_too_large(error):
+        return {"error": "Request payload is too large."}, 413
 
     @app.post("/api/analyze")
+    @app.post("/api/v1/analyze")
     def analyze():
         if "file" in request.files:
             uploaded_file = request.files["file"]
 
             if not uploaded_file.filename:
                 return {"error": "FASTA file is required."}, 400
+
+            filename = uploaded_file.filename.lower()
+            if not filename.endswith((".fasta", ".fa", ".fna")):
+                return {
+                    "error": "Unsupported file type. FASTA files are required."
+                }, 400
 
             try:
                 fasta_text = uploaded_file.read().decode("utf-8")
@@ -53,7 +64,7 @@ def create_app():
                 organism=data.get("organism"),
                 accession=data.get("accession"),
             )
-        except ValueError as error:
+        except (TypeError, ValueError) as error:
             return {"error": str(error)}, 400
         report = generate_protein_report(result)
 
