@@ -1,13 +1,16 @@
 from flask import Flask, request
 
-from app.services.analysis_service import analyze_sequence
+from app.services.analysis_service import (
+    analyze_sequence,
+    analyze_fasta_records,
+)
 from app.input.fasta import parse_fasta_records
-from app.analysis.workflow import analyze_fasta_records
 from werkzeug.exceptions import RequestEntityTooLarge
 
 
 def create_app():
     app = Flask(__name__)
+
     @app.errorhandler(RequestEntityTooLarge)
     def handle_request_entity_too_large(error):
         return {"error": "Request payload is too large."}, 413
@@ -31,19 +34,9 @@ def create_app():
                 fasta_text = uploaded_file.read().decode("utf-8")
                 records = parse_fasta_records(fasta_text)
 
-                if len(records) == 1:
-                    record = records[0]
-                    result = analyze_sequence(
-                        record["sequence"],
-                        protein_id=record["id"],
-                        protein_name=record["description"],
-                        organism=record["organism"],
-                        accession=record["accession"],
-                    )
-                    return result, 200
+                result = analyze_fasta_records(records)
 
-                workflow_result = analyze_fasta_records(records)
-                return workflow_result.to_dict(), 200
+                return result, 200
 
             except (UnicodeDecodeError, ValueError) as error:
                 return {"error": str(error)}, 400
@@ -64,7 +57,6 @@ def create_app():
             )
         except (TypeError, ValueError) as error:
             return {"error": str(error)}, 400
-        
 
         return report, 200
 
