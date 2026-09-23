@@ -1,7 +1,6 @@
 from flask import Flask, request
 
-from app.analysis.pipeline import analyze_protein
-from app.reporting.report import generate_protein_report
+from app.services.analysis_service import analyze_sequence
 from app.input.fasta import parse_fasta_records
 from app.analysis.workflow import analyze_fasta_records
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -34,15 +33,14 @@ def create_app():
 
                 if len(records) == 1:
                     record = records[0]
-                    result = analyze_protein(
+                    result = analyze_sequence(
                         record["sequence"],
                         protein_id=record["id"],
                         protein_name=record["description"],
                         organism=record["organism"],
                         accession=record["accession"],
                     )
-                    report = generate_protein_report(result)
-                    return report, 200
+                    return result, 200
 
                 workflow_result = analyze_fasta_records(records)
                 return workflow_result.to_dict(), 200
@@ -57,7 +55,7 @@ def create_app():
             return {"error": "Sequence is required."}, 400
 
         try:
-            result = analyze_protein(
+            report = analyze_sequence(
                 data["sequence"],
                 protein_id=data.get("protein_id"),
                 protein_name=data.get("protein_name"),
@@ -66,7 +64,7 @@ def create_app():
             )
         except (TypeError, ValueError) as error:
             return {"error": str(error)}, 400
-        report = generate_protein_report(result)
+        
 
         return report, 200
 
