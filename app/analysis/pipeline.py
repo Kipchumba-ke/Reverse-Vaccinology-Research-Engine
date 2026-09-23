@@ -31,6 +31,8 @@ def analyze_protein(
     essentiality_evidence = None,
     host_similarity_evidence = None,
     protein_id: str | None = None,
+    protein_name: str | None = None,
+    organism: str | None = None,
 ) -> ProteinAnalysisResult:
     """
     Run the complete protein analysis pipeline.
@@ -126,4 +128,6 @@ def analyze_protein(
         essentiality_evidence=essentiality_evidence,
         host_similarity_evidence=host_similarity_evidence,
         protein_id=protein_id,
+        protein_name=protein_name,
+        organism=organism,
     )

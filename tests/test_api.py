@@ -213,3 +213,43 @@ def test_analyze_endpoint_accepts_multi_record_fasta_file():
     assert len(data["protein_analyses"]) == 2
     assert data["protein_analyses"][0]["protein_id"] == "protein_1"
     assert data["protein_analyses"][1]["protein_id"] == "protein_2"
+
+
+def test_analyze_endpoint_preserves_protein_name():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={
+            "sequence": "MKTIIALSYIFCLVFAD",
+            "protein_id": "protein_1",
+            "protein_name": "Example protein",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["protein"]["name"] == "Example protein"
+
+def test_analyze_endpoint_preserves_organism():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={
+            "sequence": "MKTIIALSYIFCLVFAD",
+            "protein_id": "protein_1",
+            "protein_name": "Example protein",
+            "organism": "Example organism",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["protein"]["organism"] == "Example organism"

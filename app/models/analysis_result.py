@@ -19,6 +19,8 @@ class ProteinAnalysisResult:
     essentiality_evidence : list[EssentialityEvidence]
     host_similarity_evidence: list[HostSimilarityEvidence]
     protein_id: str | None = None
+    protein_name: str | None = None
+    organism: str | None = None
 
 
     def to_dict(self) -> dict:
@@ -54,4 +56,6 @@ class ProteinAnalysisResult:
                 for evidence in self.host_similarity_evidence
             ],
             "protein_id": self.protein_id,
+            "protein_name": self.protein_name,
+            "organism": self.organism,
         }

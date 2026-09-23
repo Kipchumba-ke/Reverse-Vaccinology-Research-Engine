@@ -46,6 +46,8 @@ def create_app():
             result = analyze_protein(
                 data["sequence"],
                 protein_id=data.get("protein_id"),
+                protein_name=data.get("protein_name"),
+                organism=data.get("organism"),
             )
         except ValueError as error:
             return {"error": str(error)}, 400
