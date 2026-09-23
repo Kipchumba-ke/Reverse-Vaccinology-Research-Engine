@@ -33,6 +33,7 @@ def analyze_protein(
     protein_id: str | None = None,
     protein_name: str | None = None,
     organism: str | None = None,
+    accession: str | None = None,
 ) -> ProteinAnalysisResult:
     """
     Run the complete protein analysis pipeline.
@@ -130,4 +131,5 @@ def analyze_protein(
         protein_id=protein_id,
         protein_name=protein_name,
         organism=organism,
+        accession=accession,
     )

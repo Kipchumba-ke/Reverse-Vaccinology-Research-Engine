@@ -75,6 +75,7 @@ def generate_protein_report(
             "id": result.protein_id,
             "name": result.protein_name,
             "organism": result.organism,
+            "accession": result.accession,
             "sequence": result.sequence,
             "length": result.length,
             "molecular_weight": result.molecular_weight,

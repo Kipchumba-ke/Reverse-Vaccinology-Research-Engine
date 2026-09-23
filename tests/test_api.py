@@ -253,3 +253,25 @@ def test_analyze_endpoint_preserves_organism():
     data = response.get_json()
 
     assert data["protein"]["organism"] == "Example organism"
+
+
+def test_analyze_endpoint_preserves_accession():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={
+            "sequence": "MKTIIALSYIFCLVFAD",
+            "protein_id": "protein_1",
+            "protein_name": "Example protein",
+            "organism": "Example organism",
+            "accession": "ABC123",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["protein"]["accession"] == "ABC123"

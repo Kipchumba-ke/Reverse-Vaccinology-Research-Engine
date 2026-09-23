@@ -48,6 +48,7 @@ def create_app():
                 protein_id=data.get("protein_id"),
                 protein_name=data.get("protein_name"),
                 organism=data.get("organism"),
+                accession=data.get("accession"),
             )
         except ValueError as error:
             return {"error": str(error)}, 400
