@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import inspect
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 
@@ -46,3 +48,32 @@ def test_analysis_model_id_uses_postgresql_uuid():
 
     assert isinstance(id_column.type, PostgreSQLUUID)
     assert id_column.type.as_uuid is True
+
+
+def test_analysis_model_generates_uuid_when_id_is_not_provided():
+    analysis = AnalysisModel(
+        sequence="MKTAYIAKQRQISFVKSHFSRQ",
+        status="pending",
+    )
+
+    assert analysis.id is not None
+    assert isinstance(analysis.id, uuid.UUID)
+
+def test_analysis_model_preserves_explicit_uuid():
+    analysis_id = uuid.uuid4()
+
+    analysis = AnalysisModel(
+        id=analysis_id,
+        sequence="MKTAYIAKQRQISFVKSHFSRQ",
+        status="pending",
+    )
+
+    assert analysis.id == analysis_id
+
+
+def test_analysis_model_defaults_status_to_pending():
+    analysis = AnalysisModel(
+        sequence="MKTAYIAKQRQISFVKSHFSRQ",
+    )
+
+    assert analysis.status == "pending"

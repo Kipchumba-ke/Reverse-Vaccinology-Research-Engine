@@ -12,7 +12,8 @@ class AnalysisModel(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(
         PostgreSQLUUID(as_uuid=True),
-        primary_key=True
+        primary_key=True,
+        default=uuid.uuid4,
     )
     protein_id: Mapped[str | None] = mapped_column(String(255))
     protein_name: Mapped[str | None] = mapped_column(String(255))
@@ -24,3 +25,8 @@ class AnalysisModel(Base):
         nullable=False,
         default="pending",
     )
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("id", uuid.uuid4())
+        kwargs.setdefault("status", "pending")
+        super().__init__(**kwargs)
