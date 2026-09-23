@@ -15,6 +15,18 @@ def analyze_fasta_file(path: str | Path):
         protein_id=record["id"],
     )
 
+
+def _extract_organism(description: str) -> str | None:
+    marker = "OS="
+
+    if marker not in description:
+        return None
+
+    organism = description.split(marker, 1)[1].strip()
+
+    return organism or None
+
+
 def parse_fasta(fasta_text: str) -> dict:
     lines = [
         line.strip()
@@ -47,6 +59,7 @@ def parse_fasta_records(fasta_text: str) -> list[dict]:
 
     records = []
     current_id = None
+    current_description = ""
     current_sequence = []
 
     for line in lines:
@@ -56,10 +69,19 @@ def parse_fasta_records(fasta_text: str) -> list[dict]:
                     _build_fasta_record(
                         current_id,
                         current_sequence,
+                        current_description,
                     )
                 )
 
-            current_id = line[1:].strip()
+            header = line[1:].strip()
+            if not header:
+                raise ValueError(
+                    "FASTA identifier cannot be empty."
+                )
+            parts = header.split(maxsplit=1)
+
+            current_id = parts[0]
+            current_description = parts[1] if len(parts) > 1 else ""
 
             if not current_id:
                 raise ValueError(
@@ -80,6 +102,7 @@ def parse_fasta_records(fasta_text: str) -> list[dict]:
         _build_fasta_record(
             current_id,
             current_sequence,
+            current_description,
         )
     )
 
@@ -89,6 +112,7 @@ def parse_fasta_records(fasta_text: str) -> list[dict]:
 def _build_fasta_record(
     sequence_id: str,
     sequence_parts: list[str],
+    description: str = "",
 ) -> dict:
     if not sequence_parts:
         raise ValueError("FASTA sequence cannot be empty.")
@@ -99,5 +123,7 @@ def _build_fasta_record(
 
     return {
         "id": sequence_id,
+        "description": description,
+        "organism": _extract_organism(description),
         "sequence": sequence,
     }

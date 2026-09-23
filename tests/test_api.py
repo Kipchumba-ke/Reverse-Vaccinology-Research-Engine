@@ -275,3 +275,56 @@ def test_analyze_endpoint_preserves_accession():
     data = response.get_json()
 
     assert data["protein"]["accession"] == "ABC123"
+
+
+def test_analyze_endpoint_preserves_fasta_description():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(
+                    b">protein_123 Example protein\n"
+                    b"MKTIIALSYIFCLVFAD\n"
+                ),
+                "protein.fasta",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["protein"]["id"] == "protein_123"
+    assert data["protein"]["name"] == "Example protein"
+
+
+def test_analyze_endpoint_preserves_fasta_organism():
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        data={
+            "file": (
+                io.BytesIO(
+                    b">protein_123 Example protein OS=Escherichia coli\n"
+                    b"MKTIIALSYIFCLVFAD\n"
+                ),
+                "protein.fasta",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["protein"]["id"] == "protein_123"
+    assert data["protein"]["name"] == "Example protein OS=Escherichia coli"
+    assert data["protein"]["organism"] == "Escherichia coli"

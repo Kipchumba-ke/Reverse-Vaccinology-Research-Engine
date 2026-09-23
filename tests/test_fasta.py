@@ -110,9 +110,23 @@ MKT
     result = parse_fasta_records(fasta_text)
 
     assert result == [
-        {"id": "protein_1", "sequence": "MKT"},
-        {"id": "protein_2", "sequence": "MKTT"},
-        {"id": "protein_3", "sequence": "MKT"},
+        {
+            "id": "protein_1",
+            "description": "",
+            "organism": None,
+            "sequence": "MKT"},
+        {
+            "id": "protein_2",
+            "description": "",
+            "organism": None,
+            "sequence": "MKTT",
+        },
+        {
+            "id": "protein_3",
+            "description": "",
+            "organism": None,
+            "sequence": "MKT"
+        },
     ]
 
 def test_parse_fasta_records_rejects_missing_sequence():
@@ -196,3 +210,27 @@ MKT
     assert summary.conserved_positions == 3
     assert summary.conservation_percentage == 75.0
     assert summary.mean_identity == 100.0
+
+
+def test_parse_fasta_preserves_header_description():
+    fasta_text = (
+        ">protein_123 Example protein\n"
+        "MKTIIALSYIFCLVFAD\n"
+    )
+
+    record = parse_fasta(fasta_text)
+
+    assert record["id"] == "protein_123"
+    assert record["description"] == "Example protein"
+
+def test_parse_fasta_extracts_organism_from_description():
+    fasta_text = (
+        ">protein_123 Example protein OS=Escherichia coli\n"
+        "MKTIIALSYIFCLVFAD\n"
+    )
+
+    record = parse_fasta(fasta_text)
+
+    assert record["id"] == "protein_123"
+    assert record["description"] == "Example protein OS=Escherichia coli"
+    assert record["organism"] == "Escherichia coli"

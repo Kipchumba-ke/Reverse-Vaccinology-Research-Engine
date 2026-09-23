@@ -123,9 +123,24 @@ MKT
     result = analyze_fasta(fasta_text)
 
     assert result.records == [
-        {"id": "protein_1", "sequence": "MKT"},
-        {"id": "protein_2", "sequence": "MKTT"},
-        {"id": "protein_3", "sequence": "MKT"},
+        {
+            "id": "protein_1",
+            "description": "",
+            "organism": None,
+            "sequence": "MKT"
+        },
+        {
+            "id": "protein_2",
+            "description": "",
+            "organism": None,
+            "sequence": "MKTT"
+        },
+        {
+            "id": "protein_3",
+            "description": "",
+            "organism": None,
+            "sequence": "MKT"
+        },
     ]
 
     assert result.alignment == [

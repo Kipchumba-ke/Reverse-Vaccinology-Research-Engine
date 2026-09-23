@@ -26,6 +26,8 @@ def create_app():
                     result = analyze_protein(
                         record["sequence"],
                         protein_id=record["id"],
+                        protein_name=record["description"],
+                        organism=record["organism"],
                     )
                     report = generate_protein_report(result)
                     return report, 200
