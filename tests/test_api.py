@@ -1,6 +1,10 @@
-from app import create_app
+from app import (
+    create_app,
+    create_repository,
+)
 import io
 import pytest
+from app.repositories.analysis_repository import AnalysisRepository
 
 
 def test_create_app_returns_flask_application():
@@ -648,3 +652,176 @@ def test_analyze_api_versions_return_equivalent_responses():
     assert v1_response.status_code == 200
 
     assert legacy_response.get_json() == v1_response.get_json()
+
+
+def test_create_app_accepts_analysis_repository():
+    repository = object()
+
+    app = create_app(repository=repository)
+
+    assert app is not None
+
+
+def test_analyze_endpoint_uses_analysis_repository():
+    class FakeSession:
+        def commit(self):
+            pass
+
+        def rollback(self):
+            pass
+
+
+    class FakeRepository:
+        def __init__(self):
+            self.session = FakeSession()
+            self.saved = []
+
+        def save(self, analysis):
+            self.saved.append(analysis)
+            return analysis
+
+    repository = FakeRepository()
+
+    app = create_app(repository=repository)
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={
+            "sequence": "MKTIIALSYIFCLVFAD",
+            "protein_id": "protein_123",
+            "protein_name": "Example protein",
+            "organism": "Example organism",
+            "accession": "ABC123",
+        },
+    )
+
+    assert response.status_code == 200
+    assert len(repository.saved) == 1
+
+    saved = repository.saved[0]
+
+    assert saved.protein_id == "protein_123"
+    assert saved.protein_name == "Example protein"
+    assert saved.organism == "Example organism"
+    assert saved.accession == "ABC123"
+    assert saved.sequence == "MKTIIALSYIFCLVFAD"
+
+
+def test_create_app_builds_default_analysis_repository(monkeypatch):
+    class FakeSession:
+        pass
+
+    class FakeSessionFactory:
+        def __call__(self):
+            return FakeSession()
+
+    fake_session_factory = FakeSessionFactory()
+
+    monkeypatch.setattr(
+        "app.create_database_engine_from_environment",
+        lambda: object(),
+    )
+
+    monkeypatch.setattr(
+        "app.create_session_factory",
+        lambda engine: fake_session_factory,
+    )
+
+    app = create_app()
+
+    assert app.config["ANALYSIS_REPOSITORY"] is not None
+
+
+def test_create_repository_builds_analysis_repository(monkeypatch):
+    class FakeSession:
+        pass
+
+    class FakeSessionFactory:
+        def __call__(self):
+            return FakeSession()
+
+    fake_session_factory = FakeSessionFactory()
+
+    monkeypatch.setattr(
+        "app.create_database_engine_from_environment",
+        lambda: object(),
+    )
+
+    monkeypatch.setattr(
+        "app.create_session_factory",
+        lambda engine: fake_session_factory,
+    )
+
+    repository = create_repository()
+
+    assert isinstance(repository, AnalysisRepository)
+
+
+def test_analyze_endpoint_commits_successful_analysis():
+    class FakeSession:
+        def __init__(self):
+            self.committed = False
+
+        def commit(self):
+            self.committed = True
+
+    class FakeRepository:
+        def __init__(self):
+            self.session = FakeSession()
+            self.saved = []
+
+        def save(self, analysis):
+            self.saved.append(analysis)
+            return analysis
+
+    repository = FakeRepository()
+    app = create_app(repository=repository)
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": "MKTIIALSYIFCLVFAD"},
+    )
+
+    assert response.status_code == 200
+    assert repository.session.committed is True
+
+def test_analyze_endpoint_rolls_back_failed_analysis():
+    class FakeSession:
+        def __init__(self):
+            self.rolled_back = False
+
+        def commit(self):
+            raise AssertionError("commit should not be called")
+
+        def rollback(self):
+            self.rolled_back = True
+
+    class FakeRepository:
+        def __init__(self):
+            self.session = FakeSession()
+            self.saved = []
+
+        def save(self, analysis):
+            self.saved.append(analysis)
+            return analysis
+
+    repository = FakeRepository()
+    app = create_app(repository=repository)
+
+    from unittest.mock import patch
+
+    with patch(
+        "app.run_analysis",
+        side_effect=ValueError("analysis failed"),
+    ):
+        client = app.test_client()
+
+        response = client.post(
+            "/api/analyze",
+            json={"sequence": "MKTIIALSYIFCLVFAD"},
+        )
+
+    assert response.status_code == 400
+    assert repository.session.rolled_back is True

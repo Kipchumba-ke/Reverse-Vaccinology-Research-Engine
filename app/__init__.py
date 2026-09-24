@@ -1,15 +1,31 @@
 from flask import Flask, request
 
+from app.database import (
+    create_database_engine_from_environment,
+    create_session_factory,
+)
+from app.repositories.analysis_repository import AnalysisRepository
 from app.services.analysis_service import (
     analyze_sequence,
     analyze_fasta_records,
+    run_analysis
 )
 from app.input.fasta import parse_fasta_records
 from werkzeug.exceptions import RequestEntityTooLarge
 
 
-def create_app():
+def create_repository():
+    engine = create_database_engine_from_environment()
+    session_factory = create_session_factory(engine)
+    session = session_factory()
+    return AnalysisRepository(session)
+
+def create_app(repository=None):
     app = Flask(__name__)
+    if repository is None:
+        repository = create_repository()
+
+    app.config["ANALYSIS_REPOSITORY"] = repository
 
     @app.errorhandler(RequestEntityTooLarge)
     def handle_request_entity_too_large(error):
@@ -48,14 +64,19 @@ def create_app():
             return {"error": "Sequence is required."}, 400
 
         try:
-            report = analyze_sequence(
+            report = run_analysis(
                 data["sequence"],
+                repository=repository,
                 protein_id=data.get("protein_id"),
                 protein_name=data.get("protein_name"),
                 organism=data.get("organism"),
                 accession=data.get("accession"),
             )
+
+            repository.session.commit()
+
         except (TypeError, ValueError) as error:
+            repository.session.rollback()
             return {"error": str(error)}, 400
 
         return report, 200

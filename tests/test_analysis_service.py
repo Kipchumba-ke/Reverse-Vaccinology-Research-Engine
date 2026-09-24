@@ -219,3 +219,16 @@ def test_run_analysis_rolls_back_when_analysis_fails(db_session, monkeypatch):
     analyses = db_session.query(AnalysisModel).all()
 
     assert analyses == []
+
+
+def test_db_session_commit_does_not_leak_between_tests(db_session):
+    analysis = AnalysisModel(
+        protein_id="TEST-ISOLATION",
+        sequence="MKTAYIAKQRQISFVKSHFSRQ",
+        status="pending",
+    )
+
+    db_session.add(analysis)
+    db_session.commit()
+
+    assert db_session.query(AnalysisModel).count() == 1
