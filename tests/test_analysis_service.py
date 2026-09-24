@@ -7,7 +7,9 @@ from app.services.analysis_service import (
     analyze_fasta_records,
     create_analysis,
     persist_analysis,
+    run_analysis
 )
+from app.models.analysis_orm import AnalysisModel
 
 
 def test_analyze_sequence_returns_protein_report():
@@ -150,3 +152,70 @@ def test_create_and_persist_analysis_round_trip(db_session):
     saved = repository.find_by_id(persisted.id)
 
     assert saved == analysis
+
+
+def test_run_analysis_persists_analysis_and_returns_report(db_session):
+    repository = AnalysisRepository(db_session)
+
+    report = run_analysis(
+        " mktay iakqrqisfvkshfsrq ",
+        repository=repository,
+        protein_id="sp|P12345|EXAMPLE",
+        protein_name="Example protein",
+        organism="Escherichia coli",
+        accession="P12345",
+    )
+
+    assert report["protein"]["id"] == "sp|P12345|EXAMPLE"
+    assert report["protein"]["name"] == "Example protein"
+    assert report["protein"]["organism"] == "Escherichia coli"
+    assert report["protein"]["accession"] == "P12345"
+    assert report["protein"]["sequence"] == "MKTAYIAKQRQISFVKSHFSRQ"
+
+    analyses = db_session.query(AnalysisModel).all()
+
+    assert len(analyses) == 1
+    assert analyses[0].protein_id == "sp|P12345|EXAMPLE"
+    assert analyses[0].sequence == "MKTAYIAKQRQISFVKSHFSRQ"
+
+
+def test_run_analysis_does_not_persist_invalid_sequence(db_session):
+    repository = AnalysisRepository(db_session)
+
+    with pytest.raises(ValueError):
+        run_analysis(
+            "INVALID123",
+            repository=repository,
+            protein_id="sp|P12345|INVALID",
+            protein_name="Invalid protein",
+        )
+
+    analyses = db_session.query(AnalysisModel).all()
+
+    assert analyses == []
+
+
+def test_run_analysis_rolls_back_when_analysis_fails(db_session, monkeypatch):
+    repository = AnalysisRepository(db_session)
+
+    def failing_analyze_sequence(*args, **kwargs):
+        raise RuntimeError("analysis failed")
+
+    monkeypatch.setattr(
+        "app.services.analysis_service.analyze_sequence",
+        failing_analyze_sequence,
+    )
+
+    with pytest.raises(RuntimeError, match="analysis failed"):
+        run_analysis(
+            "MKTAYIAKQRQISFVKSHFSRQ",
+            repository=repository,
+            protein_id="sp|P12345|FAILURE",
+            protein_name="Failure test protein",
+        )
+
+    db_session.rollback()
+
+    analyses = db_session.query(AnalysisModel).all()
+
+    assert analyses == []

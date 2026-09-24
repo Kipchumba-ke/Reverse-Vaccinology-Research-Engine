@@ -57,3 +57,30 @@ def create_analysis(
         accession=accession,
         sequence=cleaned_sequence,
     )
+
+
+def run_analysis(
+    sequence: str,
+    repository,
+    protein_id: str | None = None,
+    protein_name: str | None = None,
+    organism: str | None = None,
+    accession: str | None = None,
+):
+    analysis = create_analysis(
+        sequence,
+        protein_id=protein_id,
+        protein_name=protein_name,
+        organism=organism,
+        accession=accession,
+    )
+
+    persist_analysis(analysis, repository)
+
+    return analyze_sequence(
+        analysis.sequence,
+        protein_id=analysis.protein_id,
+        protein_name=analysis.protein_name,
+        organism=analysis.organism,
+        accession=analysis.accession,
+    )
