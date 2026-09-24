@@ -1,6 +1,8 @@
 from app.analysis.pipeline import analyze_protein
 from app.reporting.report import generate_protein_report
 from app.analysis.workflow import analyze_fasta_records as run_fasta_workflow
+from app.models.analysis import Analysis
+from app.utils.validation import validate_protein_sequence
 
 
 def analyze_sequence(
@@ -34,3 +36,24 @@ def analyze_fasta_records(records: list[dict]):
         )
 
     return run_fasta_workflow(records).to_dict()
+
+
+def persist_analysis(analysis, repository):
+    return repository.save(analysis)
+
+
+def create_analysis(
+    sequence: str,
+    protein_id: str | None = None,
+    protein_name: str | None = None,
+    organism: str | None = None,
+    accession: str | None = None,
+):
+    cleaned_sequence = validate_protein_sequence(sequence)
+    return Analysis(
+        protein_id=protein_id,
+        protein_name=protein_name,
+        organism=organism,
+        accession=accession,
+        sequence=cleaned_sequence,
+    )
