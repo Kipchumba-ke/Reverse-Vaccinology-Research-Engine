@@ -22,10 +22,18 @@ def create_repository():
 
 def create_app(repository=None):
     app = Flask(__name__)
-    if repository is None:
+
+    owns_repository = repository is None
+
+    if owns_repository:
         repository = create_repository()
 
     app.config["ANALYSIS_REPOSITORY"] = repository
+
+    @app.teardown_appcontext
+    def close_repository(error):
+        if owns_repository:
+            repository.session.close()
 
     @app.errorhandler(RequestEntityTooLarge)
     def handle_request_entity_too_large(error):

@@ -5,6 +5,7 @@ from app import (
 import io
 import pytest
 from app.repositories.analysis_repository import AnalysisRepository
+from app.models.analysis_orm import AnalysisModel
 
 
 def test_create_app_returns_flask_application():
@@ -13,11 +14,8 @@ def test_create_app_returns_flask_application():
     assert app is not None
     assert app.name == "app"
 
-def test_analyze_endpoint_returns_protein_report():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_returns_protein_report(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
     )
@@ -33,52 +31,38 @@ def test_analyze_endpoint_returns_protein_report():
     assert "candidate_assessment" in data
     assert "limitations" in data
 
-def test_analyze_endpoint_rejects_missing_json():
-    app = create_app()
-    client = app.test_client()
+def test_analyze_endpoint_rejects_missing_json(api_client):
 
-    response = client.post("/api/analyze")
+    response = api_client.post("/api/analyze")
 
     assert response.status_code == 400
 
-def test_analyze_endpoint_rejects_missing_sequence():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_missing_sequence(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"foo": "bar"},
     )
 
     assert response.status_code == 400
 
-def test_analyze_endpoint_rejects_empty_sequence():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_empty_sequence(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"sequence": ""},
     )
 
     assert response.status_code == 400
 
-def test_analyze_endpoint_rejects_invalid_sequence():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_invalid_sequence(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVF1D"},
     )
 
     assert response.status_code == 400
 
-def test_analyze_endpoint_returns_error_for_invalid_sequence():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_returns_error_for_invalid_sequence(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVF1D"},
     )
@@ -90,11 +74,8 @@ def test_analyze_endpoint_returns_error_for_invalid_sequence():
     assert "error" in data
     assert data["error"]
 
-def test_analyze_endpoint_preserves_protein_id():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_preserves_protein_id(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={
             "sequence": "MKTIIALSYIFCLVFAD",
@@ -108,11 +89,8 @@ def test_analyze_endpoint_preserves_protein_id():
 
     assert data["protein"]["id"] == "protein_123"
 
-def test_analyze_endpoint_accepts_fasta_file():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_accepts_fasta_file(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -132,11 +110,8 @@ def test_analyze_endpoint_accepts_fasta_file():
     assert data["protein"]["id"] == "protein_123"
     assert data["protein"]["sequence"] == "MKTIIALSYIFCLVFAD"
 
-def test_analyze_endpoint_rejects_invalid_fasta_file():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_invalid_fasta_file(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -154,11 +129,8 @@ def test_analyze_endpoint_rejects_invalid_fasta_file():
     assert "error" in data
     assert data["error"]
 
-def test_analyze_endpoint_rejects_empty_fasta_file():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_empty_fasta_file(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -176,11 +148,8 @@ def test_analyze_endpoint_rejects_empty_fasta_file():
     assert "error" in data
     assert data["error"]
 
-def test_analyze_endpoint_rejects_missing_fasta_file():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_missing_fasta_file(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={},
         content_type="multipart/form-data",
@@ -193,11 +162,8 @@ def test_analyze_endpoint_rejects_missing_fasta_file():
     assert "error" in data
     assert data["error"]
 
-def test_analyze_endpoint_accepts_multi_record_fasta_file():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_accepts_multi_record_fasta_file(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -220,11 +186,8 @@ def test_analyze_endpoint_accepts_multi_record_fasta_file():
     assert data["protein_analyses"][1]["protein_id"] == "protein_2"
 
 
-def test_analyze_endpoint_preserves_protein_name():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_preserves_protein_name(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={
             "sequence": "MKTIIALSYIFCLVFAD",
@@ -239,11 +202,8 @@ def test_analyze_endpoint_preserves_protein_name():
 
     assert data["protein"]["name"] == "Example protein"
 
-def test_analyze_endpoint_preserves_organism():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_preserves_organism(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={
             "sequence": "MKTIIALSYIFCLVFAD",
@@ -260,11 +220,8 @@ def test_analyze_endpoint_preserves_organism():
     assert data["protein"]["organism"] == "Example organism"
 
 
-def test_analyze_endpoint_preserves_accession():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_preserves_accession(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={
             "sequence": "MKTIIALSYIFCLVFAD",
@@ -282,11 +239,8 @@ def test_analyze_endpoint_preserves_accession():
     assert data["protein"]["accession"] == "ABC123"
 
 
-def test_analyze_endpoint_preserves_fasta_description():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_preserves_fasta_description(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -308,11 +262,8 @@ def test_analyze_endpoint_preserves_fasta_description():
     assert data["protein"]["name"] == "Example protein"
 
 
-def test_analyze_endpoint_preserves_fasta_organism():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_preserves_fasta_organism(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -334,11 +285,8 @@ def test_analyze_endpoint_preserves_fasta_organism():
     assert data["protein"]["name"] == "Example protein OS=Escherichia coli"
     assert data["protein"]["organism"] == "Escherichia coli"
 
-def test_analyze_endpoint_preserves_fasta_accession():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_preserves_fasta_accession(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -359,11 +307,8 @@ def test_analyze_endpoint_preserves_fasta_accession():
     assert data["protein"]["id"] == "sp|P12345|EXAMPLE_PROTEIN"
     assert data["protein"]["accession"] == "P12345"
 
-def test_analyze_endpoint_rejects_non_string_sequence():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_non_string_sequence(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"sequence": 12345},
     )
@@ -375,11 +320,8 @@ def test_analyze_endpoint_rejects_non_string_sequence():
     assert "error" in data
     assert data["error"] == "Protein sequence must be a string."
 
-def test_analyze_endpoint_rejects_null_sequence():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_null_sequence(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"sequence": None},
     )
@@ -391,11 +333,8 @@ def test_analyze_endpoint_rejects_null_sequence():
     assert "error" in data
     assert data["error"] == "Protein sequence must be a string."
 
-def test_analyze_endpoint_rejects_unsupported_content_type():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_unsupported_content_type(api_client):
+    response = api_client.post(
         "/api/analyze",
         data="MKTIIALSYIFCLVFAD",
         content_type="text/plain",
@@ -407,11 +346,8 @@ def test_analyze_endpoint_rejects_unsupported_content_type():
 
     assert data["error"] == "JSON request body is required."
 
-def test_analyze_endpoint_rejects_malformed_json():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_malformed_json(api_client):
+    response = api_client.post(
         "/api/analyze",
         data='{"sequence": ',
         content_type="application/json",
@@ -423,11 +359,8 @@ def test_analyze_endpoint_rejects_malformed_json():
 
     assert data["error"] == "JSON request body is required."
 
-def test_analyze_endpoint_rejects_fasta_file_without_filename():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_fasta_file_without_filename(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -444,11 +377,8 @@ def test_analyze_endpoint_rejects_fasta_file_without_filename():
 
     assert data["error"] == "FASTA file is required."
 
-def test_analyze_endpoint_returns_consistent_error_structure_for_invalid_json():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_returns_consistent_error_structure_for_invalid_json(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVF1D"},
     )
@@ -461,11 +391,8 @@ def test_analyze_endpoint_returns_consistent_error_structure_for_invalid_json():
     assert isinstance(data["error"], str)
     assert data["error"]
 
-def test_analyze_endpoint_returns_stable_protein_response_structure():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_returns_stable_protein_response_structure(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
     )
@@ -511,11 +438,8 @@ def test_analyze_endpoint_rejects_oversized_upload():
 
     assert data["error"]
 
-def test_analyze_endpoint_rejects_unsupported_file_type():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_rejects_unsupported_file_type(api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -536,11 +460,8 @@ def test_analyze_endpoint_rejects_unsupported_file_type():
     "filename",
     ["protein.fasta", "protein.fa", "protein.fna"],
 )
-def test_analyze_endpoint_accepts_supported_fasta_extensions(filename):
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_accepts_supported_fasta_extensions(filename, api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -564,11 +485,8 @@ def test_analyze_endpoint_accepts_supported_fasta_extensions(filename):
     "filename",
     ["protein.FASTA", "protein.Fa", "protein.FNA"],
 )
-def test_analyze_endpoint_accepts_case_insensitive_fasta_extensions(filename):
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_accepts_case_insensitive_fasta_extensions(filename, api_client):
+    response = api_client.post(
         "/api/analyze",
         data={
             "file": (
@@ -588,11 +506,8 @@ def test_analyze_endpoint_accepts_case_insensitive_fasta_extensions(filename):
 
     assert data["protein"]["id"] == "protein_123"
 
-def test_analyze_v1_endpoint_returns_protein_report():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_v1_endpoint_returns_protein_report(api_client):
+    response = api_client.post(
         "/api/v1/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
     )
@@ -610,11 +525,8 @@ def test_analyze_v1_endpoint_returns_protein_report():
     assert "conservation" in data
     assert "metadata" in data
 
-def test_analyze_endpoint_remains_available_after_api_versioning():
-    app = create_app()
-    client = app.test_client()
-
-    response = client.post(
+def test_analyze_endpoint_remains_available_after_api_versioning(api_client):
+    response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
     )
@@ -632,18 +544,15 @@ def test_analyze_endpoint_remains_available_after_api_versioning():
     assert "conservation" in data
     assert "metadata" in data
 
-def test_analyze_api_versions_return_equivalent_responses():
-    app = create_app()
-    client = app.test_client()
-
+def test_analyze_api_versions_return_equivalent_responses(api_client):
     payload = {"sequence": "MKTIIALSYIFCLVFAD"}
 
-    legacy_response = client.post(
+    legacy_response = api_client.post(
         "/api/analyze",
         json=payload,
     )
 
-    v1_response = client.post(
+    v1_response = api_client.post(
         "/api/v1/analyze",
         json=payload,
     )
@@ -825,3 +734,137 @@ def test_analyze_endpoint_rolls_back_failed_analysis():
 
     assert response.status_code == 400
     assert repository.session.rolled_back is True
+
+
+def test_create_app_closes_default_repository_session(monkeypatch):
+    class FakeSession:
+        def __init__(self):
+            self.closed = False
+
+        def commit(self):
+            pass
+
+        def rollback(self):
+            pass
+
+        def close(self):
+            self.closed = True
+
+    class FakeRepository:
+        def __init__(self):
+            self.session = FakeSession()
+
+        def save(self, analysis):
+            return analysis
+
+    repository = FakeRepository()
+
+    monkeypatch.setattr(
+        "app.create_repository",
+        lambda: repository,
+    )
+
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": "MKTIIALSYIFCLVFAD"},
+    )
+
+    assert response.status_code == 200
+    assert repository.session.closed is True
+
+
+def test_create_app_does_not_close_injected_repository_session():
+    class FakeSession:
+        def __init__(self):
+            self.closed = False
+
+        def commit(self):
+            pass
+
+        def rollback(self):
+            pass
+
+        def close(self):
+            self.closed = True
+
+    class FakeRepository:
+        def __init__(self):
+            self.session = FakeSession()
+
+        def save(self, analysis):
+            return analysis
+
+    repository = FakeRepository()
+
+    app = create_app(repository=repository)
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": "MKTIIALSYIFCLVFAD"},
+    )
+
+    assert response.status_code == 200
+    assert repository.session.closed is False
+
+
+def test_create_app_closes_default_repository_session_after_failure(monkeypatch):
+    class FakeSession:
+        def __init__(self):
+            self.closed = False
+
+        def commit(self):
+            raise AssertionError("commit should not be called")
+
+        def rollback(self):
+            pass
+
+        def close(self):
+            self.closed = True
+
+    class FakeRepository:
+        def __init__(self):
+            self.session = FakeSession()
+
+        def save(self, analysis):
+            return analysis
+
+    repository = FakeRepository()
+
+    monkeypatch.setattr(
+        "app.create_repository",
+        lambda: repository,
+    )
+
+    app = create_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": "INVALID123"},
+    )
+
+    assert response.status_code == 400
+    assert repository.session.closed is True
+
+def test_api_client_uses_test_database_session(db_session):
+    repository = AnalysisRepository(db_session)
+    app = create_app(repository=repository)
+    client = app.test_client()
+
+    response = client.post(
+        "/api/analyze",
+        json={"sequence": "MKTIIALSYIFCLVFAD"},
+    )
+
+    assert response.status_code == 200
+
+    analyses = db_session.query(AnalysisModel).all()
+
+    assert len(analyses) == 1
+
+def test_api_database_state_is_clean_after_previous_api_test(db_session):
+    assert db_session.query(AnalysisModel).count() == 0

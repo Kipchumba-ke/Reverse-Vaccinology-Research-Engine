@@ -4,6 +4,8 @@ import pytest
 from sqlalchemy import event
 
 from app.database import create_engine, create_session_factory
+from app import create_app
+from app.repositories.analysis_repository import AnalysisRepository
 
 
 @pytest.fixture
@@ -34,3 +36,9 @@ def db_session():
 
         connection.close()
         engine.dispose()
+
+@pytest.fixture
+def api_client(db_session):
+    repository = AnalysisRepository(db_session)
+    app = create_app(repository=repository)
+    return app.test_client()
