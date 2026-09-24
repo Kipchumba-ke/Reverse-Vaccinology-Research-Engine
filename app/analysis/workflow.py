@@ -10,19 +10,20 @@ def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, 
         raise ValueError(
             "At least one FASTA record is required."
         )
+    if localization_evidence is None:
+        localization_evidence = {}
+
+    if essentiality_evidence is None:
+        essentiality_evidence = {}
+
+    if host_similarity_evidence is None:
+        host_similarity_evidence = {}
     for record in records:
         if "id" not in record or "sequence" not in record:
             raise ValueError(
                 "FASTA record must contain id and sequence."
             )
-        if localization_evidence is None:
-            localization_evidence = {}
 
-        if essentiality_evidence is None:
-            essentiality_evidence = {}
-
-        if host_similarity_evidence is None:
-            host_similarity_evidence = {}
     sequences = [record["sequence"] for record in records]
 
     protein_analyses = [
