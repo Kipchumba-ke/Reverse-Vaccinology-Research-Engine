@@ -64,3 +64,20 @@ def test_repository_saves_analysis_to_postgresql(db_session):
     assert saved == analysis
     assert db_row is not None
     assert db_row.protein_id == "sp|P12345|EXAMPLE"
+
+
+def test_repository_does_not_commit_transaction(db_session):
+    repository = AnalysisRepository(db_session)
+
+    analysis = Analysis(
+        protein_id="sp|P99999|TRANSACTION",
+        protein_name="Transaction test protein",
+        organism="Escherichia coli",
+        accession="P99999",
+        sequence="MKTAYIAKQRQISFVKSHFSRQ",
+        status="completed",
+    )
+
+    repository.save(analysis)
+
+    assert db_session.in_transaction()

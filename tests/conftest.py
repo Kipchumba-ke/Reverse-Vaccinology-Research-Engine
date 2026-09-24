@@ -16,5 +16,6 @@ def db_session():
     try:
         yield session
     finally:
+        session.rollback()
         session.close()
         engine.dispose()
