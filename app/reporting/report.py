@@ -93,6 +93,7 @@ def generate_protein_report(
                 result.transmembrane_candidates
             ),
         },
+        "peptide_candidates": result.peptide_candidates,
         "conservation": {
             "summary": conservation_summary,
             "regions": conserved_regions,

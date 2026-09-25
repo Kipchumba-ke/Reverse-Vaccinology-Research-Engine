@@ -17,6 +17,11 @@ from app.analysis.properties import (
 from app.models.analysis_result import ProteinAnalysisResult
 from app.utils.validation import validate_protein_sequence
 from app.models.localization import LocalizationEvidence
+from app.analysis.epitope import (
+    calculate_peptide_properties,
+    generate_peptide_windows,
+    annotate_transmembrane_overlap,
+)
 
 
 def analyze_protein(
@@ -27,6 +32,7 @@ def analyze_protein(
     tm_min_length: int = 18,
     tm_max_length: int = 25,
     tm_min_hydropathy: float = 1.6,
+    peptide_window_size: int = 15,
     localization_evidence: list[LocalizationEvidence] | None = None,
     essentiality_evidence = None,
     host_similarity_evidence = None,
@@ -72,7 +78,6 @@ def analyze_protein(
     if host_similarity_evidence is None:
         host_similarity_evidence = []
 
-
     if len(cleaned_sequence) >= hydropathy_window_size:
         hydropathy_profile = calculate_hydropathy_profile(
             cleaned_sequence,
@@ -94,21 +99,44 @@ def analyze_protein(
             merged_regions,
         )
 
-        transmembrane_candidates = (
-            classify_transmembrane_candidates(
-                hydrophobic_regions,
-                min_length=tm_min_length,
-                max_length=tm_max_length,
-                min_hydropathy=tm_min_hydropathy,
-            )
+        transmembrane_candidates = classify_transmembrane_candidates(
+            hydrophobic_regions,
+            min_length=tm_min_length,
+            max_length=tm_max_length,
+            min_hydropathy=tm_min_hydropathy,
         )
-
     else:
         hydropathy_profile = []
         hydrophobic_regions = []
         transmembrane_candidates = []
 
-   
+    if len(cleaned_sequence) >= peptide_window_size:
+        peptide_candidates = generate_peptide_windows(
+            cleaned_sequence,
+            peptide_window_size,
+        )
+
+        peptide_candidates = [
+            {
+                **peptide,
+                **{
+                    key: value
+                    for key, value in calculate_peptide_properties(
+                        peptide["sequence"],
+                        ph,
+                    ).items()
+                    if key not in {"sequence"}
+                },
+            }
+            for peptide in peptide_candidates
+        ]
+
+        peptide_candidates = annotate_transmembrane_overlap(
+            peptide_candidates,
+            transmembrane_candidates,
+        )
+    else:
+        peptide_candidates = []
 
     return ProteinAnalysisResult(
         sequence=cleaned_sequence,
@@ -132,4 +160,5 @@ def analyze_protein(
         protein_name=protein_name,
         organism=organism,
         accession=accession,
+        peptide_candidates=peptide_candidates,
     )

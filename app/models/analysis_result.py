@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from app.models.localization import LocalizationEvidence
 from app.models.essentiality import EssentialityEvidence
 from app.models.host_similarity import HostSimilarityEvidence
@@ -22,7 +22,7 @@ class ProteinAnalysisResult:
     protein_name: str | None = None
     organism: str | None = None
     accession: str | None = None
-
+    peptide_candidates: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """
@@ -60,4 +60,5 @@ class ProteinAnalysisResult:
             "protein_name": self.protein_name,
             "organism": self.organism,
             "accession": self.accession,
+            "peptide_candidates": self.peptide_candidates,
         }

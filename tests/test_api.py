@@ -404,6 +404,7 @@ def test_analyze_endpoint_returns_stable_protein_response_structure(api_client):
     assert set(data) == {
         "protein",
         "measurements",
+        "peptide_candidates",
         "evidence",
         "interpretations",
         "candidate_assessment",

@@ -256,3 +256,22 @@ def test_pipeline_to_dict_preserves_protein_id():
     data = result.to_dict()
 
     assert data["protein_id"] == "protein_1"
+
+
+def test_pipeline_includes_peptide_candidates():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFADYKDDDDK"
+    )
+
+    assert isinstance(
+        result.peptide_candidates,
+        list,
+    )
+
+    assert len(result.peptide_candidates) > 0
+
+    first_candidate = result.peptide_candidates[0]
+
+    assert "start" in first_candidate
+    assert "end" in first_candidate
+    assert "sequence" in first_candidate

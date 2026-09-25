@@ -22,6 +22,23 @@ def test_generate_basic_report():
     assert "interpretations" in report
     assert "limitations" in report
 
+def test_report_contains_peptide_candidates():
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFADYKDDDDK"
+    )
+
+    report = generate_protein_report(result)
+
+    assert "peptide_candidates" in report
+    assert isinstance(report["peptide_candidates"], list)
+    assert len(report["peptide_candidates"]) > 0
+
+    candidate = report["peptide_candidates"][0]
+
+    assert "start" in candidate
+    assert "end" in candidate
+    assert "sequence" in candidate
+
 
 def test_report_contains_external_evidence():
     localization = create_localization_evidence(
