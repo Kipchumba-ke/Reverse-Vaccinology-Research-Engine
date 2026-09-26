@@ -297,3 +297,12 @@ def interpret_essentiality(
         interpretation=interpretation,
         confidence=confidence,
     )
+
+
+def create_uniprot_annotation_evidence(annotation):
+    return Evidence(
+        category="uniprot_annotation",
+        finding=annotation["protein_name"],
+        interpretation=f"UniProt annotation for accession {annotation['accession']}.",
+        confidence="high",
+    )
