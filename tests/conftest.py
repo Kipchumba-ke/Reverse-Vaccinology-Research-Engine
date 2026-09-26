@@ -10,7 +10,10 @@ from app.repositories.analysis_repository import AnalysisRepository
 
 @pytest.fixture
 def db_session():
-    database_url = os.environ["DATABASE_URL"]
+    database_url = os.environ.get(
+        "TEST_DATABASE_URL",
+        os.environ["DATABASE_URL"],
+    )
 
     engine = create_engine(database_url)
     connection = engine.connect()

@@ -232,3 +232,15 @@ def test_db_session_commit_does_not_leak_between_tests(db_session):
     db_session.commit()
 
     assert db_session.query(AnalysisModel).count() == 1
+
+def test_db_session_rolls_back_all_changes_after_test(db_session):
+    analysis = AnalysisModel(
+        protein_id="TEST-ROLLBACK",
+        sequence="MKTAYIAKQRQISFVKSHFSRQ",
+        status="pending",
+    )
+
+    db_session.add(analysis)
+    db_session.commit()
+
+    assert db_session.query(AnalysisModel).count() == 1

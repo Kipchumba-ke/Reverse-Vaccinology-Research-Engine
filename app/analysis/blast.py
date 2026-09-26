@@ -1,4 +1,5 @@
 from app.analysis.host_similarity import create_host_similarity_evidence
+from app.analysis.blast_runner import run_blastp
 
 
 def parse_blast_hit(
@@ -64,6 +65,46 @@ def parse_blast_tabular_hit(
         query_coverage_percentage=query_coverage_percentage,
         subject_coverage_percentage=subject_coverage_percentage,
         e_value=e_value,
+        source=source,
+        confidence=confidence,
+        description=description,
+    )
+
+
+def parse_blast_tabular_output(
+    output: str,
+    source: str,
+    confidence: str,
+    description: str,
+):
+    if not output.strip():
+        return []
+
+    return [
+        parse_blast_tabular_hit(
+            line,
+            source=source,
+            confidence=confidence,
+            description=description,
+        )
+        for line in output.strip().splitlines()
+    ]
+
+
+def run_blast_analysis(
+    sequence: str,
+    database: str,
+    source: str,
+    confidence: str,
+    description: str,
+):
+    output = run_blastp(
+        sequence,
+        database=database,
+    )
+
+    return parse_blast_tabular_output(
+        output,
         source=source,
         confidence=confidence,
         description=description,
