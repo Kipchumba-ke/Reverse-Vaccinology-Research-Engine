@@ -98,6 +98,15 @@ def run_blast_analysis(
     confidence: str,
     description: str,
 ):
+    if not sequence:
+        raise ValueError("Sequence is required.")
+
+    if not database:
+        raise ValueError("BLAST database is required")
+
+    if confidence not in {"low", "medium", "high"}:
+        raise ValueError("Confidence must be one of: low, medium, high")
+
     output = run_blastp(
         sequence,
         database=database,
