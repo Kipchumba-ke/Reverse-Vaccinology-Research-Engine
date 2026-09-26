@@ -7,7 +7,7 @@ from app.analysis.localization import (
 )
 from app.reporting.report import generate_protein_report
 from app.analysis.host_similarity import create_host_similarity_evidence
-
+from app.models.analysis_result import ProteinAnalysisResult
 
 def test_generate_basic_report():
     result = analyze_protein(
@@ -356,3 +356,80 @@ def test_report_preserves_interpretation_confidence():
     )
 
     assert localization_interpretation["confidence"] == "high"
+
+def test_generate_protein_report_uses_conservation_columns():
+    result = ProteinAnalysisResult(
+        sequence="ACDE",
+        length=4,
+        composition={},
+        molecular_weight=0.0,
+        gravy=0.0,
+        isoelectric_point=7.0,
+        charge_and_hydrophobicity={},
+        hydropathy_profile=[],
+        hydrophobic_regions=[],
+        transmembrane_candidates=[],
+        localization_evidence=[],
+        essentiality_evidence=[],
+        host_similarity_evidence=[],
+        conservation_columns=[
+            {
+                "position": 1,
+                "amino_acids": ["A", "A"],
+                "consensus": "A",
+                "conserved": True,
+                "conservation_percentage": 100.0,
+                "gap_count": 0,
+            },
+            {
+                "position": 2,
+                "amino_acids": ["C", "C"],
+                "consensus": "C",
+                "conserved": True,
+                "conservation_percentage": 100.0,
+                "gap_count": 0,
+            },
+        ],
+    )
+
+    report = generate_protein_report(
+        result,
+        conservation_summary={
+            "conservation_percentage": 100.0,
+            "total_columns": 2,
+            "conserved_columns": 2,
+        },
+        conserved_regions=[],
+    )
+
+    assert report["conservation"]["summary"]["conservation_percentage"] == 100.0
+
+
+def test_report_includes_conservation_summary_from_result():
+    result = ProteinAnalysisResult(
+        sequence="ACDE",
+        length=4,
+        composition={},
+        molecular_weight=0.0,
+        gravy=0.0,
+        isoelectric_point=7.0,
+        charge_and_hydrophobicity={},
+        hydropathy_profile=[],
+        hydrophobic_regions=[],
+        transmembrane_candidates=[],
+        localization_evidence=[],
+        essentiality_evidence=[],
+        host_similarity_evidence=[],
+        conservation_summary={
+            "sequence_count": 2,
+            "alignment_length": 4,
+            "mean_identity": 75.0,
+            "conserved_positions": 3,
+            "conservation_percentage": 75.0,
+        },
+    )
+
+    report = generate_protein_report(result)
+
+    assert report["conservation"]["summary"]["sequence_count"] == 2
+    assert report["conservation"]["summary"]["conservation_percentage"] == 75.0

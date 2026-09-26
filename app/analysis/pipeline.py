@@ -22,6 +22,10 @@ from app.analysis.epitope import (
     generate_peptide_windows,
     annotate_transmembrane_overlap,
 )
+from app.analysis.conservation import (
+    calculate_conservation_summary,
+    calculate_conserved_columns,
+)
 
 
 def analyze_protein(
@@ -40,6 +44,8 @@ def analyze_protein(
     protein_name: str | None = None,
     organism: str | None = None,
     accession: str | None = None,
+    aligned_sequences: list[str] | None = None,
+    conservation_summary: dict | None = None
 ) -> ProteinAnalysisResult:
     """
     Run the complete protein analysis pipeline.
@@ -138,6 +144,19 @@ def analyze_protein(
     else:
         peptide_candidates = []
 
+    conservation_columns = []
+
+    if aligned_sequences:
+        conservation_columns = calculate_conserved_columns(
+            aligned_sequences
+        )
+
+    conservation_summary = None
+
+    if aligned_sequences:
+        conservation_columns = calculate_conserved_columns(aligned_sequences)
+        conservation_summary = calculate_conservation_summary(aligned_sequences)
+
     return ProteinAnalysisResult(
         sequence=cleaned_sequence,
         length=len(cleaned_sequence),
@@ -161,4 +180,6 @@ def analyze_protein(
         organism=organism,
         accession=accession,
         peptide_candidates=peptide_candidates,
+        conservation_columns=conservation_columns,
+        conservation_summary=conservation_summary,
     )

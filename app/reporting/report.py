@@ -23,6 +23,9 @@ def generate_protein_report(
     from a separate multiple-sequence-alignment analysis.
     """
 
+    if conservation_summary is None:
+        conservation_summary = result.conservation_summary
+
     if conserved_regions is None:
         conserved_regions = []
 
@@ -53,9 +56,14 @@ def generate_protein_report(
     ]
 
     if conservation_summary is not None:
+        conservation_data = (
+            conservation_summary.to_dict()
+            if hasattr(conservation_summary, "to_dict")
+            else conservation_summary
+        )
         interpretations.append(
             interpret_conservation(
-                conservation_summary["conservation_percentage"]
+                conservation_data["conservation_percentage"]
             )
         )
     candidate_assessment = assess_candidate(
@@ -95,7 +103,7 @@ def generate_protein_report(
         },
         "peptide_candidates": result.peptide_candidates,
         "conservation": {
-            "summary": conservation_summary,
+            "summary": conservation_data if conservation_summary is not None else None,
             "regions": conserved_regions,
         },
         "evidence": {

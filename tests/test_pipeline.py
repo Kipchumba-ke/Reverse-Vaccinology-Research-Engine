@@ -275,3 +275,30 @@ def test_pipeline_includes_peptide_candidates():
     assert "start" in first_candidate
     assert "end" in first_candidate
     assert "sequence" in first_candidate
+
+
+def test_analyze_protein_calculates_conservation_from_aligned_sequences():
+    result = analyze_protein(
+        "ACDE",
+        aligned_sequences=[
+            "ACDE-",
+            "ACD--",
+        ],
+    )
+
+    assert result.conservation_columns
+    assert result.conservation_columns[0]["position"] == 1
+    assert result.conservation_columns[0]["conserved"] is True
+
+
+def test_analyze_protein_calculates_conservation_summary_from_alignment():
+    result = analyze_protein(
+        "ACDE",
+        aligned_sequences=[
+            "ACDE-",
+            "ACD--",
+        ],
+    )
+
+    assert result.conservation_columns
+    assert result.conservation_columns[0]["conserved"] is True

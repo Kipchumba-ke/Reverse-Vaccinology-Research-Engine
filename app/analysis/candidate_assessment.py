@@ -426,7 +426,9 @@ def assess_candidate(
     essentiality = _assess_essentiality_evidence(result)
     host_similarity = _assess_host_similarity_evidence(result)
     conservation = _assess_conservation_evidence(
-        conservation_summary
+        conservation_summary.to_dict()
+        if hasattr(conservation_summary, "to_dict")
+        else conservation_summary
     )
     regions = _assess_conserved_regions(conserved_regions)
     transmembrane = _assess_transmembrane_candidates(result)

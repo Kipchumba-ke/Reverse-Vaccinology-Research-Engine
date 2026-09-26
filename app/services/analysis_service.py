@@ -3,6 +3,7 @@ from app.reporting.report import generate_protein_report
 from app.analysis.workflow import analyze_fasta_records as run_fasta_workflow
 from app.models.analysis import Analysis
 from app.utils.validation import validate_protein_sequence
+from app.services.integration_service import run_integrations
 
 
 def analyze_sequence(
@@ -11,6 +12,8 @@ def analyze_sequence(
     protein_name: str | None = None,
     organism: str | None = None,
     accession: str | None = None,
+    blast_database: str | None = None,
+    msa_sequences: list[str] | None = None,
 ):
     result = analyze_protein(
         sequence,
@@ -18,9 +21,20 @@ def analyze_sequence(
         protein_name=protein_name,
         organism=organism,
         accession=accession,
+        aligned_sequences=msa_sequences,
     )
 
-    return generate_protein_report(result)
+    report = generate_protein_report(result)
+
+    if accession and blast_database and msa_sequences:
+        report["integrations"] = run_integrations(
+            sequence=sequence,
+            accession=accession,
+            blast_database=blast_database,
+            msa_sequences=msa_sequences,
+        )
+
+    return report
 
 
 def analyze_fasta_records(records: list[dict]):

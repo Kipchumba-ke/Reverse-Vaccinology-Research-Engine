@@ -23,6 +23,8 @@ class ProteinAnalysisResult:
     organism: str | None = None
     accession: str | None = None
     peptide_candidates: list[dict] = field(default_factory=list)
+    conservation_columns: list[dict] = field(default_factory=list)
+    conservation_summary: dict | None = None
 
     def to_dict(self) -> dict:
         """
@@ -61,4 +63,6 @@ class ProteinAnalysisResult:
             "organism": self.organism,
             "accession": self.accession,
             "peptide_candidates": self.peptide_candidates,
+            "conservation_columns": self.conservation_columns,
+            "conservation_summary": self.conservation_summary,
         }
