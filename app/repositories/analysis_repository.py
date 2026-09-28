@@ -45,3 +45,20 @@ class AnalysisRepository:
             return None
 
         return self._to_domain(model)
+
+    def update(self, analysis):
+        model = self.session.get(AnalysisModel, analysis.id)
+
+        if model is None:
+            raise ValueError(f"Analysis {analysis.id} not found.")
+
+        model.protein_id = analysis.protein_id
+        model.protein_name = analysis.protein_name
+        model.organism = analysis.organism
+        model.accession = analysis.accession
+        model.sequence = analysis.sequence
+        model.status = analysis.status
+
+        self.session.flush()
+
+        return analysis
