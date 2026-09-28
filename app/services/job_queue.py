@@ -1,3 +1,11 @@
+from typing import Protocol, runtime_checkable
+
+@runtime_checkable
+class Queue(Protocol):
+    def run(self, job_id):
+        ...
+
+
 class JobQueue:
     def __init__(self):
         self._jobs = {}

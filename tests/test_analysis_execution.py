@@ -6,7 +6,7 @@ from app.models.analysis import Analysis
 from app.services.analysis_execution import execute_analysis
 from app.repositories.analysis_repository import AnalysisRepository
 from app.services.analysis_job import AnalysisJob
-from app.services.job_queue import JobQueue
+from app.services.job_queue import JobQueue, Queue
 from app.services.analysis_worker import AnalysisWorker
 
 
@@ -377,3 +377,49 @@ def test_analysis_worker_propagates_unknown_job():
 
     with pytest.raises(ValueError, match="Job .* not found"):
         worker.run("missing-job")
+
+
+
+def test_analysis_worker_accepts_queue_like_object():
+    class FakeQueue:
+        def __init__(self):
+            self.called_with = None
+
+        def run(self, job_id):
+            self.called_with = job_id
+            return {"status": "completed"}
+
+    queue = FakeQueue()
+    worker = AnalysisWorker(queue)
+
+    result = worker.run("analysis-123")
+
+    assert result == {"status": "completed"}
+    assert queue.called_with == "analysis-123"
+
+
+
+def test_job_queue_implements_queue_contract():
+    queue = JobQueue()
+
+    assert isinstance(queue, Queue)
+
+
+
+def test_job_queue_enqueue_does_not_run_job():
+    queue = JobQueue()
+
+    analysis = Analysis(
+        protein_id="P0A911",
+        protein_name="Outer membrane protein A",
+        organism="Escherichia coli O157:H7",
+        accession="P0A911",
+        sequence="MKT",
+    )
+
+    job = AnalysisJob(analysis)
+
+    job_id = queue.enqueue(job)
+
+    assert job_id == analysis.id
+    assert analysis.status == "pending"

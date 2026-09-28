@@ -1,8 +1,8 @@
-from app.services.job_queue import JobQueue
+from app.services.job_queue import Queue
 
 
 class AnalysisWorker:
-    def __init__(self, queue: JobQueue):
+    def __init__(self, queue: Queue):
         self.queue = queue
 
     def run(self, job_id):
