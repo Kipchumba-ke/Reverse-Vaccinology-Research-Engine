@@ -1,7 +1,13 @@
+import pytest
+from uuid import uuid4
+
+
 from app.models.analysis import Analysis
 from app.services.analysis_execution import execute_analysis
 from app.repositories.analysis_repository import AnalysisRepository
 from app.services.analysis_job import AnalysisJob
+from app.services.job_queue import JobQueue
+from app.services.analysis_worker import AnalysisWorker
 
 
 def test_execution_service_runs_analysis():
@@ -256,3 +262,118 @@ def test_analysis_job_persists_failed_status(db_session, monkeypatch):
     persisted = repository.find_by_id(analysis.id)
 
     assert persisted.status == "failed"
+
+
+
+def test_analysis_job_exposes_analysis_id():
+    analysis = Analysis(
+        protein_id="P0A911",
+        protein_name="Outer membrane protein A",
+        organism="Escherichia coli O157:H7",
+        accession="P0A911",
+        sequence="MKT",
+    )
+
+    job = AnalysisJob(analysis)
+
+    assert job.analysis_id == analysis.id
+
+
+
+def test_job_queue_can_enqueue_analysis_job():
+    queue = JobQueue()
+
+    analysis = Analysis(
+        protein_id="P0A911",
+        protein_name="Outer membrane protein A",
+        organism="Escherichia coli O157:H7",
+        accession="P0A911",
+        sequence="MKT",
+    )
+
+    job = AnalysisJob(analysis)
+
+    job_id = queue.enqueue(job)
+
+    assert job_id == analysis.id
+
+
+
+def test_job_queue_stores_enqueued_job():
+    queue = JobQueue()
+
+    analysis = Analysis(
+        protein_id="P0A911",
+        protein_name="Outer membrane protein A",
+        organism="Escherichia coli O157:H7",
+        accession="P0A911",
+        sequence="MKT",
+    )
+
+    job = AnalysisJob(analysis)
+
+    queue.enqueue(job)
+
+    assert queue.get(analysis.id) is job
+
+
+
+def test_job_queue_runs_enqueued_job():
+    queue = JobQueue()
+
+    analysis = Analysis(
+        protein_id="P0A911",
+        protein_name="Outer membrane protein A",
+        organism="Escherichia coli O157:H7",
+        accession="P0A911",
+        sequence="MKT",
+    )
+
+    job = AnalysisJob(analysis)
+
+    queue.enqueue(job)
+
+    result = queue.run(analysis.id)
+
+    assert result["protein"]["id"] == "P0A911"
+    assert analysis.status == "completed"
+
+
+
+def test_job_queue_raises_for_unknown_job():
+    queue = JobQueue()
+
+    with pytest.raises(ValueError, match="Job .* not found"):
+        queue.run(uuid4())
+
+
+
+def test_analysis_worker_runs_queued_job():
+    queue = JobQueue()
+
+    analysis = Analysis(
+        protein_id="P0A911",
+        protein_name="Outer membrane protein A",
+        organism="Escherichia coli O157:H7",
+        accession="P0A911",
+        sequence="MKT",
+    )
+
+    job = AnalysisJob(analysis)
+    job_id = queue.enqueue(job)
+
+    worker = AnalysisWorker(queue)
+
+    result = worker.run(job_id)
+
+    assert result["protein"]["id"] == "P0A911"
+    assert analysis.status == "completed"
+
+
+
+def test_analysis_worker_propagates_unknown_job():
+    queue = JobQueue()
+    worker = AnalysisWorker(queue)
+
+    with pytest.raises(ValueError, match="Job .* not found"):
+        worker.run("missing-job")
