@@ -39,7 +39,11 @@ class AnalysisRepository:
         return analysis
 
     def find_by_id(self, analysis_id):
-        model = self.session.get(AnalysisModel, analysis_id)
+        model = self.session.get(
+            AnalysisModel,
+            analysis_id,
+            populate_existing=True,
+        )
 
         if model is None:
             return None

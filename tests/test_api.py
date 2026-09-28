@@ -6,6 +6,9 @@ import io
 import pytest
 from app.repositories.analysis_repository import AnalysisRepository
 from app.models.analysis_orm import AnalysisModel
+from uuid import UUID
+
+from app.services.analysis_worker import AnalysisWorker
 
 
 def test_create_app_returns_flask_application():
@@ -869,3 +872,331 @@ def test_api_client_uses_test_database_session(db_session):
 
 def test_api_database_state_is_clean_after_previous_api_test(db_session):
     assert db_session.query(AnalysisModel).count() == 0
+
+
+
+def test_submit_analysis_returns_pending_analysis(api_client):
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+            "protein_name": "Outer membrane protein A",
+            "organism": "Escherichia coli O157:H7",
+            "accession": "P0A911",
+        },
+    )
+
+    assert response.status_code == 202
+
+    data = response.get_json()
+
+    assert "analysis_id" in data
+    assert data["status"] == "pending"
+
+
+
+def test_submit_analysis_requires_sequence(api_client):
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "protein_id": "P0A911",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "error": "Sequence is required."
+    }
+
+
+
+def test_submit_analysis_requires_json_body(api_client):
+    response = api_client.post(
+        "/api/analyses",
+        data="not-json",
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "error": "JSON request body is required."
+    }
+
+
+
+def test_submit_analysis_handles_queue_failure(api_client):
+    class FailingQueue:
+        def enqueue(self, job):
+            raise RuntimeError("Queue unavailable")
+
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+    api_client.application.config["ANALYSIS_QUEUE"] = FailingQueue()
+
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+        },
+    )
+
+    assert response.status_code == 500
+    assert response.get_json() == {
+        "error": "Queue unavailable"
+    }
+
+
+
+def test_submit_analysis_handles_persistence_failure(api_client):
+    class FailingRepository:
+        def save(self, analysis):
+            raise RuntimeError("Database unavailable")
+
+        class Session:
+            def rollback(self):
+                pass
+
+            def commit(self):
+                pass
+
+        session = Session()
+
+    api_client.application.config["ANALYSIS_REPOSITORY"] = FailingRepository()
+
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+        },
+    )
+
+    assert response.status_code == 500
+    assert response.get_json() == {
+        "error": "Database unavailable"
+    }
+
+
+
+def test_submit_analysis_commits_successful_submission(api_client):
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+        },
+    )
+
+    assert response.status_code == 202
+
+    analysis_id = response.get_json()["analysis_id"]
+
+    persisted = repository.find_by_id(analysis_id)
+
+    assert persisted is not None
+    assert persisted.status == "pending"
+
+
+
+def test_get_analysis_status_returns_pending(api_client):
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+        },
+    )
+
+    assert response.status_code == 202
+
+    analysis_id = response.get_json()["analysis_id"]
+
+    response = api_client.get(f"/api/analyses/{analysis_id}")
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["analysis_id"] == analysis_id
+    assert data["status"] == "pending"
+
+
+
+def test_get_analysis_status_returns_404_for_unknown_analysis(api_client):
+    response = api_client.get(
+        "/api/analyses/00000000-0000-0000-0000-000000000000"
+    )
+
+    assert response.status_code == 404
+    assert response.get_json() == {
+        "error": "Analysis not found."
+    }
+
+
+
+def test_get_analysis_status_rejects_invalid_analysis_id(api_client):
+    response = api_client.get("/api/analyses/not-a-uuid")
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "error": "Invalid analysis ID."
+    }
+
+
+
+def test_get_analysis_status_returns_completed(api_client):
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+        },
+    )
+
+    assert response.status_code == 202
+
+    analysis_id = response.get_json()["analysis_id"]
+
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+    analysis = repository.find_by_id(analysis_id)
+
+    analysis.status = "completed"
+    repository.update(analysis)
+    repository.session.commit()
+
+    response = api_client.get(f"/api/analyses/{analysis_id}")
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["analysis_id"] == analysis_id
+    assert data["status"] == "completed"
+
+
+
+def test_get_analysis_status_returns_failed(api_client):
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+        },
+    )
+
+    assert response.status_code == 202
+
+    analysis_id = response.get_json()["analysis_id"]
+
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+    analysis = repository.find_by_id(analysis_id)
+
+    analysis.status = "failed"
+    repository.update(analysis)
+    repository.session.commit()
+
+    response = api_client.get(f"/api/analyses/{analysis_id}")
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["analysis_id"] == analysis_id
+    assert data["status"] == "failed"
+
+
+
+def test_analysis_submission_worker_and_status_lifecycle(api_client):
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+            "protein_name": "Outer membrane protein A",
+            "organism": "Escherichia coli O157:H7",
+            "accession": "P0A911",
+        },
+    )
+
+    assert response.status_code == 202
+
+    data = response.get_json()
+    analysis_id = data["analysis_id"]
+
+    assert data["status"] == "pending"
+
+    queue = api_client.application.config["ANALYSIS_QUEUE"]
+
+    job = queue.get(UUID(analysis_id))
+
+    assert job is not None
+
+    worker = AnalysisWorker(queue)
+    worker.run(job.analysis_id)
+
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+    repository.session.commit()
+
+    response = api_client.get(
+        f"/api/analyses/{analysis_id}"
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["analysis_id"] == analysis_id
+    assert data["status"] == "completed"
+
+
+
+def test_analysis_submission_worker_and_status_failure_lifecycle(api_client):
+    response = api_client.post(
+        "/api/analyses",
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+        },
+    )
+
+    assert response.status_code == 202
+
+    analysis_id = response.get_json()["analysis_id"]
+
+    queue = api_client.application.config["ANALYSIS_QUEUE"]
+    job = queue.get(UUID(analysis_id))
+
+    assert job is not None
+
+    def failing_analysis(*args, **kwargs):
+        raise RuntimeError("Analysis execution failed")
+
+    import app.services.analysis_execution as execution
+
+    original_execute = execution.analyze_sequence
+    execution.analyze_sequence = failing_analysis
+
+    try:
+        worker = AnalysisWorker(queue)
+
+        with pytest.raises(RuntimeError, match="Analysis execution failed"):
+            worker.run(job.analysis_id)
+    finally:
+        execution.analyze_sequence = original_execute
+
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+    repository.session.commit()
+
+    response = api_client.get(
+        f"/api/analyses/{analysis_id}"
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["analysis_id"] == analysis_id
+    assert data["status"] == "failed"

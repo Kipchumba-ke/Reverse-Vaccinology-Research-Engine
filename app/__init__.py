@@ -1,4 +1,5 @@
 from flask import Flask, request
+from uuid import UUID
 
 from app.database import (
     create_database_engine_from_environment,
@@ -12,6 +13,8 @@ from app.services.analysis_service import (
 )
 from app.input.fasta import parse_fasta_records
 from werkzeug.exceptions import RequestEntityTooLarge
+from app.services.analysis_submission import AnalysisSubmissionService
+from app.services.job_queue import JobQueue
 
 
 def create_repository():
@@ -20,7 +23,7 @@ def create_repository():
     session = session_factory()
     return AnalysisRepository(session)
 
-def create_app(repository=None):
+def create_app(repository=None, queue=None):
     app = Flask(__name__)
 
     owns_repository = repository is None
@@ -28,7 +31,11 @@ def create_app(repository=None):
     if owns_repository:
         repository = create_repository()
 
+    if queue is None:
+        queue = JobQueue()
+
     app.config["ANALYSIS_REPOSITORY"] = repository
+    app.config["ANALYSIS_QUEUE"] = queue
 
     @app.teardown_appcontext
     def close_repository(error):
@@ -88,5 +95,65 @@ def create_app(repository=None):
             return {"error": str(error)}, 400
 
         return report, 200
+
+    @app.post("/api/analyses")
+    def submit_analysis():
+        repository = app.config["ANALYSIS_REPOSITORY"]
+
+        data = request.get_json(silent=True)
+
+        if not data:
+            return {"error": "JSON request body is required."}, 400
+
+        if "sequence" not in data:
+            return {"error": "Sequence is required."}, 400
+
+        try:
+            service = AnalysisSubmissionService(
+                repository,
+                app.config["ANALYSIS_QUEUE"],
+            )
+
+            analysis_id = service.submit(
+                sequence=data["sequence"],
+                protein_id=data.get("protein_id"),
+                protein_name=data.get("protein_name"),
+                organism=data.get("organism"),
+                accession=data.get("accession"),
+            )
+
+            repository.session.commit()
+
+        except (TypeError, ValueError) as error:
+            repository.session.rollback()
+            return {"error": str(error)}, 400
+
+        except RuntimeError as error:
+            repository.session.rollback()
+            return {"error": str(error)}, 500
+
+        return {
+            "analysis_id": str(analysis_id),
+            "status": "pending",
+        }, 202
+
+    @app.get("/api/analyses/<analysis_id>")
+    def get_analysis_status(analysis_id):
+        repository = app.config["ANALYSIS_REPOSITORY"]
+
+        try:
+            analysis_id = UUID(analysis_id)
+        except ValueError:
+            return {"error": "Invalid analysis ID."}, 400
+
+        analysis = repository.find_by_id(analysis_id)
+
+        if analysis is None:
+            return {"error": "Analysis not found."}, 404
+
+        return {
+            "analysis_id": str(analysis.id),
+            "status": analysis.status,
+        }, 200
 
     return app
