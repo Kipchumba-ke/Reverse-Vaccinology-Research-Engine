@@ -10,6 +10,7 @@ class AnalysisRepository:
     def _to_orm(analysis: Analysis) -> AnalysisModel:
         return AnalysisModel(
             id=analysis.id,
+            user_id=analysis.user_id,
             protein_id=analysis.protein_id,
             protein_name=analysis.protein_name,
             organism=analysis.organism,
@@ -22,6 +23,7 @@ class AnalysisRepository:
     def _to_domain(model: AnalysisModel) -> Analysis:
         return Analysis(
             id=model.id,
+            user_id=model.user_id,
             protein_id=model.protein_id,
             protein_name=model.protein_name,
             organism=model.organism,

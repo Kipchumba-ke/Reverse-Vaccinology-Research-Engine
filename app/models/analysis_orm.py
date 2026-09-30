@@ -1,4 +1,5 @@
 import uuid
+from uuid import UUID
 
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy import String, Text
@@ -14,6 +15,9 @@ class AnalysisModel(Base):
         PostgreSQLUUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
+    )
+    user_id: Mapped[UUID | None] = mapped_column(
+        nullable=True,
     )
     protein_id: Mapped[str | None] = mapped_column(String(255))
     protein_name: Mapped[str | None] = mapped_column(String(255))

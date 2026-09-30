@@ -16,7 +16,7 @@ from app.input.fasta import parse_fasta_records
 from werkzeug.exceptions import RequestEntityTooLarge
 from app.services.analysis_submission import AnalysisSubmissionService
 from app.services.job_queue import JobQueue
-from app.services.token_service import decode_token
+from app.services.authentication import get_authenticated_user_id
 
 
 def create_repository():
@@ -101,6 +101,11 @@ def create_app(repository=None, queue=None):
     @app.post("/api/analyses")
     def submit_analysis():
         repository = app.config["ANALYSIS_REPOSITORY"]
+        
+        try:
+            user_id = get_authenticated_user_id(request)
+        except jwt.InvalidTokenError:
+            return {"error": "Invalid authentication token."}, 401
 
         data = request.get_json(silent=True)
 
@@ -117,6 +122,7 @@ def create_app(repository=None, queue=None):
             )
 
             analysis_id = service.submit(
+                user_id=user_id,
                 sequence=data["sequence"],
                 protein_id=data.get("protein_id"),
                 protein_name=data.get("protein_name"),
@@ -144,6 +150,11 @@ def create_app(repository=None, queue=None):
         repository = app.config["ANALYSIS_REPOSITORY"]
 
         try:
+            user_id = get_authenticated_user_id(request)
+        except ValueError as error:
+            return {"error": str(error)}, 401
+
+        try:
             analysis_id = UUID(analysis_id)
         except ValueError:
             return {"error": "Invalid analysis ID."}, 400
@@ -153,26 +164,20 @@ def create_app(repository=None, queue=None):
         if analysis is None:
             return {"error": "Analysis not found."}, 404
 
+        if analysis.user_id != user_id:
+            return {"error": "You do not have access to this analysis."}, 403
+
         return {
             "analysis_id": str(analysis.id),
             "status": analysis.status,
         }, 200
     @app.get("/api/protected")
     def protected():
-        authorization = request.headers.get("Authorization")
-
-        if not authorization:
-            return {"error": "Authentication required."}, 401
-
-        if not authorization.startswith("Bearer "):
-            return {"error": "Invalid authentication token."}, 401
-
-        token = authorization.removeprefix("Bearer ")
 
         try:
-            user_id = decode_token(token)
-        except jwt.InvalidTokenError:
-            return {"error": "Invalid authentication token."}, 401
+            user_id = get_authenticated_user_id(request)
+        except ValueError as error:
+            return {"error": str(error)}, 401
 
         return {
             "message": "Authenticated.",

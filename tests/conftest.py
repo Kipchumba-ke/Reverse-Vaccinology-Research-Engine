@@ -6,6 +6,9 @@ from sqlalchemy import event
 from app.database import create_engine, create_session_factory
 from app import create_app
 from app.repositories.analysis_repository import AnalysisRepository
+from app.services.token_service import create_token
+from app.models.user import User
+from app.repositories.user_repository import UserRepository
 
 
 @pytest.fixture
@@ -45,3 +48,20 @@ def api_client(db_session):
     repository = AnalysisRepository(db_session)
     app = create_app(repository=repository)
     return app.test_client()
+
+@pytest.fixture
+def auth_token(db_session):
+    user = User(
+        email="test@example.com",
+        password_hash="hashed-password",
+    )
+
+    user_repository = UserRepository(db_session)
+    user_repository.save(user)
+    db_session.commit()
+
+    return create_token(user)
+
+@pytest.fixture
+def auth_headers(auth_token):
+    return {"Authorization": f"Bearer {auth_token}"}

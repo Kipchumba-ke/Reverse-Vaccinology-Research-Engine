@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 @dataclass
 class Analysis:
     id: UUID = field(default_factory=uuid4)
+    user_id: UUID | None = None
     protein_id: str | None = None
     protein_name: str | None = None
     organism: str | None = None

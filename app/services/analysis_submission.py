@@ -14,8 +14,10 @@ class AnalysisSubmissionService:
         protein_name=None,
         organism=None,
         accession=None,
+        user_id=None,
     ):
         analysis = Analysis(
+            user_id=user_id,
             protein_id=protein_id,
             protein_name=protein_name,
             organism=organism,

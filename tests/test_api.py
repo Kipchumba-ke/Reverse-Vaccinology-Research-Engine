@@ -9,6 +9,10 @@ from app.models.analysis_orm import AnalysisModel
 from uuid import UUID
 
 from app.services.analysis_worker import AnalysisWorker
+from app.repositories.analysis_repository import AnalysisRepository
+from app.services.token_service import create_token
+from app.models.user import User
+from app.repositories.user_repository import UserRepository
 
 
 def test_create_app_returns_flask_application():
@@ -875,9 +879,10 @@ def test_api_database_state_is_clean_after_previous_api_test(db_session):
 
 
 
-def test_submit_analysis_returns_pending_analysis(api_client):
+def test_submit_analysis_returns_pending_analysis(api_client, auth_token):
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "sequence": "MKT",
             "protein_id": "P0A911",
@@ -896,9 +901,10 @@ def test_submit_analysis_returns_pending_analysis(api_client):
 
 
 
-def test_submit_analysis_requires_sequence(api_client):
+def test_submit_analysis_requires_sequence(api_client, auth_token):
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "protein_id": "P0A911",
         },
@@ -911,9 +917,10 @@ def test_submit_analysis_requires_sequence(api_client):
 
 
 
-def test_submit_analysis_requires_json_body(api_client):
+def test_submit_analysis_requires_json_body(api_client, auth_token):
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         data="not-json",
         content_type="application/json",
     )
@@ -925,7 +932,7 @@ def test_submit_analysis_requires_json_body(api_client):
 
 
 
-def test_submit_analysis_handles_queue_failure(api_client):
+def test_submit_analysis_handles_queue_failure(api_client, auth_token):
     class FailingQueue:
         def enqueue(self, job):
             raise RuntimeError("Queue unavailable")
@@ -935,6 +942,7 @@ def test_submit_analysis_handles_queue_failure(api_client):
 
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "sequence": "MKT",
             "protein_id": "P0A911",
@@ -948,7 +956,7 @@ def test_submit_analysis_handles_queue_failure(api_client):
 
 
 
-def test_submit_analysis_handles_persistence_failure(api_client):
+def test_submit_analysis_handles_persistence_failure(api_client, auth_token):
     class FailingRepository:
         def save(self, analysis):
             raise RuntimeError("Database unavailable")
@@ -966,6 +974,7 @@ def test_submit_analysis_handles_persistence_failure(api_client):
 
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "sequence": "MKT",
             "protein_id": "P0A911",
@@ -979,11 +988,12 @@ def test_submit_analysis_handles_persistence_failure(api_client):
 
 
 
-def test_submit_analysis_commits_successful_submission(api_client):
+def test_submit_analysis_commits_successful_submission(api_client, auth_token):
     repository = api_client.application.config["ANALYSIS_REPOSITORY"]
 
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "sequence": "MKT",
             "protein_id": "P0A911",
@@ -1001,9 +1011,10 @@ def test_submit_analysis_commits_successful_submission(api_client):
 
 
 
-def test_get_analysis_status_returns_pending(api_client):
+def test_get_analysis_status_returns_pending(api_client, auth_token):
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "sequence": "MKT",
             "protein_id": "P0A911",
@@ -1014,7 +1025,7 @@ def test_get_analysis_status_returns_pending(api_client):
 
     analysis_id = response.get_json()["analysis_id"]
 
-    response = api_client.get(f"/api/analyses/{analysis_id}")
+    response = api_client.get(f"/api/analyses/{analysis_id}", headers={"Authorization": f"Bearer {auth_token}"})
 
     assert response.status_code == 200
 
@@ -1025,9 +1036,10 @@ def test_get_analysis_status_returns_pending(api_client):
 
 
 
-def test_get_analysis_status_returns_404_for_unknown_analysis(api_client):
+def test_get_analysis_status_returns_404_for_unknown_analysis(api_client, auth_token):
     response = api_client.get(
-        "/api/analyses/00000000-0000-0000-0000-000000000000"
+        "/api/analyses/00000000-0000-0000-0000-000000000000",
+        headers={"Authorization": f"Bearer {auth_token}"},
     )
 
     assert response.status_code == 404
@@ -1037,8 +1049,8 @@ def test_get_analysis_status_returns_404_for_unknown_analysis(api_client):
 
 
 
-def test_get_analysis_status_rejects_invalid_analysis_id(api_client):
-    response = api_client.get("/api/analyses/not-a-uuid")
+def test_get_analysis_status_rejects_invalid_analysis_id(api_client, auth_token):
+    response = api_client.get("/api/analyses/not-a-uuid",headers={"Authorization": f"Bearer {auth_token}"},)
 
     assert response.status_code == 400
     assert response.get_json() == {
@@ -1047,9 +1059,10 @@ def test_get_analysis_status_rejects_invalid_analysis_id(api_client):
 
 
 
-def test_get_analysis_status_returns_completed(api_client):
+def test_get_analysis_status_returns_completed(api_client, auth_token):
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "sequence": "MKT",
             "protein_id": "P0A911",
@@ -1067,7 +1080,7 @@ def test_get_analysis_status_returns_completed(api_client):
     repository.update(analysis)
     repository.session.commit()
 
-    response = api_client.get(f"/api/analyses/{analysis_id}")
+    response = api_client.get(f"/api/analyses/{analysis_id}", headers={"Authorization": f"Bearer {auth_token}"},)
 
     assert response.status_code == 200
 
@@ -1078,9 +1091,10 @@ def test_get_analysis_status_returns_completed(api_client):
 
 
 
-def test_get_analysis_status_returns_failed(api_client):
+def test_get_analysis_status_returns_failed(api_client, auth_token):
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "sequence": "MKT",
             "protein_id": "P0A911",
@@ -1098,7 +1112,7 @@ def test_get_analysis_status_returns_failed(api_client):
     repository.update(analysis)
     repository.session.commit()
 
-    response = api_client.get(f"/api/analyses/{analysis_id}")
+    response = api_client.get(f"/api/analyses/{analysis_id}", headers={"Authorization": f"Bearer {auth_token}"},)
 
     assert response.status_code == 200
 
@@ -1109,9 +1123,10 @@ def test_get_analysis_status_returns_failed(api_client):
 
 
 
-def test_analysis_submission_worker_and_status_lifecycle(api_client):
+def test_analysis_submission_worker_and_status_lifecycle(api_client, auth_token):
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "sequence": "MKT",
             "protein_id": "P0A911",
@@ -1141,7 +1156,8 @@ def test_analysis_submission_worker_and_status_lifecycle(api_client):
     repository.session.commit()
 
     response = api_client.get(
-        f"/api/analyses/{analysis_id}"
+        f"/api/analyses/{analysis_id}",
+        headers={"Authorization": f"Bearer {auth_token}"},
     )
 
     assert response.status_code == 200
@@ -1153,9 +1169,10 @@ def test_analysis_submission_worker_and_status_lifecycle(api_client):
 
 
 
-def test_analysis_submission_worker_and_status_failure_lifecycle(api_client):
+def test_analysis_submission_worker_and_status_failure_lifecycle(api_client, auth_token):
     response = api_client.post(
         "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
         json={
             "sequence": "MKT",
             "protein_id": "P0A911",
@@ -1191,7 +1208,8 @@ def test_analysis_submission_worker_and_status_failure_lifecycle(api_client):
     repository.session.commit()
 
     response = api_client.get(
-        f"/api/analyses/{analysis_id}"
+        f"/api/analyses/{analysis_id}",
+        headers={"Authorization": f"Bearer {auth_token}"},
     )
 
     assert response.status_code == 200
