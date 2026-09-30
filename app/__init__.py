@@ -1,5 +1,6 @@
 from flask import Flask, request
 from uuid import UUID
+import jwt
 
 from app.database import (
     create_database_engine_from_environment,
@@ -15,6 +16,7 @@ from app.input.fasta import parse_fasta_records
 from werkzeug.exceptions import RequestEntityTooLarge
 from app.services.analysis_submission import AnalysisSubmissionService
 from app.services.job_queue import JobQueue
+from app.services.token_service import decode_token
 
 
 def create_repository():
@@ -154,6 +156,27 @@ def create_app(repository=None, queue=None):
         return {
             "analysis_id": str(analysis.id),
             "status": analysis.status,
+        }, 200
+    @app.get("/api/protected")
+    def protected():
+        authorization = request.headers.get("Authorization")
+
+        if not authorization:
+            return {"error": "Authentication required."}, 401
+
+        if not authorization.startswith("Bearer "):
+            return {"error": "Invalid authentication token."}, 401
+
+        token = authorization.removeprefix("Bearer ")
+
+        try:
+            user_id = decode_token(token)
+        except jwt.InvalidTokenError:
+            return {"error": "Invalid authentication token."}, 401
+
+        return {
+            "message": "Authenticated.",
+            "user_id": str(user_id),
         }, 200
 
     return app
