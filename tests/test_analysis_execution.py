@@ -1,3 +1,4 @@
+import os
 import pytest
 from uuid import uuid4
 
@@ -9,6 +10,10 @@ from app.services.analysis_job import AnalysisJob
 from app.services.job_queue import JobQueue, Queue
 from app.services.analysis_worker import AnalysisWorker
 from app.services.analysis_submission import AnalysisSubmissionService
+from app.services.celery_queue import CeleryQueue
+from app.database import create_engine, create_session_factory
+from app.services.celery_queue import execute_analysis_task
+from app.models.analysis_orm import AnalysisModel
 
 
 def test_execution_service_runs_analysis():
@@ -532,3 +537,127 @@ def test_submit_analysis_returns_enqueued_analysis_id():
 
     assert queued_job is not None
     assert queued_job.analysis_id == analysis_id
+
+def test_celery_queue_implements_queue_contract():
+
+    queue = CeleryQueue()
+
+    assert isinstance(queue, Queue)
+
+
+
+def test_celery_task_loads_analysis_from_repository(monkeypatch):
+
+    test_database_url = os.environ["TEST_DATABASE_URL"]
+    engine = create_engine(test_database_url)
+    session_factory = create_session_factory(engine)
+    setup_session = session_factory()
+
+    try:
+        analysis = Analysis(
+            sequence="MKTIIALSYIFCLVFADYKDDDDA",
+            protein_id="P12345",
+            protein_name="Test Protein",
+            organism="Test organism",
+            accession="ACC123",
+        )
+
+        repository = AnalysisRepository(setup_session)
+        repository.save(analysis)
+        setup_session.commit()
+
+        executed = {}
+
+        def fake_execute_analysis(loaded_analysis, repository):
+            executed["analysis"] = loaded_analysis
+            executed["repository"] = repository
+
+        monkeypatch.setattr(
+            "app.services.celery_queue.execute_analysis",
+            fake_execute_analysis,
+        )
+
+        monkeypatch.setenv(
+            "DATABASE_URL",
+            test_database_url,
+        )
+
+        execute_analysis_task(analysis.id)
+
+        assert executed["analysis"].id == analysis.id
+        assert executed["analysis"].sequence == analysis.sequence
+        deleted_analysis = setup_session.get(
+            AnalysisModel,
+            analysis.id,
+        )
+
+        assert deleted_analysis is not None
+
+        setup_session.delete(deleted_analysis)
+        setup_session.commit()
+
+        assert setup_session.get(
+            AnalysisModel,
+            analysis.id,
+        ) is None
+
+    finally:
+        setup_session.close()
+        engine.dispose()
+
+def test_execute_analysis_task_is_registered_with_celery():
+
+    assert hasattr(execute_analysis_task, "delay")
+    assert hasattr(execute_analysis_task, "apply_async")
+
+def test_celery_queue_enqueues_analysis_job(monkeypatch):
+    analysis = Analysis(
+        protein_id="P0A911",
+        protein_name="Outer membrane protein A",
+        organism="Escherichia coli",
+        accession="P0A911",
+        sequence="MKT",
+    )
+
+    job = AnalysisJob(analysis)
+
+    called = {}
+
+    def fake_delay(analysis_id):
+        called["analysis_id"] = analysis_id
+
+    monkeypatch.setattr(
+        "app.services.celery_queue.execute_analysis_task.delay",
+        fake_delay,
+    )
+
+    queue = CeleryQueue()
+
+    analysis_id = queue.enqueue(job)
+
+    assert analysis_id == analysis.id
+    assert called["analysis_id"] == analysis.id
+
+def test_submit_analysis_with_celery_queue_dispatches_task(monkeypatch, db_session):
+    repository = AnalysisRepository(db_session)
+    queue = CeleryQueue()
+
+    called = {}
+
+    def fake_delay(analysis_id):
+        called["analysis_id"] = analysis_id
+
+    monkeypatch.setattr(
+        execute_analysis_task,
+        "delay",
+        fake_delay,
+    )
+
+    service = AnalysisSubmissionService(repository, queue)
+
+    analysis_id = service.submit(
+        sequence="MKT",
+        protein_id="P0A911",
+    )
+
+    assert called["analysis_id"] == analysis_id
