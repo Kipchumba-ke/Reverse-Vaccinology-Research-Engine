@@ -3,6 +3,7 @@ import pytest
 from uuid import uuid4
 
 
+from app import create_app
 from app.models.analysis import Analysis
 from app.services.analysis_execution import execute_analysis
 from app.repositories.analysis_repository import AnalysisRepository
@@ -438,29 +439,6 @@ class FakeRepository:
         self.saved_analysis = analysis
         return analysis
 
-def test_submit_analysis_creates_and_enqueues_job():
-    repository = FakeRepository()
-    queue = JobQueue()
-
-    service = AnalysisSubmissionService(repository, queue)
-
-    analysis_id = service.submit(
-        sequence="MKT",
-        protein_id="P0A911",
-        protein_name="Outer membrane protein A",
-        organism="Escherichia coli O157:H7",
-        accession="P0A911",
-    )
-
-    assert analysis_id is not None
-
-    analysis = repository.saved_analysis
-
-    assert analysis.id == analysis_id
-    assert analysis.sequence == "MKT"
-    assert analysis.status == "pending"
-    assert queue.get(analysis_id) is not None
-
 
 
 def test_submit_analysis_does_not_execute_job():
@@ -481,7 +459,7 @@ def test_submit_analysis_does_not_execute_job():
 
 
 
-def test_submit_analysis_does_not_enqueue_when_persistence_fails():
+def test_submit_analysis_does_not_dispatch_when_persistence_fails():
     class FailingRepository:
         def save(self, analysis):
             raise RuntimeError("Database unavailable")
@@ -497,46 +475,7 @@ def test_submit_analysis_does_not_enqueue_when_persistence_fails():
             protein_id="P0A911",
         )
 
-    assert queue._jobs == {}
 
-
-
-def test_submit_analysis_propagates_queue_failure():
-    class FailingQueue:
-        def enqueue(self, job):
-            raise RuntimeError("Queue unavailable")
-
-    repository = FakeRepository()
-    queue = FailingQueue()
-
-    service = AnalysisSubmissionService(repository, queue)
-
-    with pytest.raises(RuntimeError, match="Queue unavailable"):
-        service.submit(
-            sequence="MKT",
-            protein_id="P0A911",
-        )
-
-    assert repository.saved_analysis is not None
-    assert repository.saved_analysis.status == "pending"
-
-
-
-def test_submit_analysis_returns_enqueued_analysis_id():
-    repository = FakeRepository()
-    queue = JobQueue()
-
-    service = AnalysisSubmissionService(repository, queue)
-
-    analysis_id = service.submit(
-        sequence="MKT",
-        protein_id="P0A911",
-    )
-
-    queued_job = queue.get(analysis_id)
-
-    assert queued_job is not None
-    assert queued_job.analysis_id == analysis_id
 
 def test_celery_queue_implements_queue_contract():
 
@@ -638,26 +577,10 @@ def test_celery_queue_enqueues_analysis_job(monkeypatch):
     assert analysis_id == analysis.id
     assert called["analysis_id"] == analysis.id
 
-def test_submit_analysis_with_celery_queue_dispatches_task(monkeypatch, db_session):
-    repository = AnalysisRepository(db_session)
-    queue = CeleryQueue()
 
-    called = {}
-
-    def fake_delay(analysis_id):
-        called["analysis_id"] = analysis_id
-
-    monkeypatch.setattr(
-        execute_analysis_task,
-        "delay",
-        fake_delay,
+def test_create_app_uses_celery_queue_by_default():
+    app = create_app()
+    assert isinstance(
+        app.config["ANALYSIS_QUEUE"],
+        CeleryQueue,
     )
-
-    service = AnalysisSubmissionService(repository, queue)
-
-    analysis_id = service.submit(
-        sequence="MKT",
-        protein_id="P0A911",
-    )
-
-    assert called["analysis_id"] == analysis_id

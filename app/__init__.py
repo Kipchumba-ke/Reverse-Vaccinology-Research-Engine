@@ -15,8 +15,9 @@ from app.services.analysis_service import (
 from app.input.fasta import parse_fasta_records
 from werkzeug.exceptions import RequestEntityTooLarge
 from app.services.analysis_submission import AnalysisSubmissionService
-from app.services.job_queue import JobQueue
+from app.services.celery_queue import CeleryQueue
 from app.services.authentication import get_authenticated_user_id
+from app.services.analysis_job import AnalysisJob
 
 
 def create_repository():
@@ -34,7 +35,7 @@ def create_app(repository=None, queue=None):
         repository = create_repository()
 
     if queue is None:
-        queue = JobQueue()
+        queue = CeleryQueue()
 
     app.config["ANALYSIS_REPOSITORY"] = repository
     app.config["ANALYSIS_QUEUE"] = queue
@@ -104,8 +105,8 @@ def create_app(repository=None, queue=None):
         
         try:
             user_id = get_authenticated_user_id(request)
-        except jwt.InvalidTokenError:
-            return {"error": "Invalid authentication token."}, 401
+        except ValueError as error:
+            return {"error": str(error)}, 401
 
         data = request.get_json(silent=True)
 
@@ -131,6 +132,15 @@ def create_app(repository=None, queue=None):
             )
 
             repository.session.commit()
+
+            analysis = repository.find_by_id(analysis_id)
+
+            job = AnalysisJob(
+                analysis,
+                app.config["ANALYSIS_QUEUE"],
+            )
+
+            app.config["ANALYSIS_QUEUE"].enqueue(job)
 
         except (TypeError, ValueError) as error:
             repository.session.rollback()

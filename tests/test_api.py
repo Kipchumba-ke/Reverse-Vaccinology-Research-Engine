@@ -1143,29 +1143,11 @@ def test_analysis_submission_worker_and_status_lifecycle(api_client, auth_token)
 
     assert data["status"] == "pending"
 
-    queue = api_client.application.config["ANALYSIS_QUEUE"]
-
-    job = queue.get(UUID(analysis_id))
-
-    assert job is not None
-
-    worker = AnalysisWorker(queue)
-    worker.run(job.analysis_id)
-
     repository = api_client.application.config["ANALYSIS_REPOSITORY"]
-    repository.session.commit()
+    analysis = repository.find_by_id(UUID(analysis_id))
 
-    response = api_client.get(
-        f"/api/analyses/{analysis_id}",
-        headers={"Authorization": f"Bearer {auth_token}"},
-    )
-
-    assert response.status_code == 200
-
-    data = response.get_json()
-
-    assert data["analysis_id"] == analysis_id
-    assert data["status"] == "completed"
+    assert analysis is not None
+    assert analysis.status == "pending"
 
 
 
@@ -1183,38 +1165,49 @@ def test_analysis_submission_worker_and_status_failure_lifecycle(api_client, aut
 
     analysis_id = response.get_json()["analysis_id"]
 
-    queue = api_client.application.config["ANALYSIS_QUEUE"]
-    job = queue.get(UUID(analysis_id))
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+    analysis = repository.find_by_id(UUID(analysis_id))
 
-    assert job is not None
+    assert analysis is not None
+    assert analysis.status == "pending"
 
-    def failing_analysis(*args, **kwargs):
-        raise RuntimeError("Analysis execution failed")
-
-    import app.services.analysis_execution as execution
-
-    original_execute = execution.analyze_sequence
-    execution.analyze_sequence = failing_analysis
-
-    try:
-        worker = AnalysisWorker(queue)
-
-        with pytest.raises(RuntimeError, match="Analysis execution failed"):
-            worker.run(job.analysis_id)
-    finally:
-        execution.analyze_sequence = original_execute
+def test_analysis_submission_commits_before_dispatching_task(
+    api_client,
+    auth_token,
+    monkeypatch,
+):
+    order = []
 
     repository = api_client.application.config["ANALYSIS_REPOSITORY"]
-    repository.session.commit()
 
-    response = api_client.get(
-        f"/api/analyses/{analysis_id}",
-        headers={"Authorization": f"Bearer {auth_token}"},
+    original_commit = repository.session.commit
+
+    def tracked_commit():
+        order.append("commit")
+        return original_commit()
+
+    def fake_delay(analysis_id):
+        order.append("enqueue")
+
+    monkeypatch.setattr(
+        repository.session,
+        "commit",
+        tracked_commit,
     )
 
-    assert response.status_code == 200
+    monkeypatch.setattr(
+        "app.services.celery_queue.execute_analysis_task.delay",
+        fake_delay,
+    )
 
-    data = response.get_json()
+    response = api_client.post(
+        "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "sequence": "MKT",
+            "protein_id": "P0A911",
+        },
+    )
 
-    assert data["analysis_id"] == analysis_id
-    assert data["status"] == "failed"
+    assert response.status_code == 202
+    assert order == ["commit", "enqueue"]

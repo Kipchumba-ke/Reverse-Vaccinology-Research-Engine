@@ -1,5 +1,4 @@
 from app.models.analysis import Analysis
-from app.services.analysis_job import AnalysisJob
 
 
 class AnalysisSubmissionService:
@@ -26,11 +25,5 @@ class AnalysisSubmissionService:
         )
 
         self.repository.save(analysis)
-
-        job = AnalysisJob(
-            analysis,
-            self.repository,
-        )
-        self.queue.enqueue(job)
 
         return analysis.id
