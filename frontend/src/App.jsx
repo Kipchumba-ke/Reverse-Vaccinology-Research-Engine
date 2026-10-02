@@ -1,11 +1,19 @@
 import { useState } from "react"
+import { submitAnalysis } from './services/analysisService'
 
 
 function App() {
   const [submitted, setSubmitted] = useState(false) 
+  const [sequence, setSequence] = useState('')
+  const [error, setError] = useState(null)
 
-  function handleSubmit() {
-    setSubmitted(true)
+  async function handleSubmit() {
+    try {
+      await submitAnalysis(sequence)
+      setSubmitted(true)
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
@@ -19,6 +27,8 @@ function App() {
       <textarea 
         id="protein-sequence" 
         name="protein-sequence" 
+        value={sequence}
+        onChange={(e) => setSequence(e.target.value)}
       />
 
       <button type="button" onClick={handleSubmit}>
@@ -31,6 +41,11 @@ function App() {
         </p>
       )}
 
+      {error && (
+        <p>
+          {error}
+        </p>
+      )}
     </main>
   )
 }
