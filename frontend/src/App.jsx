@@ -1,5 +1,12 @@
+import { useState } from "react"
+
 
 function App() {
+  const [submitted, setSubmitted] = useState(false) 
+
+  function handleSubmit() {
+    setSubmitted(true)
+  }
 
   return (
     <main>
@@ -14,9 +21,15 @@ function App() {
         name="protein-sequence" 
       />
 
-      <button type="button">
+      <button type="button" onClick={handleSubmit}>
         Analyze Protein
       </button>
+
+      {submitted && (
+        <p>
+          Analysis submitted!
+        </p>
+      )}
 
     </main>
   )
