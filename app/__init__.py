@@ -180,6 +180,7 @@ def create_app(repository=None, queue=None):
         return {
             "analysis_id": str(analysis.id),
             "status": analysis.status,
+            "report": analysis.report,
         }, 200
     @app.get("/api/protected")
     def protected():

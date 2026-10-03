@@ -12,3 +12,4 @@ class Analysis:
     accession: str | None = None
     sequence: str = ""
     status: str = "pending"
+    report: dict | None = None

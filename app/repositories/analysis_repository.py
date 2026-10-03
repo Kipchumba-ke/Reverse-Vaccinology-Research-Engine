@@ -17,6 +17,8 @@ class AnalysisRepository:
             accession=analysis.accession,
             sequence=analysis.sequence,
             status=analysis.status,
+            report=analysis.report,
+
         )
 
     @staticmethod
@@ -30,6 +32,7 @@ class AnalysisRepository:
             accession=model.accession,
             sequence=model.sequence,
             status=model.status,
+            report=model.report,
         )
 
     def save(self, analysis: Analysis) -> Analysis:
@@ -64,6 +67,7 @@ class AnalysisRepository:
         model.accession = analysis.accession
         model.sequence = analysis.sequence
         model.status = analysis.status
+        model.report = analysis.report
 
         self.session.flush()
 

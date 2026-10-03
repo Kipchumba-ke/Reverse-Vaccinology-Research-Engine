@@ -25,4 +25,32 @@ describe('getAnalysisStatus', () => {
       status: 'running',
     })
   })
+
+  it('returns the analysis report when the analysis is completed', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        analysis_id: '123',
+        status: 'completed',
+        report: {
+          sequence: 'MKT',
+          length: 3,
+        },
+      }),
+    })
+
+    globalThis.fetch = fetchMock
+
+    const result = await getAnalysisStatus('123')
+
+    expect(result).toEqual({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        sequence: 'MKT',
+        length: 3,
+      },
+    })
+  })
 })

@@ -104,6 +104,38 @@ def test_execution_persists_running_status(db_session, monkeypatch):
 
     execute_analysis(analysis, repository)
 
+def test_execution_persists_analysis_report(db_session, monkeypatch):
+    repository = AnalysisRepository(db_session)
+
+    analysis = Analysis(
+        protein_id="P0A911",
+        protein_name="Outer membrane protein A",
+        organism="Escherichia coli O157:H7",
+        accession="P0A911",
+        sequence="MKT",
+    )
+
+    repository.save(analysis)
+    db_session.commit()
+
+    report = {
+        "protein": {
+            "id": "P0A911",
+        },
+        "sequence": "MKT",
+        "length": 3,
+    }
+
+    monkeypatch.setattr(
+        "app.services.analysis_execution.analyze_sequence",
+        lambda *args, **kwargs: report,
+    )
+
+    execute_analysis(analysis, repository)
+
+    persisted = repository.find_by_id(analysis.id)
+
+    assert persisted.report == report
 
 def test_update_analysis_status(db_session):
     repository = AnalysisRepository(db_session)

@@ -23,6 +23,7 @@ def execute_analysis(analysis, repository=None):
         
         raise
 
+    analysis.report = result
     analysis.status = "completed"
     
     if repository is not None:

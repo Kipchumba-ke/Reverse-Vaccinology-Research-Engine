@@ -1033,6 +1033,7 @@ def test_get_analysis_status_returns_pending(api_client, auth_token):
 
     assert data["analysis_id"] == analysis_id
     assert data["status"] == "pending"
+    assert data["report"] is None
 
 
 
@@ -1077,6 +1078,13 @@ def test_get_analysis_status_returns_completed(api_client, auth_token):
     analysis = repository.find_by_id(analysis_id)
 
     analysis.status = "completed"
+    analysis.report = {
+        "protein": {
+            "id": "P0A911",
+        },
+        "sequence": "MKT",
+        "length": 3,
+    }
     repository.update(analysis)
     repository.session.commit()
 
@@ -1088,6 +1096,7 @@ def test_get_analysis_status_returns_completed(api_client, auth_token):
 
     assert data["analysis_id"] == analysis_id
     assert data["status"] == "completed"
+    assert data["report"] == analysis.report
 
 
 

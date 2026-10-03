@@ -22,3 +22,18 @@ def test_analysis_has_an_id():
     analysis = Analysis()
 
     assert analysis.id is not None
+
+def test_analysis_stores_analysis_report():
+    report = {
+        "sequence": "MKTAYIAKQRQISFVKSHFSRQ",
+        "length": 22,
+        "molecular_weight": 2500.0,
+    }
+
+    analysis = Analysis(
+        sequence="MKTAYIAKQRQISFVKSHFSRQ",
+        status="completed",
+        report=report,
+    )
+
+    assert analysis.report == report

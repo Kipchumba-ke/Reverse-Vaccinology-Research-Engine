@@ -183,3 +183,50 @@ def test_repository_requires_rollback_after_duplicate_id_failure(db_session):
     with pytest.raises(PendingRollbackError):
         repository.find_by_id(analysis.id)
 
+
+def test_repository_round_trip_preserves_analysis_report(db_session):
+    repository = AnalysisRepository(db_session)
+
+    report = {
+        "sequence": "MKTAYIAKQRQISFVKSHFSRQ",
+        "length": 22,
+        "molecular_weight": 2500.0,
+    }
+
+    analysis = Analysis(
+        sequence="MKTAYIAKQRQISFVKSHFSRQ",
+        status="completed",
+        report=report,
+    )
+
+    repository.save(analysis)
+
+    found = repository.find_by_id(analysis.id)
+
+    assert found.report == report
+
+def test_repository_update_preserves_analysis_report(db_session):
+    repository = AnalysisRepository(db_session)
+
+    analysis = Analysis(
+        sequence="MKTAYIAKQRQISFVKSHFSRQ",
+        status="running",
+    )
+
+    repository.save(analysis)
+
+    report = {
+        "sequence": "MKTAYIAKQRQISFVKSHFSRQ",
+        "length": 22,
+        "molecular_weight": 2500.0,
+    }
+
+    analysis.report = report
+    analysis.status = "completed"
+
+    repository.update(analysis)
+
+    found = repository.find_by_id(analysis.id)
+
+    assert found.report == report
+    assert found.status == "completed"
