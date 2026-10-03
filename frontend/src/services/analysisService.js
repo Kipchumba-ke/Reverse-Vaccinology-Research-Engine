@@ -11,3 +11,9 @@ export async function submitAnalysis(sequence) {
 
   return response.json()
 }
+
+export async function getAnalysisStatus(analysisId) {
+  const response = await fetch(`/api/analyses/${analysisId}`)
+
+  return response.json()
+}

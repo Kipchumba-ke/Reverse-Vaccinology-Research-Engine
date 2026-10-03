@@ -1,16 +1,52 @@
-import { useState } from "react"
-import { submitAnalysis } from './services/analysisService'
+import { use, useEffect ,useState } from "react"
+import { submitAnalysis, getAnalysisStatus } from './services/analysisService'
 
 
 function App() {
   const [submitted, setSubmitted] = useState(false) 
   const [sequence, setSequence] = useState('')
   const [error, setError] = useState(null)
+  const [analysisId, setAnalysisId] = useState('')
+  const [status, setStatus] = useState('')
+
+  useEffect(() => {
+    if (!analysisId) return
+
+    let cancelled = false
+    let timeoutId
+
+
+    async function pollAnalysisStatus() {
+      const result = await getAnalysisStatus(analysisId)
+
+      if (cancelled) return
+
+      setStatus(result.status)
+      
+      if (result.status === 'pending' || result.status === 'running') {
+        timeoutId = setTimeout(pollAnalysisStatus, 1000)
+      }
+
+    }
+
+    pollAnalysisStatus()
+    
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+    }
+
+  }, [analysisId])
+
 
   async function handleSubmit() {
     try {
-      await submitAnalysis(sequence)
+      const result = await submitAnalysis(sequence)
+
+      setAnalysisId(result.analysis_id)
+
       setSubmitted(true)
+
     } catch (err) {
       setError(err.message)
     }
@@ -20,7 +56,7 @@ function App() {
     <main>
       <h1>Reverse Vaccinology</h1>
 
-      < label htmlFor="protein-sequence">
+      <label htmlFor="protein-sequence">
         Protein Sequence
       </label>
 
@@ -34,6 +70,18 @@ function App() {
       <button type="button" onClick={handleSubmit}>
         Analyze Protein
       </button>
+
+      {status && (
+        <p>
+          Analysis Status: {status}
+        </p>
+      )}
+
+      {analysisId && (
+        <p>
+          Analysis ID: {analysisId}
+        </p>
+      )}
 
       {submitted && (
         <p>
