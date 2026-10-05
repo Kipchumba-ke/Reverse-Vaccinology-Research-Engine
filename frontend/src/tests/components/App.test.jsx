@@ -1,21 +1,31 @@
 import { act ,render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach ,describe, expect, it, vi } from 'vitest'
 import { submitAnalysis, getAnalysisStatus } from '../../services/analysisService'
 import App from '../../App'
 
 vi.mock('../../services/analysisService', () => ({
-  submitAnalysis: vi.fn().mockResolvedValue({
-    analysis_id: '123',
-    status: 'pending',
-  }),
-  getAnalysisStatus: vi.fn().mockResolvedValue({
-    analysis_id: '123',
-    status: 'running',
-  }),
+  submitAnalysis: vi.fn(),
+  getAnalysisStatus: vi.fn(),
 }))
 
 describe('App', () => {
+
+  beforeEach(() => {
+    submitAnalysis.mockReset()
+    getAnalysisStatus.mockReset()
+
+    submitAnalysis.mockResolvedValue({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValue({
+      analysis_id: '123',
+      status: 'running',
+    })
+  })
+
   it('renders the reverse vaccinology application', () => {
     render(<App />)
 
@@ -1124,5 +1134,357 @@ describe('App', () => {
     expect(
       screen.getByText(/length: 6/i),
     ).toBeInTheDocument()
+  })
+
+  it('displays scientific sections in the analysis report', async () => {
+    getAnalysisStatus.mockResolvedValue({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        metadata: {
+          report_type: 'reverse_vaccinology',
+          report_version: '1.0',
+          analysis_pipeline: 'protein_sequence_analysis',
+        },
+        protein: {
+          id: 'protein-1',
+          name: 'Test Protein',
+          organism: 'Test Organism',
+          accession: 'ABC123',
+          sequence: 'MKTLLILAV',
+          length: 9,
+          molecular_weight: 1000,
+          gravy: 0.5,
+          isoelectric_point: 7.0,
+        },
+        measurements: {
+          charge_and_hydrophobicity: {
+            net_charge: 1,
+          },
+        },
+        conservation: {},
+        evidence: {},
+        interpretations: [],
+        candidate_assessment: {},
+        limitations: [],
+        peptide_candidates: [],
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByRole('textbox'),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze/i }),
+    )
+
+    expect(
+      await screen.findByRole('heading', {
+        name: /report metadata/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /protein characteristics/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /measurements/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /conservation/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /evidence/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /interpretations/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /candidate assessment/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /limitations/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /peptide candidates/i,
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('groups scientific report content into sections', async () => {
+    getAnalysisStatus.mockResolvedValue({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        metadata: {
+          report_type: 'reverse_vaccinology',
+          report_version: '1.0',
+          analysis_pipeline: 'protein_sequence_analysis',
+        },
+        protein: {
+          id: 'protein-1',
+          name: 'Test Protein',
+          organism: 'Test Organism',
+          accession: 'ABC123',
+          sequence: 'MKTLLILAV',
+          length: 9,
+          molecular_weight: 1000,
+          gravy: 0.5,
+          isoelectric_point: 7.0,
+        },
+        measurements: {
+          charge_and_hydrophobicity: {
+            net_charge: 1,
+          },
+        },
+        conservation: {},
+        evidence: {},
+        interpretations: [],
+        candidate_assessment: {},
+        limitations: [],
+        peptide_candidates: [],
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByRole('textbox'),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze/i }),
+    )
+
+    expect(
+      await screen.findByRole('heading', {
+        name: /report metadata/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /report metadata/i,
+      }).closest('section'),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /protein characteristics/i,
+      }).closest('section'),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /measurements/i,
+      }).closest('section'),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /conservation/i,
+      }).closest('section'),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /evidence/i,
+      }).closest('section'),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /interpretations/i,
+      }).closest('section'),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /candidate assessment/i,
+      }).closest('section'),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /limitations/i,
+      }).closest('section'),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('heading', {
+        name: /peptide candidates/i,
+      }).closest('section'),
+    ).toBeInTheDocument()
+  })
+
+  it('provides stable styling hooks for the analysis report', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        metadata: {
+          report_type: 'reverse_vaccinology',
+          report_version: '1.0',
+          analysis_pipeline: 'protein_sequence_analysis',
+        },
+        protein: {
+          id: 'protein-1',
+          name: 'Test Protein',
+          organism: 'Test Organism',
+          accession: 'ABC123',
+          sequence: 'MKTLLILAV',
+          length: 9,
+          molecular_weight: 1000,
+          gravy: 0.5,
+          isoelectric_point: 7.0,
+        },
+        measurements: {
+          charge_and_hydrophobicity: {
+            net_charge: 1,
+          },
+        },
+        conservation: {},
+        evidence: {},
+        interpretations: [],
+        candidate_assessment: {},
+        limitations: [],
+        peptide_candidates: [],
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByRole('textbox'),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze/i }),
+    )
+
+    const report = await screen.findByRole('heading', {
+      name: /analysis report/i,
+    })
+
+    expect(
+      report.closest('.analysis-report'),
+    ).toBeInTheDocument()
+
+    expect(
+      document.querySelectorAll('.analysis-report-section'),
+    ).toHaveLength(9)
+  })
+
+  it('marks each scientific section for visual separation', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        metadata: {
+          report_type: 'reverse_vaccinology',
+          report_version: '1.0',
+          analysis_pipeline: 'protein_sequence_analysis',
+        },
+        protein: {
+          id: 'protein-1',
+          name: 'Test Protein',
+          organism: 'Test Organism',
+          accession: 'ABC123',
+          sequence: 'MKTLLILAV',
+          length: 9,
+          molecular_weight: 1000,
+          gravy: 0.5,
+          isoelectric_point: 7.0,
+        },
+        measurements: {
+          charge_and_hydrophobicity: {
+            net_charge: 1,
+          },
+        },
+        conservation: {},
+        evidence: {},
+        interpretations: [],
+        candidate_assessment: {},
+        limitations: [],
+        peptide_candidates: [],
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByRole('textbox'),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze/i }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /analysis report/i,
+    })
+
+    const sections = document.querySelectorAll(
+      '.analysis-report-section',
+    )
+
+    expect(sections).toHaveLength(9)
+
+    sections.forEach((section) => {
+      expect(section).toHaveClass(
+        'analysis-report-section',
+      )
+    })
+  })
+
+  it('provides styling hooks for the analysis interface', () => {
+    render(<App />)
+
+    expect(
+      screen.getByRole('heading', {
+        name: /reverse vaccinology/i,
+      }).closest('.analysis-page'),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByLabelText(/protein sequence/i).closest(
+        '.analysis-form',
+      ),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    ).toHaveClass('analysis-submit')
   })
 })

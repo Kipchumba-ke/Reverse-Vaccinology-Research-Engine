@@ -1,4 +1,4 @@
-.counter {
+/* .counter {
   font-size: 16px;
   padding: 5px 10px;
   border-radius: 5px;
@@ -181,4 +181,140 @@
     right: 0;
     border-right-color: var(--border);
   }
+} */
+ :root {
+  --primary-green: #006b3f;
+  --primary-green-dark: #004d2d;
+  --accent-green: #2e8b57;
+  --page-bg: #f4f8f5;
+  --card-bg: #ffffff;
+  --text-primary: #17352a;
+  --text-secondary: #5d6f67;
+  --border: #d9e5df;
+  --shadow: 0 8px 24px rgba(23, 53, 42, 0.08);
+}
+
+.analysis-page {
+  min-height: 100vh;
+  padding: 0 24px 64px;
+  box-sizing: border-box;
+  background: var(--page-bg);
+  color: var(--text-primary);
+}
+
+.analysis-page > h1 {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  padding: 48px 0 32px;
+  text-align: center;
+  font-size: 2.75rem;
+  line-height: 1.1;
+  font-weight: 700;
+  color: var(--primary-green-dark);
+}
+
+.analysis-form {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  padding: 32px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+}
+
+.analysis-form label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.analysis-form textarea {
+  width: 100%;
+  min-height: 240px;
+  padding: 16px;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fbfdfc;
+  color: var(--text-primary);
+  font: inherit;
+  line-height: 1.6;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.analysis-form textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+.analysis-form textarea:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.15);
+}
+
+.analysis-submit {
+  display: block;
+  margin: 18px 0 0 auto;
+  padding: 13px 24px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary-green);
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.analysis-submit:hover {
+  background: var(--primary-green-dark);
+  box-shadow: 0 6px 14px rgba(0, 107, 63, 0.2);
+  transform: translateY(-1px);
+}
+
+.analysis-submit:active {
+  transform: translateY(0);
+}
+/* Reverse Vaccinology */
+
+
+.analysis-report {
+  width: min(100%, 1100px);
+  margin: 32px auto 0;
+}
+
+.analysis-report-section {
+  padding: 28px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card-bg);
+  box-shadow: 0 4px 16px rgba(23, 53, 42, 0.05);
+}
+
+.analysis-report-section h3 {
+  margin: 0 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e7f0eb;
+  color: var(--primary-green-dark);
+  font-size: 1.2rem;
+}
+
+.analysis-report-section p {
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.analysis-report-section strong {
+  color: var(--primary-green-dark);
 }

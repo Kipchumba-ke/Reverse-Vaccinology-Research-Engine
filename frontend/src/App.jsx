@@ -1,6 +1,7 @@
 import { useEffect ,useState } from "react"
 import { submitAnalysis, getAnalysisStatus } from './services/analysisService'
 import AnalysisReport from "./components/AnalysisReport"
+import './App.css'
 
 
 function App() {
@@ -56,23 +57,24 @@ function App() {
   }
 
   return (
-    <main>
+    <main className="analysis-page">
       <h1>Reverse Vaccinology</h1>
+      <div className="analysis-form">
+        <label htmlFor="protein-sequence">
+          Protein Sequence
+        </label>
 
-      <label htmlFor="protein-sequence">
-        Protein Sequence
-      </label>
+        <textarea 
+          id="protein-sequence" 
+          name="protein-sequence" 
+          value={sequence}
+          onChange={(e) => setSequence(e.target.value)}
+        />
 
-      <textarea 
-        id="protein-sequence" 
-        name="protein-sequence" 
-        value={sequence}
-        onChange={(e) => setSequence(e.target.value)}
-      />
-
-      <button type="button" onClick={handleSubmit}>
-        Analyze Protein
-      </button>
+        <button type="button" className="analysis-submit" onClick={handleSubmit}>
+          Analyze Protein
+        </button>
+      </div>
 
       {report && (
         <AnalysisReport report={report} />
