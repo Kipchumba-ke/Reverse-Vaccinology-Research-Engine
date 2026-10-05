@@ -1,5 +1,6 @@
-import { use, useEffect ,useState } from "react"
+import { useEffect ,useState } from "react"
 import { submitAnalysis, getAnalysisStatus } from './services/analysisService'
+import AnalysisReport from "./components/AnalysisReport"
 
 
 function App() {
@@ -74,11 +75,7 @@ function App() {
       </button>
 
       {report && (
-        <div>
-          <h2>Analysis Report</h2>
-          <p>Sequence: {report.sequence}</p>
-          <p>Length: {report.length}</p>
-        </div>
+        <AnalysisReport report={report} />
       )}
 
       {status && (

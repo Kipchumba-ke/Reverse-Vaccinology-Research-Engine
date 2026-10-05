@@ -345,8 +345,10 @@ describe('App', () => {
         analysis_id: '123',
         status: 'completed',
         report: {
-          sequence: 'MKT',
-          length: 3,
+          protein: {
+            sequence: 'MKT',
+            length: 3,
+          },
         },
       })
 
@@ -420,6 +422,707 @@ describe('App', () => {
 
     expect(
       screen.getByText(/analysis failed/i),
+    ).toBeInTheDocument()
+  })
+
+  it('displays report metadata from the analysis report', async () => {
+    getAnalysisStatus.mockResolvedValue({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        metadata: {
+          report_type: 'reverse_vaccinology',
+          report_version: '1.0',
+          analysis_pipeline: 'protein_sequence_analysis',
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByRole('textbox'),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze/i }),
+    )
+
+    expect(
+      await screen.findByText(
+        /report type: reverse_vaccinology/i,
+      ),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/report version: 1.0/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(
+        /analysis pipeline: protein_sequence_analysis/i,
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('displays the protein characteristics from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        protein: {
+          id: 'P12345',
+          name: 'Example Protein',
+          organism: 'Example bacterium',
+          accession: 'ABC123',
+          sequence: 'MKT',
+          length: 3,
+          molecular_weight: 345.67,
+          gravy: 0.42,
+          isoelectric_point: 6.8,
+        },
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/molecular weight: 345.67/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/gravy: 0.42/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/isoelectric point: 6.8/i),
+    ).toBeInTheDocument()
+
+    expect(
+    screen.getByText(/protein id: P12345/i),
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText(/name: example protein/i),
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText(/organism: example bacterium/i),
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText(/accession: ABC123/i),
+  ).toBeInTheDocument()
+  })
+
+  it('displays hydrophobicity measurements from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        measurements: {
+          composition: {
+            A: 10,
+            C: 2,
+            G: 8,
+          },
+          charge_and_hydrophobicity: {
+            net_charge: -1.2,
+          },
+          hydropathy_profile: [
+            {
+              position: 1,
+              value: 0.5,
+            },
+            {
+              position: 2,
+              value: 1.2,
+            },
+          ],
+          hydrophobic_regions: [
+            {
+              start: 5,
+              end: 12,
+              length: 8,
+            },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/net charge: -1.2/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/hydrophobic region: 5-12/i),
+    ).toBeInTheDocument()
+
+    expect(
+    screen.getByText(/composition: A 10/i),
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText(/composition: C 2/i),
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText(/composition: G 8/i),
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText(/hydropathy: position 1, value 0.5/i),
+  ).toBeInTheDocument()
+
+  expect(
+    screen.getByText(/hydropathy: position 2, value 1.2/i),
+  ).toBeInTheDocument()
+  })
+
+  it('displays transmembrane candidates from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        measurements: {
+          transmembrane_candidates: [
+            {
+              start: 20,
+              end: 42,
+              length: 23,
+            },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/transmembrane candidate: 20-42/i),
+    ).toBeInTheDocument()
+  })
+
+  it('displays conservation results from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        conservation: {
+          summary: {
+            conservation_percentage: 85.0,
+            alignment_length: 120,
+            sequence_count: 5,
+          },
+          regions: [
+            {
+              start: 10,
+              end: 25,
+              length: 16,
+            },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/conservation: 85%/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/alignment length: 120/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/sequences analyzed: 5/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/conserved region: 10-25/i),
+    ).toBeInTheDocument()
+  })
+
+  it('displays localization evidence from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        evidence: {
+          localization: [
+            {
+              source: 'UniProt',
+              location: 'cell membrane',
+              confidence: 'high',
+            },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/localization: cell membrane/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/source: UniProt/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/confidence: high/i),
+    ).toBeInTheDocument()
+  })
+
+  it('displays essentiality evidence from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        evidence: {
+          essentiality: [
+            {
+              source: 'Database',
+              evidence: 'Essential gene',
+              confidence: 'high',
+            },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/essentiality: essential gene/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/source: Database/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/confidence: high/i),
+    ).toBeInTheDocument()
+  })
+
+  it('displays host similarity evidence from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        evidence: {
+          host_similarity: [
+            {
+              source: 'BLAST',
+              identity_percentage: 12.5,
+              alignment_length: 180,
+              e_value: 0.01,
+              confidence: 'low',
+            },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/host similarity: 12.5%/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/alignment length: 180/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/e-value: 0.01/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/source: BLAST/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/confidence: low/i),
+    ).toBeInTheDocument()
+  })
+
+  it('displays interpretations from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        interpretations: [
+          {
+            category: 'hydrophobicity',
+            interpretation: 'The protein contains moderately hydrophobic regions.',
+            confidence: 'medium',
+          },
+        ],
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(
+        /the protein contains moderately hydrophobic regions/i,
+      ),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/category: hydrophobicity/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/confidence: medium/i),
+    ).toBeInTheDocument()
+  })
+
+  it('displays the candidate assessment from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        candidate_assessment: {
+          category: 'promising',
+          score: 0.82,
+          rationale: 'Multiple computational evidence types support further investigation.',
+        },
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/category: promising/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/score: 0.82/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(
+        /multiple computational evidence types support further investigation/i,
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('displays limitations from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        limitations: [
+          'Computational evidence does not replace experimental validation.',
+          'Results depend on the quality of the available reference data.',
+        ],
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(
+        /computational evidence does not replace experimental validation/i,
+      ),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(
+        /results depend on the quality of the available reference data/i,
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('displays peptide candidates from the analysis report', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        peptide_candidates: [
+          {
+            sequence: 'MKTLLV',
+            start: 10,
+            end: 15,
+            length: 6,
+          },
+        ],
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/peptide candidate: MKTLLV/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/position: 10-15/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/length: 6/i),
     ).toBeInTheDocument()
   })
 })
