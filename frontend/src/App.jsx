@@ -8,6 +8,7 @@ function App() {
   const [error, setError] = useState(null)
   const [analysisId, setAnalysisId] = useState('')
   const [status, setStatus] = useState('')
+  const [report, setReport] = useState(null)
 
   useEffect(() => {
     if (!analysisId) return
@@ -22,6 +23,7 @@ function App() {
       if (cancelled) return
 
       setStatus(result.status)
+      setReport(result.report)
       
       if (result.status === 'pending' || result.status === 'running') {
         timeoutId = setTimeout(pollAnalysisStatus, 1000)
@@ -71,9 +73,23 @@ function App() {
         Analyze Protein
       </button>
 
+      {report && (
+        <div>
+          <h2>Analysis Report</h2>
+          <p>Sequence: {report.sequence}</p>
+          <p>Length: {report.length}</p>
+        </div>
+      )}
+
       {status && (
         <p>
           Analysis Status: {status}
+        </p>
+      )}
+
+      {status === 'failed' && (
+        <p>
+          Analysis failed. Please try again.
         </p>
       )}
 

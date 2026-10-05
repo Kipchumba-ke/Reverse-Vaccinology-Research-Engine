@@ -331,4 +331,95 @@ describe('App', () => {
       vi.useRealTimers()
     }
   })
+
+    it('displays the analysis report when the analysis is completed', async () => {
+    vi.useFakeTimers()
+
+    try {
+      submitAnalysis.mockResolvedValueOnce({
+        analysis_id: '123',
+        status: 'pending',
+      })
+
+      getAnalysisStatus.mockResolvedValueOnce({
+        analysis_id: '123',
+        status: 'completed',
+        report: {
+          sequence: 'MKT',
+          length: 3,
+        },
+      })
+
+      render(<App />)
+
+      const input = screen.getByLabelText(/protein sequence/i)
+
+      fireEvent.change(input, {
+        target: {
+          value: 'MKT',
+        },
+      })
+
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole('button', {
+            name: /analyze protein/i,
+          }),
+        )
+
+        await Promise.resolve()
+      })
+
+      expect(
+        screen.getByText(/status: completed/i),
+      ).toBeInTheDocument()
+
+      expect(
+        screen.getByText('MKT'),
+      ).toBeInTheDocument()
+
+      expect(
+        screen.getByText(/length: 3/i),
+      ).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+    it('displays an error when the analysis fails', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'failed',
+      report: null,
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(/analysis failed/i),
+    ).toBeInTheDocument()
+  })
 })
