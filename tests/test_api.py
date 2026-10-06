@@ -13,6 +13,8 @@ from app.repositories.analysis_repository import AnalysisRepository
 from app.services.token_service import create_token
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
+from app.services.password_service import hash_password
+from app.models.user_orm import UserModel
 
 
 def test_create_app_returns_flask_application():
@@ -21,10 +23,11 @@ def test_create_app_returns_flask_application():
     assert app is not None
     assert app.name == "app"
 
-def test_analyze_endpoint_returns_protein_report(api_client):
+def test_analyze_endpoint_returns_protein_report(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -38,40 +41,44 @@ def test_analyze_endpoint_returns_protein_report(api_client):
     assert "candidate_assessment" in data
     assert "limitations" in data
 
-def test_analyze_endpoint_rejects_missing_json(api_client):
+def test_analyze_endpoint_rejects_missing_json(api_client, auth_headers):
 
-    response = api_client.post("/api/analyze")
+    response = api_client.post("/api/analyze", headers=auth_headers)
 
     assert response.status_code == 400
 
-def test_analyze_endpoint_rejects_missing_sequence(api_client):
+def test_analyze_endpoint_rejects_missing_sequence(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"foo": "bar"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
 
-def test_analyze_endpoint_rejects_empty_sequence(api_client):
+def test_analyze_endpoint_rejects_empty_sequence(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"sequence": ""},
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
 
-def test_analyze_endpoint_rejects_invalid_sequence(api_client):
+def test_analyze_endpoint_rejects_invalid_sequence(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVF1D"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
 
-def test_analyze_endpoint_returns_error_for_invalid_sequence(api_client):
+def test_analyze_endpoint_returns_error_for_invalid_sequence(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVF1D"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -81,13 +88,14 @@ def test_analyze_endpoint_returns_error_for_invalid_sequence(api_client):
     assert "error" in data
     assert data["error"]
 
-def test_analyze_endpoint_preserves_protein_id(api_client):
+def test_analyze_endpoint_preserves_protein_id(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={
             "sequence": "MKTIIALSYIFCLVFAD",
             "protein_id": "protein_123",
         },
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -96,7 +104,7 @@ def test_analyze_endpoint_preserves_protein_id(api_client):
 
     assert data["protein"]["id"] == "protein_123"
 
-def test_analyze_endpoint_accepts_fasta_file(api_client):
+def test_analyze_endpoint_accepts_fasta_file(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -108,6 +116,7 @@ def test_analyze_endpoint_accepts_fasta_file(api_client):
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -117,7 +126,7 @@ def test_analyze_endpoint_accepts_fasta_file(api_client):
     assert data["protein"]["id"] == "protein_123"
     assert data["protein"]["sequence"] == "MKTIIALSYIFCLVFAD"
 
-def test_analyze_endpoint_rejects_invalid_fasta_file(api_client):
+def test_analyze_endpoint_rejects_invalid_fasta_file(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -127,6 +136,7 @@ def test_analyze_endpoint_rejects_invalid_fasta_file(api_client):
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -136,7 +146,7 @@ def test_analyze_endpoint_rejects_invalid_fasta_file(api_client):
     assert "error" in data
     assert data["error"]
 
-def test_analyze_endpoint_rejects_empty_fasta_file(api_client):
+def test_analyze_endpoint_rejects_empty_fasta_file(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -146,6 +156,7 @@ def test_analyze_endpoint_rejects_empty_fasta_file(api_client):
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -155,11 +166,12 @@ def test_analyze_endpoint_rejects_empty_fasta_file(api_client):
     assert "error" in data
     assert data["error"]
 
-def test_analyze_endpoint_rejects_missing_fasta_file(api_client):
+def test_analyze_endpoint_rejects_missing_fasta_file(api_client,auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={},
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -169,7 +181,7 @@ def test_analyze_endpoint_rejects_missing_fasta_file(api_client):
     assert "error" in data
     assert data["error"]
 
-def test_analyze_endpoint_accepts_multi_record_fasta_file(api_client):
+def test_analyze_endpoint_accepts_multi_record_fasta_file(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -182,6 +194,7 @@ def test_analyze_endpoint_accepts_multi_record_fasta_file(api_client):
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -193,7 +206,7 @@ def test_analyze_endpoint_accepts_multi_record_fasta_file(api_client):
     assert data["protein_analyses"][1]["protein_id"] == "protein_2"
 
 
-def test_analyze_endpoint_preserves_protein_name(api_client):
+def test_analyze_endpoint_preserves_protein_name(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={
@@ -201,6 +214,7 @@ def test_analyze_endpoint_preserves_protein_name(api_client):
             "protein_id": "protein_1",
             "protein_name": "Example protein",
         },
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -209,7 +223,7 @@ def test_analyze_endpoint_preserves_protein_name(api_client):
 
     assert data["protein"]["name"] == "Example protein"
 
-def test_analyze_endpoint_preserves_organism(api_client):
+def test_analyze_endpoint_preserves_organism(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={
@@ -218,6 +232,7 @@ def test_analyze_endpoint_preserves_organism(api_client):
             "protein_name": "Example protein",
             "organism": "Example organism",
         },
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -227,7 +242,7 @@ def test_analyze_endpoint_preserves_organism(api_client):
     assert data["protein"]["organism"] == "Example organism"
 
 
-def test_analyze_endpoint_preserves_accession(api_client):
+def test_analyze_endpoint_preserves_accession(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={
@@ -237,6 +252,7 @@ def test_analyze_endpoint_preserves_accession(api_client):
             "organism": "Example organism",
             "accession": "ABC123",
         },
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -246,7 +262,7 @@ def test_analyze_endpoint_preserves_accession(api_client):
     assert data["protein"]["accession"] == "ABC123"
 
 
-def test_analyze_endpoint_preserves_fasta_description(api_client):
+def test_analyze_endpoint_preserves_fasta_description(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -259,6 +275,7 @@ def test_analyze_endpoint_preserves_fasta_description(api_client):
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -269,7 +286,7 @@ def test_analyze_endpoint_preserves_fasta_description(api_client):
     assert data["protein"]["name"] == "Example protein"
 
 
-def test_analyze_endpoint_preserves_fasta_organism(api_client):
+def test_analyze_endpoint_preserves_fasta_organism(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -282,6 +299,7 @@ def test_analyze_endpoint_preserves_fasta_organism(api_client):
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -292,7 +310,7 @@ def test_analyze_endpoint_preserves_fasta_organism(api_client):
     assert data["protein"]["name"] == "Example protein OS=Escherichia coli"
     assert data["protein"]["organism"] == "Escherichia coli"
 
-def test_analyze_endpoint_preserves_fasta_accession(api_client):
+def test_analyze_endpoint_preserves_fasta_accession(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -305,6 +323,7 @@ def test_analyze_endpoint_preserves_fasta_accession(api_client):
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -314,10 +333,11 @@ def test_analyze_endpoint_preserves_fasta_accession(api_client):
     assert data["protein"]["id"] == "sp|P12345|EXAMPLE_PROTEIN"
     assert data["protein"]["accession"] == "P12345"
 
-def test_analyze_endpoint_rejects_non_string_sequence(api_client):
+def test_analyze_endpoint_rejects_non_string_sequence(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"sequence": 12345},
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -327,10 +347,11 @@ def test_analyze_endpoint_rejects_non_string_sequence(api_client):
     assert "error" in data
     assert data["error"] == "Protein sequence must be a string."
 
-def test_analyze_endpoint_rejects_null_sequence(api_client):
+def test_analyze_endpoint_rejects_null_sequence(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"sequence": None},
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -340,11 +361,12 @@ def test_analyze_endpoint_rejects_null_sequence(api_client):
     assert "error" in data
     assert data["error"] == "Protein sequence must be a string."
 
-def test_analyze_endpoint_rejects_unsupported_content_type(api_client):
+def test_analyze_endpoint_rejects_unsupported_content_type(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data="MKTIIALSYIFCLVFAD",
         content_type="text/plain",
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -353,11 +375,12 @@ def test_analyze_endpoint_rejects_unsupported_content_type(api_client):
 
     assert data["error"] == "JSON request body is required."
 
-def test_analyze_endpoint_rejects_malformed_json(api_client):
+def test_analyze_endpoint_rejects_malformed_json(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data='{"sequence": ',
         content_type="application/json",
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -366,7 +389,7 @@ def test_analyze_endpoint_rejects_malformed_json(api_client):
 
     assert data["error"] == "JSON request body is required."
 
-def test_analyze_endpoint_rejects_fasta_file_without_filename(api_client):
+def test_analyze_endpoint_rejects_fasta_file_without_filename(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -376,6 +399,7 @@ def test_analyze_endpoint_rejects_fasta_file_without_filename(api_client):
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -384,10 +408,11 @@ def test_analyze_endpoint_rejects_fasta_file_without_filename(api_client):
 
     assert data["error"] == "FASTA file is required."
 
-def test_analyze_endpoint_returns_consistent_error_structure_for_invalid_json(api_client):
+def test_analyze_endpoint_returns_consistent_error_structure_for_invalid_json(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVF1D"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -398,10 +423,11 @@ def test_analyze_endpoint_returns_consistent_error_structure_for_invalid_json(ap
     assert isinstance(data["error"], str)
     assert data["error"]
 
-def test_analyze_endpoint_returns_stable_protein_response_structure(api_client):
+def test_analyze_endpoint_returns_stable_protein_response_structure(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -420,7 +446,7 @@ def test_analyze_endpoint_returns_stable_protein_response_structure(api_client):
         "metadata",
     }
 
-def test_analyze_endpoint_rejects_oversized_upload():
+def test_analyze_endpoint_rejects_oversized_upload(auth_headers):
     app = create_app()
     app.config["MAX_CONTENT_LENGTH"] = 100
 
@@ -438,6 +464,7 @@ def test_analyze_endpoint_rejects_oversized_upload():
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 413
@@ -446,7 +473,7 @@ def test_analyze_endpoint_rejects_oversized_upload():
 
     assert data["error"]
 
-def test_analyze_endpoint_rejects_unsupported_file_type(api_client):
+def test_analyze_endpoint_rejects_unsupported_file_type(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -456,6 +483,7 @@ def test_analyze_endpoint_rejects_unsupported_file_type(api_client):
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 400
@@ -468,7 +496,7 @@ def test_analyze_endpoint_rejects_unsupported_file_type(api_client):
     "filename",
     ["protein.fasta", "protein.fa", "protein.fna"],
 )
-def test_analyze_endpoint_accepts_supported_fasta_extensions(filename, api_client):
+def test_analyze_endpoint_accepts_supported_fasta_extensions(filename, api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -481,6 +509,7 @@ def test_analyze_endpoint_accepts_supported_fasta_extensions(filename, api_clien
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -493,7 +522,7 @@ def test_analyze_endpoint_accepts_supported_fasta_extensions(filename, api_clien
     "filename",
     ["protein.FASTA", "protein.Fa", "protein.FNA"],
 )
-def test_analyze_endpoint_accepts_case_insensitive_fasta_extensions(filename, api_client):
+def test_analyze_endpoint_accepts_case_insensitive_fasta_extensions(filename, api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         data={
@@ -506,6 +535,7 @@ def test_analyze_endpoint_accepts_case_insensitive_fasta_extensions(filename, ap
             )
         },
         content_type="multipart/form-data",
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -514,10 +544,11 @@ def test_analyze_endpoint_accepts_case_insensitive_fasta_extensions(filename, ap
 
     assert data["protein"]["id"] == "protein_123"
 
-def test_analyze_v1_endpoint_returns_protein_report(api_client):
+def test_analyze_v1_endpoint_returns_protein_report(api_client, auth_headers):
     response = api_client.post(
         "/api/v1/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -533,10 +564,11 @@ def test_analyze_v1_endpoint_returns_protein_report(api_client):
     assert "conservation" in data
     assert "metadata" in data
 
-def test_analyze_endpoint_remains_available_after_api_versioning(api_client):
+def test_analyze_endpoint_remains_available_after_api_versioning(api_client, auth_headers):
     response = api_client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -552,16 +584,18 @@ def test_analyze_endpoint_remains_available_after_api_versioning(api_client):
     assert "conservation" in data
     assert "metadata" in data
 
-def test_analyze_api_versions_return_equivalent_responses(api_client):
+def test_analyze_api_versions_return_equivalent_responses(api_client, auth_headers):
     payload = {"sequence": "MKTIIALSYIFCLVFAD"}
 
     legacy_response = api_client.post(
         "/api/analyze",
+        headers=auth_headers,
         json=payload,
     )
 
     v1_response = api_client.post(
         "/api/v1/analyze",
+        headers=auth_headers,
         json=payload,
     )
 
@@ -579,7 +613,7 @@ def test_create_app_accepts_analysis_repository():
     assert app is not None
 
 
-def test_analyze_endpoint_uses_analysis_repository():
+def test_analyze_endpoint_uses_analysis_repository(auth_headers):
     class FakeSession:
         def commit(self):
             pass
@@ -611,6 +645,8 @@ def test_analyze_endpoint_uses_analysis_repository():
             "organism": "Example organism",
             "accession": "ABC123",
         },
+        headers=auth_headers,
+        
     )
 
     assert response.status_code == 200
@@ -675,7 +711,7 @@ def test_create_repository_builds_analysis_repository(monkeypatch):
     assert isinstance(repository, AnalysisRepository)
 
 
-def test_analyze_endpoint_commits_successful_analysis():
+def test_analyze_endpoint_commits_successful_analysis(auth_headers):
     class FakeSession:
         def __init__(self):
             self.committed = False
@@ -699,12 +735,13 @@ def test_analyze_endpoint_commits_successful_analysis():
     response = client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
     assert repository.session.committed is True
 
-def test_analyze_endpoint_rolls_back_failed_analysis():
+def test_analyze_endpoint_rolls_back_failed_analysis(auth_headers):
     class FakeSession:
         def __init__(self):
             self.rolled_back = False
@@ -738,6 +775,7 @@ def test_analyze_endpoint_rolls_back_failed_analysis():
         response = client.post(
             "/api/analyze",
             json={"sequence": "MKTIIALSYIFCLVFAD"},
+            headers=auth_headers,
         )
 
     assert response.status_code == 400
@@ -1220,3 +1258,175 @@ def test_analysis_submission_commits_before_dispatching_task(
 
     assert response.status_code == 202
     assert order == ["commit", "enqueue"]
+
+def test_login_returns_token(api_client, db_session):
+    user = User(
+        email="login@example.com",
+        password_hash=hash_password("password123"),
+    )
+
+    user_repository = UserRepository(db_session)
+    user_repository.save(user)
+    db_session.commit()
+
+    response = api_client.post(
+        "/api/login",
+        json={
+            "email": "login@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["user_id"] == str(user.id)
+    assert data["token"]
+
+def test_login_rejects_unknown_email(api_client):
+    response = api_client.post(
+        "/api/login",
+        json={
+            "email": "unknown@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.get_json() == {
+        "error": "Invalid email or password."
+    }
+
+def test_login_rejects_incorrect_password(api_client, db_session):
+    user = User(
+        email="wrong-password@example.com",
+        password_hash=hash_password("correct-password"),
+    )
+
+    user_repository = UserRepository(db_session)
+    user_repository.save(user)
+    db_session.commit()
+
+    response = api_client.post(
+        "/api/login",
+        json={
+            "email": "wrong-password@example.com",
+            "password": "wrong-password",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.get_json() == {
+        "error": "Invalid email or password."
+    }
+
+def test_login_requires_email_and_password(api_client):
+    response = api_client.post(
+        "/api/login",
+        json={
+            "email": "login@example.com",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "error": "Email and password are required."
+    }
+
+def test_register_creates_user(api_client, db_session):
+    response = api_client.post(
+        "/api/register",
+        json={
+            "email": "newuser@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert response.status_code == 201
+
+    data = response.get_json()
+
+    assert "user_id" in data
+    assert data["user_id"]
+
+    user = db_session.query(UserModel).filter_by(
+        email="newuser@example.com"
+    ).first()
+
+    assert user is not None
+    assert user.email == "newuser@example.com"
+
+def test_register_requires_json_body(api_client):
+    response = api_client.post("/api/register")
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "error": "JSON request body is required."
+    }
+
+def test_register_requires_email_and_password(api_client):
+    response = api_client.post(
+        "/api/register",
+        json={
+            "email": "newuser@example.com",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "error": "Email and password are required."
+    }
+
+def test_register_rejects_duplicate_email(api_client):
+    first_response = api_client.post(
+        "/api/register",
+        json={
+            "email": "duplicate@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert first_response.status_code == 201
+
+    second_response = api_client.post(
+        "/api/register",
+        json={
+            "email": "duplicate@example.com",
+            "password": "anotherpassword123",
+        },
+    )
+
+    assert second_response.status_code == 400
+    assert second_response.get_json() == {
+        "error": "Email is already registered."
+    }
+
+def test_register_does_not_store_plaintext_password(api_client, db_session):
+    response = api_client.post(
+        "/api/register",
+        json={
+            "email": "secure@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert response.status_code == 201
+
+    user = db_session.query(UserModel).filter_by(
+        email="secure@example.com"
+    ).first()
+
+    assert user is not None
+    assert user.password_hash != "password123"
+
+def test_analyze_endpoint_requires_authentication(api_client):
+    response = api_client.post(
+        "/api/analyze",
+        json={"sequence": "MKTIIALSYIFCLVFAD"},
+    )
+
+    assert response.status_code == 401
+    assert response.get_json() == {
+        "error": "Authentication required."
+    }
