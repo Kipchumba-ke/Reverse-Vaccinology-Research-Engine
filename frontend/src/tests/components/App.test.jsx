@@ -2,6 +2,7 @@ import { act ,render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach ,describe, expect, it, vi } from 'vitest'
 import { submitAnalysis, getAnalysisStatus } from '../../services/analysisService'
+import { login } from '../../services/authService'
 import App from '../../App'
 
 vi.mock('../../services/analysisService', () => ({
@@ -9,11 +10,22 @@ vi.mock('../../services/analysisService', () => ({
   getAnalysisStatus: vi.fn(),
 }))
 
+vi.mock('../../services/authService', () => ({
+  login: vi.fn(),
+}))
+
 describe('App', () => {
 
   beforeEach(() => {
+    localStorage.setItem('token', 'test_token')
     submitAnalysis.mockReset()
     getAnalysisStatus.mockReset()
+
+    login.mockReset()
+    login.mockResolvedValue({
+      user_id: '1',
+      token: 'test_token',
+    })
 
     submitAnalysis.mockResolvedValue({
       analysis_id: '123',
@@ -24,6 +36,7 @@ describe('App', () => {
       analysis_id: '123',
       status: 'running',
     })
+
   })
 
   it('renders the reverse vaccinology application', () => {
@@ -1588,6 +1601,52 @@ describe('App', () => {
 
     expect(
       screen.getByText(/protein characteristics/i),
+    ).toBeInTheDocument()
+  })
+
+  it('shows the login screen when the user is not authenticated', () => {
+    localStorage.removeItem('token')
+
+    render(<App />)
+
+    expect(
+      screen.getByRole('button', {
+        name: /login/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByLabelText(/email/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.queryByLabelText(/protein sequence/i),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows the analysis application after a successful login', async () => {
+    localStorage.removeItem('token')
+
+    const user = userEvent.setup()
+
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/email/i),
+      'test@example.com',
+    )
+
+    await user.type(
+      screen.getByLabelText(/password/i),
+      'password123',
+    )
+
+    await user.click(
+      screen.getByRole('button', { name: /login/i }),
+    )
+
+    expect(
+      screen.getByLabelText(/protein sequence/i),
     ).toBeInTheDocument()
   })
 })

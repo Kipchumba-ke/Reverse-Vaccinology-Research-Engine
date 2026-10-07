@@ -1,17 +1,32 @@
 import { useEffect ,useState } from "react"
 import { submitAnalysis, getAnalysisStatus } from './services/analysisService'
 import AnalysisReport from "./components/AnalysisReport"
+import Login from "./components/Login"
 import './App.css'
 
 
 function App() {
+  
+  const [authenticated, setAuthenticated] = useState(
+    Boolean(localStorage.getItem('token'))
+  )
+
+  if (!authenticated) {
+    return (
+      <Login onLogin={() => setAuthenticated(true)} />
+    )
+  }
+  return <AnalysisApp />
+}
+
+function AnalysisApp() {
   const [submitted, setSubmitted] = useState(false) 
   const [sequence, setSequence] = useState('')
   const [error, setError] = useState(null)
   const [analysisId, setAnalysisId] = useState('')
   const [status, setStatus] = useState('')
   const [report, setReport] = useState(null)
-
+  
   useEffect(() => {
     if (!analysisId) return
 
