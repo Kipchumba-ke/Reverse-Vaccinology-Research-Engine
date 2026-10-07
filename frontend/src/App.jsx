@@ -1,6 +1,7 @@
 import { useEffect ,useState } from "react"
 import { submitAnalysis, getAnalysisStatus } from './services/analysisService'
 import AnalysisReport from "./components/AnalysisReport"
+import Register from './components/Register'
 import Login from "./components/Login"
 import './App.css'
 
@@ -10,12 +11,25 @@ function App() {
   const [authenticated, setAuthenticated] = useState(
     Boolean(localStorage.getItem('token'))
   )
+  const [showRegister, setShowRegister] = useState(false)
 
   if (!authenticated) {
+  if (showRegister) {
     return (
-      <Login onLogin={() => setAuthenticated(true)} />
+      <Register
+        onRegister={() => setShowRegister(false)}
+        onLogin={() => setShowRegister(false)}
+      />
     )
   }
+
+
+  return (
+    <Login
+      onLogin={() => setAuthenticated(true)}
+      onRegister={() => setShowRegister(true)}
+    />
+  )}
   return <AnalysisApp />
 }
 
@@ -26,7 +40,7 @@ function AnalysisApp() {
   const [analysisId, setAnalysisId] = useState('')
   const [status, setStatus] = useState('')
   const [report, setReport] = useState(null)
-  
+
   useEffect(() => {
     if (!analysisId) return
 

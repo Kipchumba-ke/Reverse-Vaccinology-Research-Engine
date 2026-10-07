@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { login } from '../services/authService'
+import { register } from '../services/authService'
 
-function Login({ onLogin, onRegister }) {
+function Register({ onRegister, onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [success, setSuccess] = useState(false)
@@ -11,8 +11,8 @@ function Login({ onLogin, onRegister }) {
     event.preventDefault()
 
     try {
-      await login(email, password)
-      onLogin()
+      await register(email, password)
+      onRegister()
       setSuccess(true)
       setError(null)
     } catch (err) {
@@ -23,28 +23,28 @@ function Login({ onLogin, onRegister }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <label htmlFor="login-email">Email</label>
+      <label htmlFor="register-email">Email</label>
       <input
-        id="login-email"
+        id="register-email"
         type="email"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
       />
 
-      <label htmlFor="login-password">Password</label>
+      <label htmlFor="register-password">Password</label>
       <input
-        id="login-password"
+        id="register-password"
         type="password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
       />
 
-      <button type="submit">Login</button>
-      <button type="button" onClick={onRegister}>Don't have an account? Register</button>
-      {success && <p>Login successful!</p>}
+      <button type="submit">Register</button>
+      <button type="button" onClick={onLogin}>Already have an account? Login</button>
+      {success && <p>Registration successful!</p>}
       {error && <p>{error}</p>}
     </form>
   )
 }
 
-export default Login
+export default Register

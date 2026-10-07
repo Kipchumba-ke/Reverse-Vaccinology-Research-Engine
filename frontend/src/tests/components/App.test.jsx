@@ -1649,4 +1649,58 @@ describe('App', () => {
       screen.getByLabelText(/protein sequence/i),
     ).toBeInTheDocument()
   })
+
+  it('allows an unauthenticated user to switch to registration', async () => {
+    localStorage.removeItem('token')
+
+    const user = userEvent.setup()
+
+    render(<App />)
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /register/i,
+      }),
+    )
+
+    expect(
+      screen.getByLabelText(/email/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('button', {
+        name: /^register$/i,
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('allows an unauthenticated user to switch from registration to login', async () => {
+    localStorage.removeItem('token')
+
+    const user = userEvent.setup()
+
+    render(<App />)
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /register/i,
+      }),
+    )
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /already have an account\? login/i,
+      }),
+    )
+
+    expect(
+      screen.getByLabelText(/email/i),
+    ).toHaveAttribute('id', 'login-email')
+
+    expect(
+      screen.getByRole('button', {
+        name: /^login$/i,
+      }),
+    ).toBeInTheDocument()
+  })
 })
