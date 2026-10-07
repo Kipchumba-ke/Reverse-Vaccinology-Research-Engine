@@ -43,14 +43,30 @@ function AnalysisReport({ report }) {
           {report.measurements?.charge_and_hydrophobicity?.net_charge}
         </p>
 
-        {report.measurements?.composition &&
-          Object.entries(report.measurements.composition).map(
-            ([aminoAcid, value]) => (
-              <p key={aminoAcid}>
-                Composition: {aminoAcid} {value}
+        {report.measurements?.composition && (
+          <>
+            <p>
+              Composition Length:{' '}
+              {report.measurements.composition.length}
+            </p>
+
+            {Object.entries(
+              report.measurements.composition.counts || {},
+            ).map(([aminoAcid, count]) => (
+              <p key={`count-${aminoAcid}`}>
+                Composition Count: {aminoAcid} {count}
               </p>
-            ),
-          )}
+            ))}
+
+            {Object.entries(
+              report.measurements.composition.percentages || {},
+            ).map(([aminoAcid, percentage]) => (
+              <p key={`percentage-${aminoAcid}`}>
+                Composition Percentage: {aminoAcid} {percentage}%
+              </p>
+            ))}
+          </>
+        )}
 
         {report.measurements?.hydropathy_profile?.map(
           (point, index) => (

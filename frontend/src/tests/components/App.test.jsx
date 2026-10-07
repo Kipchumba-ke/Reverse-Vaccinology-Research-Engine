@@ -630,9 +630,17 @@ describe('App', () => {
       report: {
         measurements: {
           composition: {
-            A: 10,
-            C: 2,
-            G: 8,
+            length: 346,
+            counts: {
+              A: 10,
+              C: 2,
+              G: 8,
+            },
+            percentages: {
+              A: 2.89,
+              C: 0.58,
+              G: 2.31,
+            },
           },
           charge_and_hydrophobicity: {
             net_charge: -1.2,
@@ -687,24 +695,40 @@ describe('App', () => {
     ).toBeInTheDocument()
 
     expect(
-    screen.getByText(/composition: A 10/i),
-  ).toBeInTheDocument()
+      screen.getByText(/composition length: 346/i),
+    ).toBeInTheDocument()
 
-  expect(
-    screen.getByText(/composition: C 2/i),
-  ).toBeInTheDocument()
+    expect(
+      screen.getByText(/composition count: A 10/i),
+    ).toBeInTheDocument()
 
-  expect(
-    screen.getByText(/composition: G 8/i),
-  ).toBeInTheDocument()
+    expect(
+      screen.getByText(/composition count: C 2/i),
+    ).toBeInTheDocument()
 
-  expect(
-    screen.getByText(/hydropathy: position 1, value 0.5/i),
-  ).toBeInTheDocument()
+    expect(
+      screen.getByText(/composition count: G 8/i),
+    ).toBeInTheDocument()
 
-  expect(
-    screen.getByText(/hydropathy: position 2, value 1.2/i),
-  ).toBeInTheDocument()
+    expect(
+      screen.getByText(/composition percentage: A 2.89%/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/composition percentage: C 0.58%/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/composition percentage: G 2.31%/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/hydropathy: position 1, value 0.5/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/hydropathy: position 2, value 1.2/i),
+    ).toBeInTheDocument()
   })
 
   it('displays transmembrane candidates from the analysis report', async () => {
