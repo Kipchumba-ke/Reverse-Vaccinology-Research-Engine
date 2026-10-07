@@ -16,12 +16,17 @@ describe('submitAnalysis', () => {
 
     const result = await submitAnalysis(
       'MKTIIALSYIFCLVFADYKDDDDK',
+      'test_token',
     )
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/analyses',
       expect.objectContaining({
         method: 'POST',
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer test-token',
+        }),
         headers: expect.objectContaining({
           'Content-Type': 'application/json',
         }),

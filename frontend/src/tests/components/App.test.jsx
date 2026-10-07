@@ -1,4 +1,4 @@
-import { act ,render, screen, fireEvent } from '@testing-library/react'
+import { act ,render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach ,describe, expect, it, vi } from 'vitest'
 import { submitAnalysis, getAnalysisStatus } from '../../services/analysisService'
@@ -102,6 +102,7 @@ describe('App', () => {
 
   it('submits the protein sequence through the analysis service', async () => {
     const user = userEvent.setup()
+    localStorage.setItem('token', 'test_token')
 
     render(<App />)
 
@@ -120,7 +121,62 @@ describe('App', () => {
 
     expect(submitAnalysis).toHaveBeenCalledWith(
       'MKTIIALSYIFCLVFADYKDDDDK',
+      'test_token'
     )
+  })
+
+  it('passes the stored authentication token when submitting an analysis', async () => {
+    const user = userEvent.setup()
+
+    localStorage.setItem('token', 'test_token')
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    await user.type(
+      input,
+      'MKTIIALSYIFCLVFADYKDDDDK',
+    )
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    expect(submitAnalysis).toHaveBeenCalledWith(
+      'MKTIIALSYIFCLVFADYKDDDDK',
+      'test_token',
+    )
+  })
+
+  it('passes the stored authentication token when polling analysis status', async () => {
+    const user = userEvent.setup()
+
+    localStorage.setItem('token', 'test_token')
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    await user.type(
+      input,
+      'MKTIIALSYIFCLVFADYKDDDDK',
+    )
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await waitFor(() => {
+      expect(getAnalysisStatus).toHaveBeenCalledWith(
+        '123',
+        'test_token',
+      )
+    })
   })
 
   it('shows an error when protein analysis submission fails', async () => {
@@ -1486,5 +1542,52 @@ describe('App', () => {
         name: /analyze protein/i,
       }),
     ).toHaveClass('analysis-submit')
+  })
+
+  it('provides stable styling hooks for the report overview', async () => {
+    const report = {
+      metadata: {
+        report_type: 'reverse_vaccinology',
+        report_version: '1.0',
+        analysis_pipeline: 'protein_sequence_analysis',
+      },
+      protein: {
+        id: 'P001',
+        name: 'Example Protein',
+        organism: 'Example Organism',
+        accession: 'ABC123',
+        sequence: 'MKTIIALSYIFCLVFADYKDDDDK',
+        length: 25,
+        molecular_weight: 2800,
+        gravy: -0.2,
+        isoelectric_point: 6.5,
+      },
+    }
+
+    getAnalysisStatus.mockResolvedValue({
+      analysis_id: '123',
+      status: 'completed',
+      report,
+    })
+
+    render(<App />)
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+    })
+
+    expect(
+      screen.getByText(/report metadata/i).closest(
+        '.report-overview',
+      ),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/protein characteristics/i),
+    ).toBeInTheDocument()
   })
 })

@@ -4,35 +4,36 @@ function AnalysisReport({ report }) {
       <h2>Analysis Report</h2>
 
       
+      <div className="report-overview">
+        {report.metadata && (
+          <section className="analysis-report-section">
+            <h3>Report Metadata</h3>
+            <p>
+              Report Type: {report.metadata.report_type}
+            </p>
+            <p>
+              Report Version: {report.metadata.report_version}
+            </p>
+            <p>
+              Analysis Pipeline: {report.metadata.analysis_pipeline}
+            </p>
+          </section>
+        )}
 
-      {report.metadata && (
         <section className="analysis-report-section">
-          <h3>Report Metadata</h3>
-          <p>
-            Report Type: {report.metadata.report_type}
-          </p>
-          <p>
-            Report Version: {report.metadata.report_version}
-          </p>
-          <p>
-            Analysis Pipeline: {report.metadata.analysis_pipeline}
-          </p>
+          <h3>Protein Characteristics</h3>
+
+          <p>Protein ID: {report.protein?.id}</p>
+          <p>Name: {report.protein?.name}</p>
+          <p>Organism: {report.protein?.organism}</p>
+          <p>Accession: {report.protein?.accession}</p>
+          <p>Sequence: {report.protein?.sequence}</p>
+          <p>Length: {report.protein?.length}</p>
+          <p>Molecular Weight: {report.protein?.molecular_weight}</p>
+          <p>GRAVY: {report.protein?.gravy}</p>
+          <p>Isoelectric Point: {report.protein?.isoelectric_point}</p>
         </section>
-      )}
-
-      <section className="analysis-report-section">
-        <h3>Protein Characteristics</h3>
-
-        <p>Protein ID: {report.protein?.id}</p>
-        <p>Name: {report.protein?.name}</p>
-        <p>Organism: {report.protein?.organism}</p>
-        <p>Accession: {report.protein?.accession}</p>
-        <p>Sequence: {report.protein?.sequence}</p>
-        <p>Length: {report.protein?.length}</p>
-        <p>Molecular Weight: {report.protein?.molecular_weight}</p>
-        <p>GRAVY: {report.protein?.gravy}</p>
-        <p>Isoelectric Point: {report.protein?.isoelectric_point}</p>
-      </section>
+      </div>
 
       <section className="analysis-report-section">
         <h3>Measurements</h3>

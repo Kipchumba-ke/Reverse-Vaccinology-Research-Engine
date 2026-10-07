@@ -20,7 +20,8 @@ function App() {
 
 
     async function pollAnalysisStatus() {
-      const result = await getAnalysisStatus(analysisId)
+      const token = localStorage.getItem('token')
+      const result = await getAnalysisStatus(analysisId, token)
 
       if (cancelled) return
 
@@ -45,10 +46,9 @@ function App() {
 
   async function handleSubmit() {
     try {
-      const result = await submitAnalysis(sequence)
-
+      const token = localStorage.getItem('token')
+      const result = await submitAnalysis(sequence, token)
       setAnalysisId(result.analysis_id)
-
       setSubmitted(true)
 
     } catch (err) {

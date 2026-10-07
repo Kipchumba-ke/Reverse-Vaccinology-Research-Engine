@@ -318,3 +318,20 @@
 .analysis-report-section strong {
   color: var(--primary-green-dark);
 }
+
+.report-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.report-overview .analysis-report-section {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .report-overview {
+    grid-template-columns: 1fr;
+  }
+}

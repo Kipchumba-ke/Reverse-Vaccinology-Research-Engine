@@ -14,10 +14,15 @@ describe('getAnalysisStatus', () => {
 
     globalThis.fetch = fetchMock
 
-    const result = await getAnalysisStatus('123')
+    const result = await getAnalysisStatus('123', 'test_token')
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/analyses/123',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Authorization': 'Bearer test_token',
+        }),
+      }),
     )
 
     expect(result).toEqual({
