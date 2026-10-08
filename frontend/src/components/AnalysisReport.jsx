@@ -49,7 +49,10 @@ function AnalysisReport({ report }) {
         </p>
 
         {report.measurements?.composition && (
-          <>
+          <div className="measurement-composition measurement-card">
+
+            <h4>Composition</h4>
+
             <p>
               Composition Length:{' '}
               {report.measurements.composition.length}
@@ -70,31 +73,55 @@ function AnalysisReport({ report }) {
                 Composition Percentage: {aminoAcid} {percentage}%
               </p>
             ))}
-          </>
+          </div>
         )}
 
-        {report.measurements?.hydropathy_profile?.map(
-          (point, index) => (
-            <p key={index}>
-              Hydropathy: Position {point.position}, Value {point.value}
-            </p>
-          ),
+        {report.measurements?.hydropathy_profile?.length > 0 && (
+          <div className="measurement-hydropathy measurement-card">
+            <h4>Hydropathy Profile</h4>
+
+            <div className="measurement-values">
+              {report.measurements.hydropathy_profile.map(
+                (point, index) => (
+                  <p key={index}>
+                    Hydropathy: Position {point.position}, Value {point.value}
+                  </p>
+                ),
+              )}
+            </div>
+          </div>
         )}
 
-        {report.measurements?.hydrophobic_regions?.map(
-          (region, index) => (
-            <p key={index}>
-              Hydrophobic Region: {region.start}-{region.end}
-            </p>
-          ),
+        {report.measurements?.hydrophobic_regions?.length > 0 && (
+          <div className="measurement-hydrophobic-regions measurement-card">
+            <h4>Hydrophobic Regions</h4>
+
+            <div className="measurement-values">
+              {report.measurements.hydrophobic_regions.map(
+                (region, index) => (
+                  <p key={index}>
+                    Hydrophobic Region: {region.start}-{region.end}
+                  </p>
+                ),
+              )}
+            </div>
+          </div>
         )}
 
-        {report.measurements?.transmembrane_candidates?.map(
-          (candidate, index) => (
-            <p key={index}>
-              Transmembrane Candidate: {candidate.start}-{candidate.end}
-            </p>
-          ),
+        {report.measurements?.transmembrane_candidates?.length > 0 && (
+          <div className="measurement-transmembrane measurement-card">
+            <h4>Transmembrane Candidates</h4>
+
+            <div className="measurement-values">
+              {report.measurements.transmembrane_candidates.map(
+                (candidate, index) => (
+                  <p key={index}>
+                    Transmembrane Candidate: {candidate.start}-{candidate.end}
+                  </p>
+                ),
+              )}
+            </div>
+          </div>
         )}
       </section>
 

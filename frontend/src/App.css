@@ -1,4 +1,4 @@
- :root {
+:root {
   --primary-green: #006b3f;
   --primary-green-dark: #004d2d;
   --accent-green: #2e8b57;
@@ -101,8 +101,8 @@
 .analysis-submit:active {
   transform: translateY(0);
 }
-/* Reverse Vaccinology */
 
+/* Reverse Vaccinology */
 
 .analysis-report {
   width: min(100%, 1100px);
@@ -146,12 +146,6 @@
   margin-bottom: 0;
 }
 
-@media (max-width: 768px) {
-  .report-overview {
-    grid-template-columns: 1fr;
-  }
-}
-
 .protein-characteristics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -160,12 +154,6 @@
 
 .protein-characteristics-grid p {
   margin: 0;
-}
-
-@media (max-width: 768px) {
-  .protein-characteristics-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .protein-sequence {
@@ -187,4 +175,116 @@
   font-family: "Courier New", monospace;
   line-height: 1.7;
   overflow-wrap: anywhere;
+}
+
+.measurement-card {
+  padding: 20px;
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fbf9;
+}
+
+.measurement-card h4 {
+  margin: 0 0 14px;
+  color: var(--primary-green-dark);
+  font-size: 1rem;
+}
+
+.measurement-card p {
+  margin: 8px 0;
+}
+
+.measurement-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 20px;
+}
+
+.measurement-values p {
+  margin: 0;
+}
+
+/* Tablet and smaller */
+
+@media (max-width: 768px) {
+  .analysis-page {
+    padding: 0 16px 48px;
+  }
+
+  .analysis-page > h1 {
+    padding: 36px 0 24px;
+    font-size: 2.25rem;
+  }
+
+  .analysis-form {
+    padding: 24px;
+  }
+
+  .analysis-report {
+    margin-top: 24px;
+  }
+
+  .analysis-report-section {
+    padding: 22px;
+  }
+
+  .report-overview {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .protein-characteristics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-submit {
+    width: 100%;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 480px) {
+  .analysis-page {
+    padding: 0 12px 36px;
+  }
+
+  .analysis-page > h1 {
+    padding: 28px 0 20px;
+    font-size: 1.85rem;
+  }
+
+  .analysis-form {
+    padding: 18px;
+    border-radius: 12px;
+  }
+
+  .analysis-form textarea {
+    min-height: 200px;
+    padding: 12px;
+  }
+
+  .analysis-report-section {
+    padding: 18px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+
+  .analysis-report-section h3 {
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+  }
+
+  .protein-sequence {
+    padding: 12px;
+  }
+
+  .measurement-card {
+    padding: 16px;
+  }
+
+  .measurement-values {
+    grid-template-columns: 1fr;
+  }
 }

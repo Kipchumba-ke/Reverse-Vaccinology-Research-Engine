@@ -1815,4 +1815,275 @@ describe('App', () => {
       sequence.closest('.protein-sequence'),
     ).toBeInTheDocument()
   })
+
+  it('groups composition measurements into a dedicated block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        measurements: {
+          composition: {
+            length: 346,
+            counts: {
+              A: 10,
+              C: 2,
+              G: 8,
+            },
+            percentages: {
+              A: 2.89,
+              C: 0.58,
+              G: 2.31,
+            },
+          },
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /measurements/i,
+    })
+
+    const composition = screen.getByText(/composition length/i)
+
+    expect(
+      composition.closest('.measurement-composition'),
+    ).toBeInTheDocument()
+  })
+
+  it('styles the composition measurement block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        measurements: {
+          composition: {
+            length: 346,
+            counts: {
+              A: 10,
+              C: 2,
+              G: 8,
+            },
+            percentages: {
+              A: 2.89,
+              C: 0.58,
+              G: 2.31,
+            },
+          },
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /measurements/i,
+    })
+
+    const composition = screen.getByText(/composition length/i)
+
+    expect(
+      composition.closest('.measurement-composition'),
+    ).toHaveClass('measurement-card')
+  })
+
+  it('styles the hydropathy measurement block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        measurements: {
+          hydropathy_profile: [
+            { position: 1, value: 0.5 },
+            { position: 2, value: 1.2 },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /measurements/i,
+    })
+
+    const hydropathy = screen.getByText(/hydropathy: position 1/i)
+
+    expect(
+      hydropathy.closest('.measurement-hydropathy'),
+    ).toHaveClass('measurement-card')
+  })
+
+  it('styles the hydrophobic regions measurement block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        measurements: {
+          hydrophobic_regions: [
+            { start: 10, end: 30 },
+            { start: 50, end: 70 },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /measurements/i,
+    })
+
+    const regions = screen.getByText(/hydrophobic region: 10-30/i)
+
+    expect(
+      regions.closest('.measurement-hydrophobic-regions'),
+    ).toHaveClass('measurement-card')
+  })
+
+  it('styles the transmembrane candidates measurement block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        measurements: {
+          transmembrane_candidates: [
+            { start: 80, end: 102 },
+            { start: 150, end: 172 },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /measurements/i,
+    })
+
+    const candidate = screen.getByText(
+      /transmembrane candidate: 80-102/i,
+    )
+
+    expect(
+      candidate.closest('.measurement-transmembrane'),
+    ).toHaveClass('measurement-card')
+  })
+
+  it('styles the net charge measurement', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        measurements: {
+          charge_and_hydrophobicity: {
+            net_charge: -3.5,
+          },
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /measurements/i,
+    })
+
+    const charge = screen.getByText(/net charge/i)
+
+    expect(
+      charge.closest('.measurement-net-charge'),
+    ).toHaveClass('measurement-card')
+  })
 })
