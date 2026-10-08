@@ -43,10 +43,12 @@ function AnalysisReport({ report }) {
       <section className="analysis-report-section">
         <h3>Measurements</h3>
 
-        <p>
-          Net Charge:{' '}
-          {report.measurements?.charge_and_hydrophobicity?.net_charge}
-        </p>
+        <div className="measurement-net-charge measurement-card">
+          <h4>Net Charge</h4>
+          <p>
+            {report.measurements?.charge_and_hydrophobicity?.net_charge}
+          </p>
+        </div>
 
         {report.measurements?.composition && (
           <div className="measurement-composition measurement-card">
@@ -129,79 +131,112 @@ function AnalysisReport({ report }) {
         <h3>Conservation</h3>
 
         {report.conservation?.summary && (
-          <>
-            
-            <p>
-              Conservation:{' '}
-              {report.conservation.summary.conservation_percentage}%
-            </p>
+          <div className="conservation-summary measurement-card">
+            <h4>Conservation Summary</h4>
 
-            <p>
-              Alignment Length:{' '}
-              {report.conservation.summary.alignment_length}
-            </p>
+            <div className="measurement-values">
+              <p>
+                Conservation:{' '}
+                {report.conservation.summary.conservation_percentage}%
+              </p>
 
-            <p>
-              Sequences Analyzed:{' '}
-              {report.conservation.summary.sequence_count}
-            </p>
-          </>
+              <p>
+                Alignment Length:{' '}
+                {report.conservation.summary.alignment_length}
+              </p>
+
+              <p>
+                Sequences Analyzed:{' '}
+                {report.conservation.summary.sequence_count}
+              </p>
+            </div>
+          </div>
         )}
 
-        {report.conservation?.regions?.map(
-          (region, index) => (
-            <p key={index}>
-              Conserved Region: {region.start}-{region.end}
-            </p>
-          ),
+        {report.conservation?.regions?.length > 0 && (
+          <div className="conserved-regions measurement-card">
+            <h4>Conserved Regions</h4>
+
+            <div className="measurement-values">
+              {report.conservation.regions.map(
+                (region, index) => (
+                  <p key={index}>
+                    Conserved Region: {region.start}-{region.end}
+                  </p>
+                ),
+              )}
+            </div>
+          </div>
         )}
       </section>
 
       <section className="analysis-report-section">
         <h3>Evidence</h3>
 
-        {report.evidence?.localization?.map(
-          (evidence, index) => (
-            <div key={index}>
-              <p>
-                Localization: {evidence.location}
-              </p>
-              <p>
-                Source: {evidence.source}
-              </p>
-              <p>
-                Confidence: {evidence.confidence}
-              </p>
+        {report.evidence?.localization?.length > 0 && (
+          <div className="evidence-localization evidence-card">
+            <h4>Localization Evidence</h4>
+
+            <div className="evidence-values">
+              {report.evidence.localization.map(
+                (evidence, index) => (
+                  <div key={index}>
+                    <p>Localization: {evidence.location}</p>
+                    <p>Source: {evidence.source}</p>
+                    <p>Confidence: {evidence.confidence}</p>
+                  </div>
+                ),
+              )}
             </div>
-          ),
+          </div>
         )}
 
-        {report.evidence?.essentiality?.map(
-          (evidence, index) => (
-            <div key={index}>
-              <p>Essentiality: {evidence.evidence}</p>
-              <p>Source: {evidence.source}</p>
-              <p>Confidence: {evidence.confidence}</p>
+        {report.evidence?.essentiality?.length > 0 && (
+          <div className="evidence-essentiality evidence-card">
+            <h4>Essentiality Evidence</h4>
+
+            <div className="evidence-values">
+              {report.evidence.essentiality.map(
+                (evidence, index) => (
+                  <div key={index}>
+                    <p>Essentiality: {evidence.evidence}</p>
+                    <p>Source: {evidence.source}</p>
+                    <p>Confidence: {evidence.confidence}</p>
+                  </div>
+                ),
+              )}
             </div>
-          ),
+          </div>
         )}
 
-        {report.evidence?.host_similarity?.map(
-          (evidence, index) => (
-            <div key={index}>
-              <p>
-                Host Similarity: {evidence.identity_percentage}%
-              </p>
-              <p>
-                Alignment Length: {evidence.alignment_length}
-              </p>
-              <p>
-                E-value: {evidence.e_value}
-              </p>
-              <p>Source: {evidence.source}</p>
-              <p>Confidence: {evidence.confidence}</p>
+        {report.evidence?.host_similarity?.length > 0 && (
+          <div className="evidence-host-similarity evidence-card">
+            <h4>Host Similarity Evidence</h4>
+
+            <div className="evidence-values">
+              {report.evidence.host_similarity.map(
+                (evidence, index) => (
+                  <div key={index}>
+                    <p>
+                      Host Similarity: {evidence.identity_percentage}%
+                    </p>
+                    <p>
+                      Alignment Length: {evidence.alignment_length}
+                    </p>
+                    <p>
+                      E-value: {evidence.e_value}
+                    </p>
+                    <p>
+                      Source: {evidence.source}
+                    </p>
+                    <p>
+                      Confidence: {evidence.confidence}
+                    </p>
+                  </div>
+                ),
+              )}
             </div>
-          ),
+          </div>
         )}
       </section>
 
@@ -209,20 +244,23 @@ function AnalysisReport({ report }) {
 
         <h3>Interpretations</h3>
 
-        {report.interpretations?.map(
-          (interpretation, index) => (
-            <div key={index}>
-              <p>
-                {interpretation.interpretation}
-              </p>
-              <p>
-                Category: {interpretation.category}
-              </p>
-              <p>
-                Confidence: {interpretation.confidence}
-              </p>
-            </div>
-          ),
+        {report.interpretations?.length > 0 && (
+          <div className="interpretations-list">
+            {report.interpretations.map(
+              (interpretation, index) => (
+                <div
+                  key={index}
+                  className="interpretation-card"
+                >
+                  <p className="interpretation-text">
+                    {interpretation.interpretation}
+                  </p>
+                  <p>Category: {interpretation.category}</p>
+                  <p>Confidence: {interpretation.confidence}</p>
+                </div>
+              ),
+            )}
+          </div>
         )}
       </section>
 
@@ -230,16 +268,29 @@ function AnalysisReport({ report }) {
         <h3>Candidate Assessment</h3>
 
         {report.candidate_assessment && (
-          <div>
-            <p>
-              Category: {report.candidate_assessment.category}
-            </p>
-            <p>
-              Score: {report.candidate_assessment.score}
-            </p>
-            <p>
-              {report.candidate_assessment.rationale}
-            </p>
+          <div className="candidate-assessment-card">
+            <div className="candidate-assessment-summary">
+              <div>
+                <span className="candidate-assessment-label">
+                  Category
+                </span>
+                <p>{report.candidate_assessment.category}</p>
+              </div>
+
+              <div>
+                <span className="candidate-assessment-label">
+                  Score
+                </span>
+                <p>{report.candidate_assessment.score}</p>
+              </div>
+            </div>
+
+            <div className="candidate-assessment-rationale">
+              <span className="candidate-assessment-label">
+                Rationale
+              </span>
+              <p>{report.candidate_assessment.rationale}</p>
+            </div>
           </div>
         )}
       </section>
@@ -247,32 +298,61 @@ function AnalysisReport({ report }) {
       <section className="analysis-report-section">
         <h3>Limitations</h3>
 
-        {report.limitations?.map(
-          (limitation, index) => (
-            <p key={index}>
-              {limitation}
-            </p>
-          ),
+        {report.limitations?.length > 0 && (
+          <div className="limitations-list">
+            {report.limitations.map(
+              (limitation, index) => (
+                <div
+                  key={index}
+                  className="limitation-card"
+                >
+                  <p>{limitation}</p>
+                </div>
+              ),
+            )}
+          </div>
         )}
       </section>
 
       <section className="analysis-report-section">
         <h3>Peptide Candidates</h3>
 
-        {report.peptide_candidates?.map(
-          (candidate, index) => (
-            <div key={index}>
-              <p>
-                Peptide Candidate: {candidate.sequence}
-              </p>
-              <p>
-                Position: {candidate.start}-{candidate.end}
-              </p>
-              <p>
-                Length: {candidate.length}
-              </p>
-            </div>
-          ),
+        {report.peptide_candidates?.length > 0 && (
+          <div className="peptide-candidates-list">
+            {report.peptide_candidates.map(
+              (candidate, index) => (
+                <div
+                  key={index}
+                  className="peptide-candidate-card"
+                >
+                  <div className="peptide-sequence">
+                    <span className="peptide-candidate-label">
+                      Peptide Candidate
+                    </span>
+                    <p>{candidate.sequence}</p>
+                  </div>
+
+                  <div className="peptide-candidate-details">
+                    <div>
+                      <span className="peptide-candidate-label">
+                        Position
+                      </span>
+                      <p>
+                        {candidate.start}-{candidate.end}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="peptide-candidate-label">
+                        Length
+                      </span>
+                      <p>{candidate.length}</p>
+                    </div>
+                  </div>
+                </div>
+              ),
+            )}
+          </div>
         )}
       </section>
     </div>

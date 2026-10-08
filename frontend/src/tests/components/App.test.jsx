@@ -285,8 +285,6 @@ describe('App', () => {
   })
 
   it('displays a running analysis status', async () => {
-    const user = userEvent.setup()
-
     submitAnalysis.mockResolvedValueOnce({
       analysis_id: '123',
       status: 'pending',
@@ -301,19 +299,24 @@ describe('App', () => {
 
     const input = screen.getByLabelText(/protein sequence/i)
 
-    await user.type(
-      input,
-      'MKTIIALSYIFCLVFADYKDDDDK',
-    )
+    fireEvent.change(input, {
+      target: {
+        value: 'MKTIIALSYIFCLVFADYKDDDDK',
+      },
+    })
 
-    await user.click(
-      screen.getByRole('button', {
-        name: /analyze protein/i,
-      }),
-    )
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
 
     expect(
-      screen.getByText(/status: running/i),
+      await screen.findByText(/analysis status:\s*running/i),
     ).toBeInTheDocument()
   })
 
@@ -456,7 +459,9 @@ describe('App', () => {
       ).toBeInTheDocument()
 
       expect(
-        screen.getByText('MKT'),
+        screen.getByText('MKT', {
+          selector: '.protein-sequence p',
+        }),
       ).toBeInTheDocument()
 
       expect(
@@ -687,7 +692,9 @@ describe('App', () => {
     })
 
     expect(
-      screen.getByText(/net charge: -1.2/i),
+      screen.getByText('-1.2', {
+        selector: '.measurement-net-charge p',
+      }),
     ).toBeInTheDocument()
 
     expect(
@@ -1111,11 +1118,15 @@ describe('App', () => {
     })
 
     expect(
-      screen.getByText(/category: promising/i),
+      screen.getByText('promising', {
+        selector: '.candidate-assessment-summary p',
+      }),
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText(/score: 0.82/i),
+      screen.getByText('0.82', {
+        selector: '.candidate-assessment-summary p',
+      }),
     ).toBeInTheDocument()
 
     expect(
@@ -1217,15 +1228,22 @@ describe('App', () => {
     })
 
     expect(
-      screen.getByText(/peptide candidate: MKTLLV/i),
+      screen.getByText('MKTLLV', {
+        selector: '.peptide-sequence p',
+      }),
     ).toBeInTheDocument()
 
-    expect(
-      screen.getByText(/position: 10-15/i),
-    ).toBeInTheDocument()
+    const position = document.querySelector(
+      '.peptide-candidate-details p',
+    )
+
+    expect(position).toBeInTheDocument()
+    expect(position.textContent).toBe('10-15')
 
     expect(
-      screen.getByText(/length: 6/i),
+      screen.getByText('6', {
+        selector: '.peptide-candidate-details p',
+      }),
     ).toBeInTheDocument()
   })
 
@@ -2085,5 +2103,365 @@ describe('App', () => {
     expect(
       charge.closest('.measurement-net-charge'),
     ).toHaveClass('measurement-card')
+  })
+
+  it('styles the conservation summary block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        conservation: {
+          summary: {
+            conservation_percentage: 87.5,
+            alignment_length: 346,
+            sequence_count: 12,
+          },
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    const summary = await screen.findByText(
+      /conservation: 87.5/i,
+    )
+
+    expect(
+      summary.closest('.conservation-summary'),
+    ).toHaveClass('measurement-card')
+  })
+
+  it('styles the conserved regions block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        conservation: {
+          regions: [
+            { start: 20, end: 45 },
+            { start: 80, end: 110 },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /conservation/i,
+    })
+
+    const region = screen.getByText(/conserved region: 20-45/i)
+
+    expect(
+      region.closest('.conserved-regions'),
+    ).toHaveClass('measurement-card')
+  })
+
+  it('styles the localization evidence block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        evidence: {
+          localization: [
+            {
+              location: 'Cell membrane',
+              source: 'UniProt',
+              confidence: 'high',
+            },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /^Evidence$/,
+    })
+
+    const localization = screen.getByText(
+      /localization: cell membrane/i,
+    )
+
+    expect(
+      localization.closest('.evidence-localization'),
+    ).toHaveClass('evidence-card')
+  })
+
+  it('styles the essentiality evidence block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        evidence: {
+          essentiality: [
+            {
+              evidence: 'Essential for bacterial survival',
+              source: 'Database',
+              confidence: 'high',
+            },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /^Evidence$/,
+    })
+
+    const essentiality = screen.getByText(
+      /essentiality: essential for bacterial survival/i,
+    )
+
+    expect(
+      essentiality.closest('.evidence-essentiality'),
+    ).toHaveClass('evidence-card')
+  })
+
+  it('styles the host similarity evidence block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        evidence: {
+          host_similarity: [
+            {
+              identity_percentage: 12.5,
+              alignment_length: 80,
+              e_value: 0.001,
+              source: 'BLAST',
+              confidence: 'high',
+            },
+          ],
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /^Evidence$/,
+    })
+
+    const hostSimilarity = screen.getByText(
+      /host similarity: 12.5%/i,
+    )
+
+    expect(
+      hostSimilarity.closest('.evidence-host-similarity'),
+    ).toHaveClass('evidence-card')
+  })
+
+  it('styles the interpretation block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        interpretations: [
+          {
+            interpretation: 'The protein may be associated with the cell membrane.',
+            category: 'localization',
+            confidence: 'high',
+          },
+        ],
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /^Interpretations$/,
+    })
+
+    const interpretation = screen.getByText(
+      /the protein may be associated with the cell membrane/i,
+    )
+
+    expect(
+      interpretation.closest('.interpretation-card'),
+    ).toHaveClass('interpretation-card')
+  })
+
+  it('styles the candidate assessment block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        candidate_assessment: {
+          category: 'High Priority Candidate',
+          score: 0.87,
+          rationale: 'The protein shows favorable characteristics.',
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /^Candidate Assessment$/,
+    })
+
+    const assessment = screen.getByText(
+      /high priority candidate/i,
+    )
+
+    expect(
+      assessment.closest('.candidate-assessment-card'),
+    ).toHaveClass('candidate-assessment-card')
+  })
+
+  it('styles the limitations block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        limitations: [
+          'Conservation analysis depends on the quality of the alignment.',
+          'Host similarity results require further experimental validation.',
+        ],
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /^Limitations$/,
+    })
+
+    const limitation = screen.getByText(
+      /conservation analysis depends on the quality of the alignment/i,
+    )
+
+    expect(
+      limitation.closest('.limitations-list'),
+    ).toHaveClass('limitations-list')
+  })
+
+  it('styles the peptide candidate block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        peptide_candidates: [
+          {
+            sequence: 'MKTLLILAV',
+            start: 10,
+            end: 18,
+            length: 9,
+          },
+        ],
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      { target: { value: 'MKTLLILAV' } },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /^Peptide Candidates$/,
+    })
+
+    const peptide = screen.getByText('MKTLLILAV', {
+      selector: '.peptide-sequence p',
+    })
+
+    expect(
+      peptide.closest('.peptide-candidate-card'),
+    ).toHaveClass('peptide-candidate-card')
   })
 })

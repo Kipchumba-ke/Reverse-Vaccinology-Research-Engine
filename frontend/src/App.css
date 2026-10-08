@@ -205,6 +205,192 @@
   margin: 0;
 }
 
+.measurement-net-charge p {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-green-dark);
+}
+
+.evidence-card {
+  padding: 20px;
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fbf9;
+}
+
+.evidence-card h4 {
+  margin: 0 0 14px;
+  color: var(--primary-green-dark);
+  font-size: 1rem;
+}
+
+.evidence-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.evidence-values > div {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+}
+
+.evidence-values p {
+  margin: 6px 0;
+}
+
+
+.interpretations-list {
+  display: grid;
+  gap: 16px;
+}
+
+.interpretation-card {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fbf9;
+}
+
+.interpretation-card p {
+  margin: 8px 0;
+}
+
+.interpretation-card .interpretation-text {
+  margin-top: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+.candidate-assessment-card {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fbf9;
+}
+
+.candidate-assessment-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.candidate-assessment-summary > div {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+}
+
+.candidate-assessment-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.candidate-assessment-card p {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.candidate-assessment-rationale {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+}
+
+.candidate-assessment-rationale p {
+  margin-top: 8px;
+}
+
+.limitations-list {
+  display: grid;
+  gap: 12px;
+}
+
+.limitation-card {
+  padding: 16px 20px;
+  border-left: 4px solid var(--accent-green);
+  border-radius: 8px;
+  background: #f8fbf9;
+}
+
+.limitation-card p {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.peptide-candidates-list {
+  display: grid;
+  gap: 16px;
+}
+
+.peptide-candidate-card {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fbf9;
+}
+
+.peptide-candidate-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.peptide-sequence {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+}
+
+.peptide-sequence p {
+  margin: 0;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.peptide-candidate-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.peptide-candidate-details > div {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+}
+
+.peptide-candidate-details p {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+
+
 /* Tablet and smaller */
 
 @media (max-width: 768px) {
@@ -285,6 +471,42 @@
   }
 
   .measurement-values {
+    grid-template-columns: 1fr;
+  }
+
+  .measurement-net-charge p {
+    font-size: 1.3rem;
+  }
+
+  .evidence-values {
+    grid-template-columns: 1fr;
+  }
+
+  .evidence-card {
+    padding: 16px;
+  }
+
+  .interpretation-card {
+    padding: 16px;
+  }
+
+  .candidate-assessment-card {
+    padding: 16px;
+  }
+
+  .candidate-assessment-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .limitation-card {
+    padding: 14px 16px;
+  }
+
+  .peptide-candidate-card {
+    padding: 16px;
+  }
+
+  .peptide-candidate-details {
     grid-template-columns: 1fr;
   }
 }
