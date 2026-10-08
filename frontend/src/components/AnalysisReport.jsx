@@ -23,15 +23,20 @@ function AnalysisReport({ report }) {
         <section className="analysis-report-section">
           <h3>Protein Characteristics</h3>
 
-          <p>Protein ID: {report.protein?.id}</p>
-          <p>Name: {report.protein?.name}</p>
-          <p>Organism: {report.protein?.organism}</p>
-          <p>Accession: {report.protein?.accession}</p>
-          <p>Sequence: {report.protein?.sequence}</p>
-          <p>Length: {report.protein?.length}</p>
-          <p>Molecular Weight: {report.protein?.molecular_weight}</p>
-          <p>GRAVY: {report.protein?.gravy}</p>
-          <p>Isoelectric Point: {report.protein?.isoelectric_point}</p>
+          <div className="protein-characteristics-grid">
+            <p>Protein ID: {report.protein?.id}</p>
+            <p>Name: {report.protein?.name}</p>
+            <p>Organism: {report.protein?.organism}</p>
+            <p>Accession: {report.protein?.accession}</p>
+            <p>Length: {report.protein?.length}</p>
+            <p>Molecular Weight: {report.protein?.molecular_weight}</p>
+            <p>GRAVY: {report.protein?.gravy}</p>
+            <p>Isoelectric Point: {report.protein?.isoelectric_point}</p>
+          </div>
+          <div className="protein-sequence">
+            <strong>Sequence</strong>
+            <p>{report.protein?.sequence}</p>
+          </div>
         </section>
       </div>
 

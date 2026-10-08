@@ -1727,4 +1727,92 @@ describe('App', () => {
       }),
     ).toBeInTheDocument()
   })
+
+  it('groups protein characteristics into a structured grid', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        protein: {
+          id: 'protein-1',
+          name: 'Test Protein',
+          organism: 'Test Organism',
+          accession: 'ABC123',
+          sequence: 'MKTLLILAV',
+          length: 9,
+          molecular_weight: 1000,
+          gravy: 0.5,
+          isoelectric_point: 7.0,
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /protein characteristics/i,
+    })
+
+    expect(
+      screen.getByText(/protein id/i).closest(
+        '.protein-characteristics-grid',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('renders the protein sequence in a dedicated sequence block', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        protein: {
+          sequence: 'MKTLLILAV',
+        },
+      },
+    })
+
+    render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: {
+          value: 'MKTLLILAV',
+        },
+      },
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await screen.findByRole('heading', {
+      name: /protein characteristics/i,
+    })
+
+    const sequence = screen.getByText('MKTLLILAV', {
+      selector: '.protein-sequence p',
+    })
+
+    expect(
+      sequence.closest('.protein-sequence'),
+    ).toBeInTheDocument()
+  })
 })

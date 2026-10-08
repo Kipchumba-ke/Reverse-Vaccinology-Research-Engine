@@ -1,5 +1,5 @@
 export async function submitAnalysis(sequence, token) {
-  const response = await fetch('http://127.0.0.1:5000/api/analyses', {
+  const response = await fetch('/api/analyses', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -14,7 +14,7 @@ export async function submitAnalysis(sequence, token) {
 }
 
 export async function getAnalysisStatus(analysisId, token) {
-  const response = await fetch(`http://127.0.0.1:5000/api/analyses/${analysisId}`, {
+  const response = await fetch(`/api/analyses/${analysisId}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
