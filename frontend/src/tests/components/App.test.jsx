@@ -649,17 +649,19 @@ describe('App', () => {
           },
           charge_and_hydrophobicity: {
             net_charge: -1.2,
+          },        
+        hydropathy_profile: [
+          {
+            start: 1,
+            end: 19,
+            hydropathy: 0.5,
           },
-          hydropathy_profile: [
-            {
-              position: 1,
-              value: 0.5,
-            },
-            {
-              position: 2,
-              value: 1.2,
-            },
-          ],
+          {
+            start: 2,
+            end: 20,
+            hydropathy: 1.2,
+          },
+        ],
           hydrophobic_regions: [
             {
               start: 5,
@@ -730,12 +732,12 @@ describe('App', () => {
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText(/hydropathy: position 1, value 0.5/i),
-    ).toBeInTheDocument()
+      screen.getByText('0.500', { selector: 'tbody td' }),
+    ).toBeInTheDocument();
 
     expect(
-      screen.getByText(/hydropathy: position 2, value 1.2/i),
-    ).toBeInTheDocument()
+      screen.getByText('1.200', { selector: 'tbody td' }),
+    ).toBeInTheDocument();
   })
 
   it('displays transmembrane candidates from the analysis report', async () => {
@@ -1088,11 +1090,18 @@ describe('App', () => {
     getAnalysisStatus.mockResolvedValueOnce({
       analysis_id: '123',
       status: 'completed',
-      report: {
+      report: {       
         candidate_assessment: {
-          category: 'promising',
-          score: 0.82,
-          rationale: 'Multiple computational evidence types support further investigation.',
+          status: 'requires_further_review',
+          rationale:
+            'The assessment requires further review because missing evidence remains.',
+          supporting_evidence: [
+            'Sequence-based hydrophobicity analysis was completed.',
+          ],
+          concerns: [],
+          missing_evidence: [
+            'Localization evidence from a prediction tool, database, or experiment.',
+          ],
         },
       },
     })
@@ -1116,24 +1125,30 @@ describe('App', () => {
 
       await Promise.resolve()
     })
-
+    
     expect(
-      screen.getByText('promising', {
+      screen.getByText('requires further review', {
         selector: '.candidate-assessment-summary p',
       }),
-    ).toBeInTheDocument()
-
-    expect(
-      screen.getByText('0.82', {
-        selector: '.candidate-assessment-summary p',
-      }),
-    ).toBeInTheDocument()
+    ).toBeInTheDocument();
 
     expect(
       screen.getByText(
-        /multiple computational evidence types support further investigation/i,
+        /the assessment requires further review because missing evidence remains/i,
       ),
-    ).toBeInTheDocument()
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        /sequence-based hydrophobicity analysis was completed/i,
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        /localization evidence from a prediction tool/i,
+      ),
+    ).toBeInTheDocument();
   })
 
   it('displays limitations from the analysis report', async () => {
@@ -1941,10 +1956,10 @@ describe('App', () => {
       analysis_id: '123',
       status: 'completed',
       report: {
-        measurements: {
+        measurements: {         
           hydropathy_profile: [
-            { position: 1, value: 0.5 },
-            { position: 2, value: 1.2 },
+            { start: 1, end: 19, hydropathy: 0.5 },
+            { start: 2, end: 20, hydropathy: 1.2 },
           ],
         },
       },
@@ -1971,7 +1986,23 @@ describe('App', () => {
       name: /measurements/i,
     })
 
-    const hydropathy = screen.getByText(/hydropathy: position 1/i)
+    expect(
+      screen.getByRole('img', {
+        name: /hydropathy profile chart/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/2 sliding windows/i),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(/raw hydropathy values/i),
+    ).toBeInTheDocument()
+
+    const hydropathy = screen.getByRole('img', {
+      name: /hydropathy profile chart/i,
+    })
 
     expect(
       hydropathy.closest('.measurement-hydropathy'),
@@ -2104,6 +2135,68 @@ describe('App', () => {
       charge.closest('.measurement-net-charge'),
     ).toHaveClass('measurement-card')
   })
+
+  it('explains when conservation results are unavailable', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        conservation: {},
+      },
+    });
+
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText(/protein sequence/i), {
+      target: { value: 'MKTLLILAV' },
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    );
+
+    await screen.findByRole('heading', {
+      name: /^Conservation$/,
+    });
+
+    expect(
+      screen.getByText(
+        /conservation results are unavailable because no comparative sequence alignment was provided/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
+
+  it('explains when evidence results are unavailable', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        evidence: {},
+      },
+    });
+
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText(/protein sequence/i), {
+      target: { value: 'MKTLLILAV' },
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    );
+
+    await screen.findByRole('heading', {
+      name: /^Evidence$/,
+    });
+
+    expect(
+      screen.getByText(
+        /no localization, essentiality, or host similarity evidence was provided for this report/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
 
   it('styles the conservation summary block', async () => {
     getAnalysisStatus.mockResolvedValueOnce({
@@ -2358,10 +2451,12 @@ describe('App', () => {
       status: 'completed',
       report: {
         candidate_assessment: {
-          category: 'High Priority Candidate',
-          score: 0.87,
-          rationale: 'The protein shows favorable characteristics.',
-        },
+        status: 'requires_further_review',
+        rationale: 'The protein shows favorable characteristics.',
+        supporting_evidence: [],
+        concerns: [],
+        missing_evidence: [],
+      },
       },
     })
 
@@ -2381,8 +2476,11 @@ describe('App', () => {
     })
 
     const assessment = screen.getByText(
-      /high priority candidate/i,
-    )
+      'requires further review',
+      {
+        selector: '.candidate-assessment-summary p',
+      },
+    );
 
     expect(
       assessment.closest('.candidate-assessment-card'),
@@ -2424,6 +2522,49 @@ describe('App', () => {
       limitation.closest('.limitations-list'),
     ).toHaveClass('limitations-list')
   })
+
+  it('keeps large peptide candidate lists compact and expandable', async () => {
+    const candidates = Array.from({ length: 100 }, (_, index) => ({
+      sequence: `PEPTIDE${index}`,
+      start: index * 9 + 1,
+      end: index * 9 + 8,
+      length: 8,
+    }));
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        peptide_candidates: candidates,
+      },
+    });
+
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText(/protein sequence/i), {
+      target: { value: 'MKTLLILAV' },
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    );
+
+    await screen.findByRole('heading', {
+      name: /^Peptide Candidates$/,
+    });
+
+    expect(screen.getByText(/100 peptide candidates/i)).toBeInTheDocument();
+
+    const candidateList = screen.getByTestId('peptide-candidates-list');
+
+    expect(candidateList.querySelectorAll('.peptide-candidate-card')).toHaveLength(10);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /show all peptide candidates/i }),
+    );
+
+    expect(candidateList.querySelectorAll('.peptide-candidate-card')).toHaveLength(100);
+  });
 
   it('styles the peptide candidate block', async () => {
     getAnalysisStatus.mockResolvedValueOnce({

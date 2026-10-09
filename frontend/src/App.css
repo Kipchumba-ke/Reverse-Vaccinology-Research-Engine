@@ -389,6 +389,64 @@
   color: var(--text-primary);
 }
 
+.hydropathy-chart-container {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.hydropathy-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+}
+
+.hydropathy-zero-line {
+  stroke: currentColor;
+  stroke-opacity: 0.3;
+  stroke-dasharray: 5 5;
+}
+
+.hydropathy-line {
+  fill: none;
+  stroke: #2878b5;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.hydropathy-point {
+  fill: #2878b5;
+}
+
+.hydropathy-raw-data {
+  margin-top: 1rem;
+}
+
+.hydropathy-raw-data summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.5rem 0;
+}
+
+.hydropathy-table-container {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.hydropathy-table-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hydropathy-table-container th,
+.hydropathy-table-container td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
 
 
 /* Tablet and smaller */
