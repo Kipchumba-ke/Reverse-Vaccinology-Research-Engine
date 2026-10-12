@@ -1001,6 +1001,65 @@ def test_submit_analysis_accepts_fasta_content(api_client, auth_headers):
     assert "analysis_id" in response.json
 
 
+@pytest.mark.parametrize(
+    ("fasta_content", "expected_error"),
+    [
+        ("", "Invalid FASTA input."),
+        ("MKTIIALSYIFCLVFAD", "Invalid FASTA input."),
+        (
+            ">protein_1\n",
+            "FASTA sequence cannot be empty.",
+        ),
+    ],
+)
+def test_submit_analysis_rejects_invalid_fasta_content(
+    api_client,
+    auth_headers,
+    fasta_content,
+    expected_error,
+):
+    response = api_client.post(
+        "/api/analyses",
+        json={"fasta_content": fasta_content},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"] == expected_error
+
+
+def test_invalid_fasta_does_not_persist_or_enqueue_analysis(
+    api_client,
+    auth_headers,
+):
+    class TrackingQueue:
+        def __init__(self):
+            self.jobs = []
+
+        def enqueue(self, job):
+            self.jobs.append(job)
+
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+    queue = TrackingQueue()
+    api_client.application.config["ANALYSIS_QUEUE"] = queue
+
+    response = api_client.post(
+        "/api/analyses",
+        json={"fasta_content": ">protein_1\n"},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "error": "FASTA sequence cannot be empty."
+    }
+    assert queue.jobs == []
+
+    persisted_analyses = repository.session.query(
+        AnalysisModel
+    ).all()
+    assert persisted_analyses == []
+
 
 
 def test_submit_analysis_requires_sequence(api_client, auth_token):
