@@ -2,11 +2,21 @@ import { useState } from "react";
 
 function AnalysisReport({ report }) {
   const [showAllPeptides, setShowAllPeptides] = useState(false);
+  const [showFullSequence, setShowFullSequence] = useState(false);
 
   const peptideCandidates = report.peptide_candidates ?? [];
   const visiblePeptides = showAllPeptides
     ? peptideCandidates
     : peptideCandidates.slice(0, 10);
+
+  const proteinSequence = report.protein?.sequence ?? '';
+  const sequencePreviewLength = 120;
+  const isLongSequence = proteinSequence.length > sequencePreviewLength;
+
+  const displayedSequence =
+    isLongSequence && !showFullSequence
+      ? `${proteinSequence.slice(0, sequencePreviewLength)}...`
+      : proteinSequence;
   return (
     <div className="analysis-report">
       <h2>Analysis Report</h2>
@@ -41,9 +51,18 @@ function AnalysisReport({ report }) {
             <p>GRAVY: {report.protein?.gravy}</p>
             <p>Isoelectric Point: {report.protein?.isoelectric_point}</p>
           </div>
-          <div className="protein-sequence">
-            <strong>Sequence</strong>
-            <p>{report.protein?.sequence}</p>
+          <div className="protein-sequence" data-testid="protein-sequence">
+            <strong>Sequence ({proteinSequence.length} amino acids)</strong>
+            <p>{displayedSequence}</p>
+
+            {isLongSequence && (
+              <button
+                type="button"
+                onClick={() => setShowFullSequence((current) => !current)}
+              >
+                {showFullSequence ? 'Show less' : 'Show full sequence'}
+              </button>
+            )}
           </div>
         </section>
       </div>
@@ -60,7 +79,6 @@ function AnalysisReport({ report }) {
 
         {report.measurements?.composition && (
           <div className="measurement-composition measurement-card">
-
             <h4>Composition</h4>
 
             <p>
@@ -68,21 +86,41 @@ function AnalysisReport({ report }) {
               {report.measurements.composition.length}
             </p>
 
-            {Object.entries(
-              report.measurements.composition.counts || {},
-            ).map(([aminoAcid, count]) => (
-              <p key={`count-${aminoAcid}`}>
-                Composition Count: {aminoAcid} {count}
-              </p>
-            ))}
-
-            {Object.entries(
-              report.measurements.composition.percentages || {},
-            ).map(([aminoAcid, percentage]) => (
-              <p key={`percentage-${aminoAcid}`}>
-                Composition Percentage: {aminoAcid} {percentage}%
-              </p>
-            ))}
+            <div className="composition-table-container">
+              <table aria-label="Amino Acid Composition">
+                <thead>
+                  <tr>
+                    <th scope="col">Amino Acid</th>
+                    <th scope="col">Count</th>
+                    <th scope="col">Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from(
+                    new Set([
+                      ...Object.keys(
+                        report.measurements.composition.counts ?? {},
+                      ),
+                      ...Object.keys(
+                        report.measurements.composition.percentages ?? {},
+                      ),
+                    ]),
+                  ).map((aminoAcid) => (
+                    <tr key={aminoAcid}>
+                      <td>{aminoAcid}</td>
+                      <td>
+                        {report.measurements.composition.counts?.[aminoAcid] ?? 'Unavailable'}
+                      </td>
+                      <td>
+                        {report.measurements.composition.percentages?.[aminoAcid] != null
+                          ? `${report.measurements.composition.percentages[aminoAcid]}%`
+                          : 'Unavailable'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

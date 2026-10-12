@@ -1,4 +1,4 @@
-import { act ,render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { act ,render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach ,describe, expect, it, vi } from 'vitest'
 import { submitAnalysis, getAnalysisStatus } from '../../services/analysisService'
@@ -707,28 +707,38 @@ describe('App', () => {
       screen.getByText(/composition length: 346/i),
     ).toBeInTheDocument()
 
+    const compositionTable = screen.getByRole('table', {
+      name: /amino acid composition/i,
+    })
+
+    expect(compositionTable).toBeInTheDocument()
+
     expect(
-      screen.getByText(/composition count: A 10/i),
+      within(compositionTable).getByText('A'),
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText(/composition count: C 2/i),
+      within(compositionTable).getByText('10'),
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText(/composition count: G 8/i),
+      within(compositionTable).getByText('2.89%'),
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText(/composition percentage: A 2.89%/i),
+      within(compositionTable).getByText('C'),
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText(/composition percentage: C 0.58%/i),
+      within(compositionTable).getByText('0.58%'),
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText(/composition percentage: G 2.31%/i),
+      within(compositionTable).getByText('G'),
+    ).toBeInTheDocument()
+
+    expect(
+      within(compositionTable).getByText('2.31%'),
     ).toBeInTheDocument()
 
     expect(
@@ -1849,56 +1859,171 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
-  it('groups composition measurements into a dedicated block', async () => {
+  it('keeps long protein sequences compact and expandable', async () => {
+    const longSequence = 'MKTLLILAV'.repeat(120);
+
     getAnalysisStatus.mockResolvedValueOnce({
       analysis_id: '123',
       status: 'completed',
       report: {
-        measurements: {
-          composition: {
-            length: 346,
-            counts: {
-              A: 10,
-              C: 2,
-              G: 8,
-            },
-            percentages: {
-              A: 2.89,
-              C: 0.58,
-              G: 2.31,
-            },
-          },
+        protein: {
+          sequence: longSequence,
         },
       },
-    })
+    });
 
-    render(<App />)
+    render(<App />);
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
       {
-        target: {
-          value: 'MKTLLILAV',
-        },
+        target: { value: 'MKTLLILAV' },
       },
-    )
+    );
 
     fireEvent.click(
       screen.getByRole('button', {
         name: /analyze protein/i,
       }),
-    )
+    );
 
-    await screen.findByRole('heading', {
-      name: /measurements/i,
-    })
+    const sequenceBlock = await screen.findByTestId(
+      'protein-sequence',
+    );
 
-    const composition = screen.getByText(/composition length/i)
+    expect(sequenceBlock).toHaveTextContent(
+      `${longSequence.slice(0, 120)}...`,
+    );
+
+    expect(sequenceBlock).not.toHaveTextContent(longSequence);
 
     expect(
-      composition.closest('.measurement-composition'),
-    ).toBeInTheDocument()
+      screen.getByRole('button', {
+        name: /show full sequence/i,
+      }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /show full sequence/i,
+      }),
+    );
+    
+    expect(sequenceBlock).toHaveTextContent(longSequence)
+
+    expect(
+      screen.getByRole('button', {
+        name: /show less/i,
+      }),
+    ).toBeInTheDocument();
+  });
+
+
+it('groups composition measurements into a dedicated block', async () => {
+  getAnalysisStatus.mockResolvedValueOnce({
+    analysis_id: '123',
+    status: 'completed',
+    report: {
+      measurements: {
+        composition: {
+          length: 346,
+          counts: {
+            A: 10,
+            C: 2,
+            G: 8,
+          },
+          percentages: {
+            A: 2.89,
+            C: 0.58,
+            G: 2.31,
+          },
+        },
+      },
+    },
   })
+
+  render(<App />)
+
+  fireEvent.change(
+    screen.getByLabelText(/protein sequence/i),
+    {
+      target: {
+        value: 'MKTLLILAV',
+      },
+    },
+  )
+
+  fireEvent.click(
+    screen.getByRole('button', {
+      name: /analyze protein/i,
+    }),
+  )
+
+  await screen.findByRole('heading', {
+    name: /measurements/i,
+  })
+
+  const composition = screen.getByText(/composition length/i)
+
+  expect(
+    composition.closest('.measurement-composition'),
+  ).toBeInTheDocument()
+})
+
+
+it('renders composition counts and percentages in a compact table', async () => {
+  getAnalysisStatus.mockResolvedValueOnce({
+    analysis_id: '123',
+    status: 'completed',
+    report: {
+      measurements: {
+        composition: {
+          length: 346,
+          counts: {
+            A: 10,
+            C: 2,
+            G: 8,
+          },
+          percentages: {
+            A: 2.89,
+            C: 0.58,
+            G: 2.31,
+          },
+        },
+      },
+    },
+  });
+
+  render(<App />);
+
+  fireEvent.change(
+    screen.getByLabelText(/protein sequence/i),
+    { target: { value: 'MKTLLILAV' } },
+  );
+
+  fireEvent.click(
+    screen.getByRole('button', { name: /analyze protein/i }),
+  );
+
+  const table = await screen.findByRole('table', {
+    name: /amino acid composition/i,
+  });
+
+  expect(table).toBeInTheDocument();
+  expect(
+    within(table).getByRole('columnheader', { name: /amino acid/i }),
+  ).toBeInTheDocument();
+  expect(
+    within(table).getByRole('columnheader', { name: /count/i }),
+  ).toBeInTheDocument();
+  expect(
+    within(table).getByRole('columnheader', { name: /percentage/i }),
+  ).toBeInTheDocument();
+
+  expect(within(table).getByText('A')).toBeInTheDocument();
+  expect(within(table).getByText('10')).toBeInTheDocument();
+  expect(within(table).getByText('2.89%')).toBeInTheDocument();
+});
 
   it('styles the composition measurement block', async () => {
     getAnalysisStatus.mockResolvedValueOnce({
