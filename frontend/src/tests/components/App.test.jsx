@@ -1,12 +1,13 @@
 import { act ,render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach ,describe, expect, it, vi } from 'vitest'
-import { submitAnalysis, getAnalysisStatus } from '../../services/analysisService'
+import { submitAnalysis, submitFastaAnalysis ,getAnalysisStatus } from '../../services/analysisService'
 import { login } from '../../services/authService'
 import App from '../../App'
 
 vi.mock('../../services/analysisService', () => ({
   submitAnalysis: vi.fn(),
+  submitFastaAnalysis: vi.fn(),
   getAnalysisStatus: vi.fn(),
 }))
 
@@ -29,6 +30,12 @@ describe('App', () => {
 
     submitAnalysis.mockResolvedValue({
       analysis_id: '123',
+      status: 'pending',
+    })
+
+    submitFastaAnalysis.mockReset()
+    submitFastaAnalysis.mockResolvedValue({
+      analysis_id: '456',
       status: 'pending',
     })
 
@@ -472,41 +479,112 @@ describe('App', () => {
     }
   })
 
-    it('displays an error when the analysis fails', async () => {
-    submitAnalysis.mockResolvedValueOnce({
-      analysis_id: '123',
-      status: 'pending',
-    })
 
-    getAnalysisStatus.mockResolvedValueOnce({
-      analysis_id: '123',
-      status: 'failed',
-      report: null,
-    })
+it('renders a FASTA file input accepting supported extensions', () => {
+  render(<App />)
 
-    render(<App />)
+  const fileInput = screen.getByLabelText(/upload fasta file/i)
 
-    const input = screen.getByLabelText(/protein sequence/i)
+  expect(fileInput).toHaveAttribute(
+    'accept',
+    '.fasta,.fa,.fna',
+  )
+})
 
-    fireEvent.change(input, {
-      target: {
-        value: 'MKT',
-      },
-    })
+it('submits selected FASTA file contents through the analysis service', async () => {
+  const user = userEvent.setup()
+  const fastaContent = '>protein_1 Example protein\nMKTIIALSYIFCLVFADYKDDDDK\n'
+  const fastaFile = new File(
+    [fastaContent],
+    'protein.fasta',
+    { type: 'text/plain' },
+  )
 
-    await act(async () => {
-      fireEvent.click(
-        screen.getByRole('button', {
-          name: /analyze protein/i,
-        }),
-      )
+  render(<App />)
 
-      await Promise.resolve()
-    })
+  const fileInput = screen.getByLabelText(/upload fasta file/i)
 
-    expect(
-      screen.getByText(/analysis failed/i),
-    ).toBeInTheDocument()
+  await user.upload(fileInput, fastaFile)
+
+  await user.click(
+    screen.getByRole('button', {
+      name: /analyze protein/i,
+    }),
+  )
+
+  await waitFor(() => {
+    expect(submitFastaAnalysis).toHaveBeenCalledWith(
+      fastaContent,
+      'test_token',
+    )
+  })
+})
+
+
+it('rejects an empty FASTA file without submitting an analysis', async () => {
+  const user = userEvent.setup()
+  const emptyFile = new File([], 'empty.fasta', {
+    type: 'text/plain',
+  })
+
+  render(<App />)
+
+  await user.upload(
+    screen.getByLabelText(/upload fasta file/i),
+    emptyFile,
+  )
+
+  await user.click(
+    screen.getByRole('button', {
+      name: /analyze protein/i,
+    }),
+  )
+
+  expect(
+    await screen.findByText(/selected fasta file is empty/i),
+  ).toBeInTheDocument()
+
+  expect(submitFastaAnalysis).not.toHaveBeenCalled()
+  expect(submitAnalysis).not.toHaveBeenCalled()
+})
+
+
+
+  it('displays an error when the analysis fails', async () => {
+  submitAnalysis.mockResolvedValueOnce({
+    analysis_id: '123',
+    status: 'pending',
+  })
+
+  getAnalysisStatus.mockResolvedValueOnce({
+    analysis_id: '123',
+    status: 'failed',
+    report: null,
+  })
+
+  render(<App />)
+
+  const input = screen.getByLabelText(/protein sequence/i)
+
+  fireEvent.change(input, {
+    target: {
+      value: 'MKT',
+    },
+  })
+
+  await act(async () => {
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /analyze protein/i,
+      }),
+    )
+
+    await Promise.resolve()
+  })
+
+  expect(
+    screen.getByText(/analysis failed/i),
+  ).toBeInTheDocument()
   })
 
   it('displays report metadata from the analysis report', async () => {
@@ -1651,6 +1729,13 @@ describe('App', () => {
     })
 
     render(<App />)
+
+    fireEvent.change(
+      screen.getByLabelText(/protein sequence/i),
+      {
+        target: { value: 'MKTIIALSYIFCLVFADYKDDDDK' },
+      },
+    )
 
     await act(async () => {
       fireEvent.click(

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { submitAnalysis } from '../../services/analysisService'
+import { submitAnalysis, submitFastaAnalysis, } from '../../services/analysisService'
 
 describe('submitAnalysis', () => {
   it('submits a protein sequence to the analysis API', async () => {
@@ -29,6 +29,7 @@ describe('submitAnalysis', () => {
         }),
         headers: expect.objectContaining({
           'Content-Type': 'application/json',
+          Authorization: 'Bearer test_token',
         }),
         body: JSON.stringify({
           sequence: 'MKTIIALSYIFCLVFADYKDDDDK',
@@ -41,4 +42,42 @@ describe('submitAnalysis', () => {
       status: 'pending',
     })
   })
+
+
+  it('submits FASTA content to the analysis API', async () => {
+    const fastaContent = '>protein_1 Example protein\nMKTIIALSYIFCLVFADYKDDDDK\n'
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 202,
+      json: async () => ({
+        analysis_id: '456',
+        status: 'pending',
+      }),
+    })
+
+    globalThis.fetch = fetchMock
+
+    const result = await submitFastaAnalysis(fastaContent, 'test_token')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/analyses',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer test_token',
+        }),
+        body: JSON.stringify({
+          fasta_content: fastaContent,
+        }),
+      }),
+    )
+
+    expect(result).toEqual({
+      analysis_id: '456',
+      status: 'pending',
+    })
+  })
+
 })

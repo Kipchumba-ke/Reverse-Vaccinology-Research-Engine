@@ -1,5 +1,5 @@
 import { useEffect ,useState } from "react"
-import { submitAnalysis, getAnalysisStatus } from './services/analysisService'
+import { submitAnalysis, submitFastaAnalysis ,getAnalysisStatus } from './services/analysisService'
 import AnalysisReport from "./components/AnalysisReport"
 import Register from './components/Register'
 import Login from "./components/Login"
@@ -40,6 +40,7 @@ function AnalysisApp() {
   const [analysisId, setAnalysisId] = useState('')
   const [status, setStatus] = useState('')
   const [report, setReport] = useState(null)
+  const [fastaFile, setFastaFile] = useState(null)
 
   useEffect(() => {
     if (!analysisId) return
@@ -73,17 +74,50 @@ function AnalysisApp() {
   }, [analysisId])
 
 
-  async function handleSubmit() {
-    try {
-      const token = localStorage.getItem('token')
-      const result = await submitAnalysis(sequence, token)
-      setAnalysisId(result.analysis_id)
-      setSubmitted(true)
 
-    } catch (err) {
-      setError(err.message)
+async function handleSubmit() {
+  setError(null)
+
+  try {
+    const token = localStorage.getItem('token')
+    let result
+
+    if (fastaFile) {
+      const allowedExtensions = /\.(fasta|fa|fna)$/i
+
+      if (!allowedExtensions.test(fastaFile.name)) {
+        setError('Please select a .fasta, .fa, or .fna file.')
+        return
+      }
+
+      const fastaContent = await fastaFile.text()
+
+      if (!fastaContent.trim()) {
+        setError('The selected FASTA file is empty.')
+        return
+      }
+
+      result = await submitFastaAnalysis(fastaContent, token)
+    } else {
+      if (!sequence.trim()) {
+        setError('Enter a protein sequence or select a FASTA file.')
+        return
+      }
+
+      result = await submitAnalysis(sequence, token)
     }
+
+    if (!result.analysis_id) {
+      throw new Error(result.error || 'Unable to submit the analysis.')
+    }
+
+    setAnalysisId(result.analysis_id)
+    setSubmitted(true)
+  } catch (err) {
+    setError(err.message || 'Analysis submission failed.')
   }
+}
+
 
   return (
     <main className="analysis-page">
@@ -99,6 +133,28 @@ function AnalysisApp() {
           value={sequence}
           onChange={(e) => setSequence(e.target.value)}
         />
+
+
+        <label htmlFor="fasta-file">
+          Upload FASTA File
+        </label>
+
+        <input
+          id="fasta-file"
+          name="fasta-file"
+          type="file"
+          accept=".fasta,.fa,.fna"
+          onChange={(event) => {
+            setFastaFile(event.target.files?.[0] ?? null)
+          }}
+        />
+
+        {fastaFile && (
+          <p>
+            Selected file: {fastaFile.name}
+          </p>
+        )}
+
 
         <button type="button" className="analysis-submit" onClick={handleSubmit}>
           Analyze Protein

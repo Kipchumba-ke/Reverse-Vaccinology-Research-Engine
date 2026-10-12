@@ -13,6 +13,21 @@ export async function submitAnalysis(sequence, token) {
   return response.json()
 }
 
+export async function submitFastaAnalysis(fastaContent, token) {
+  const response = await fetch('/api/analyses', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      fasta_content: fastaContent,
+    }),
+  })
+
+  return response.json()
+}
+
 export async function getAnalysisStatus(analysisId, token) {
   const response = await fetch(`/api/analyses/${analysisId}`, {
     headers: {
