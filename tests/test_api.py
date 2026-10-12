@@ -810,6 +810,11 @@ def test_create_app_closes_default_repository_session(monkeypatch):
         lambda: repository,
     )
 
+    monkeypatch.setattr(
+        "app.get_authenticated_user_id",
+        lambda request: "test-user-id",
+    )
+
     app = create_app()
     client = app.test_client()
 
@@ -822,7 +827,7 @@ def test_create_app_closes_default_repository_session(monkeypatch):
     assert repository.session.closed is True
 
 
-def test_create_app_does_not_close_injected_repository_session():
+def test_create_app_does_not_close_injected_repository_session(monkeypatch):
     class FakeSession:
         def __init__(self):
             self.closed = False
@@ -845,8 +850,19 @@ def test_create_app_does_not_close_injected_repository_session():
 
     repository = FakeRepository()
 
+    monkeypatch.setattr(
+        "app.create_repository",
+        lambda: repository,
+    )
+
+    monkeypatch.setattr(
+        "app.get_authenticated_user_id",
+        lambda request: "test-user-id",
+    )
+
     app = create_app(repository=repository)
     client = app.test_client()
+
 
     response = client.post(
         "/api/analyze",
@@ -885,8 +901,14 @@ def test_create_app_closes_default_repository_session_after_failure(monkeypatch)
         lambda: repository,
     )
 
+    monkeypatch.setattr(
+        "app.get_authenticated_user_id",
+        lambda request: "test-user-id",
+    )
+
     app = create_app()
     client = app.test_client()
+    
 
     response = client.post(
         "/api/analyze",
@@ -901,9 +923,32 @@ def test_api_client_uses_test_database_session(db_session):
     app = create_app(repository=repository)
     client = app.test_client()
 
+    register_response = client.post(
+        "/api/register",
+        json={
+            "email": "session-test@example.com",
+            "password": "StrongPass123!",
+        },
+    )
+    assert register_response.status_code == 201
+
+    login_response = client.post(
+        "/api/login",
+        json={
+            "email": "session-test@example.com",
+            "password": "StrongPass123!",
+        },
+    )
+    assert login_response.status_code == 200
+
+    auth_headers = {
+        "Authorization": f"Bearer {login_response.get_json()['token']}"
+    }
+
     response = client.post(
         "/api/analyze",
         json={"sequence": "MKTIIALSYIFCLVFAD"},
+        headers=auth_headers
     )
 
     assert response.status_code == 200
@@ -936,6 +981,25 @@ def test_submit_analysis_returns_pending_analysis(api_client, auth_token):
 
     assert "analysis_id" in data
     assert data["status"] == "pending"
+
+
+def test_submit_analysis_accepts_fasta_content(api_client, auth_headers):
+    fasta_content = (
+        ">sp|P0A911|OMPA_ECOLI Outer membrane protein A "
+        "OS=Escherichia coli\n"
+        "MKTIIALSYIFCLVFADYKDDDDK\n"
+    )
+
+    response = api_client.post(
+        "/api/analyses",
+        json={"fasta_content": fasta_content},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 202
+    assert response.json["status"] == "pending"
+    assert "analysis_id" in response.json
+
 
 
 

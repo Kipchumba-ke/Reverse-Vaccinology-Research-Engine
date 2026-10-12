@@ -616,3 +616,73 @@ def test_create_app_uses_celery_queue_by_default():
         app.config["ANALYSIS_QUEUE"],
         CeleryQueue,
     )
+
+
+def test_execution_routes_fasta_to_fasta_workflow(monkeypatch):
+    analysis = Analysis(
+        sequence=">protein_1 Example protein\nMKT\n"
+    )
+    captured = {}
+
+    def fake_fasta_workflow(records):
+        captured["records"] = records
+        return {"workflow": "fasta"}
+
+    def unexpected_sequence_analysis(*args, **kwargs):
+        raise AssertionError(
+            "FASTA input must not be passed to analyze_sequence"
+        )
+
+    monkeypatch.setattr(
+        "app.services.analysis_execution.analyze_fasta_records",
+        fake_fasta_workflow,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "app.services.analysis_execution.analyze_sequence",
+        unexpected_sequence_analysis,
+    )
+
+    result = execute_analysis(analysis)
+
+    assert result == {"workflow": "fasta"}
+    assert captured["records"][0]["sequence"] == "MKT"
+    assert analysis.status == "completed"
+
+
+def test_execution_processes_persisted_fasta_content(
+    db_session, monkeypatch
+):
+    repository = AnalysisRepository(db_session)
+    fasta_content = ">protein_1 Example protein\nMKT\n"
+
+    analysis = Analysis(sequence=fasta_content)
+    repository.save(analysis)
+    db_session.commit()
+
+    persisted = repository.find_by_id(analysis.id)
+
+    assert persisted.sequence == fasta_content
+
+    captured = {}
+
+    def fake_fasta_workflow(records):
+        captured["records"] = records
+        return {"workflow": "fasta", "protein_count": len(records)}
+
+    monkeypatch.setattr(
+        "app.services.analysis_execution.analyze_fasta_records",
+        fake_fasta_workflow,
+    )
+
+    result = execute_analysis(persisted, repository)
+    db_session.commit()
+
+    assert result == {"workflow": "fasta", "protein_count": 1}
+    assert captured["records"][0]["sequence"] == "MKT"
+    assert persisted.status == "completed"
+
+    saved_result = repository.find_by_id(analysis.id)
+    assert saved_result.status == "completed"
+    assert saved_result.report == result
+

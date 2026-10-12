@@ -185,8 +185,26 @@ def create_app(repository=None, queue=None):
         if not data:
             return {"error": "JSON request body is required."}, 400
 
-        if "sequence" not in data:
+        has_sequence = "sequence" in data
+        has_fasta_content = "fasta_content" in data
+
+        if not has_sequence and not has_fasta_content:
             return {"error": "Sequence is required."}, 400
+
+        if has_sequence and has_fasta_content:
+            return {
+                "error": "Provide either a protein sequence or FASTA content, not both."
+            }, 400
+
+        if has_fasta_content:
+            try:
+                parse_fasta_records(data["fasta_content"])
+            except (TypeError, ValueError) as error:
+                return {"error": str(error)}, 400
+
+            input_sequence = data["fasta_content"]
+        else:
+            input_sequence = data["sequence"]
 
         try:
             service = AnalysisSubmissionService(
@@ -196,7 +214,7 @@ def create_app(repository=None, queue=None):
 
             analysis_id = service.submit(
                 user_id=user_id,
-                sequence=data["sequence"],
+                sequence=input_sequence,
                 protein_id=data.get("protein_id"),
                 protein_name=data.get("protein_name"),
                 organism=data.get("organism"),
