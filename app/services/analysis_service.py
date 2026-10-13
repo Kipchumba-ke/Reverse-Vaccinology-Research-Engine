@@ -49,7 +49,18 @@ def analyze_fasta_records(records: list[dict]):
             accession=record.get("accession"),
         )
 
-    return run_fasta_workflow(records).to_dict()
+    workflow_result = run_fasta_workflow(records)
+    workflow_data = workflow_result.to_dict()
+
+    workflow_data["protein_analyses"] = [
+        {
+            **analysis.to_dict(),
+            **generate_protein_report(analysis),
+        }
+        for analysis in workflow_result.protein_analyses
+    ]
+
+    return workflow_data
 
 
 def persist_analysis(analysis, repository):

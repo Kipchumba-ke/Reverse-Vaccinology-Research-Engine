@@ -2815,4 +2815,125 @@ it('renders composition counts and percentages in a compact table', async () => 
       peptide.closest('.peptide-candidate-card'),
     ).toHaveClass('peptide-candidate-card')
   })
+
+
+  it('renders a completed multi-record FASTA analysis with alignment and conservation', async () => {
+    const user = userEvent.setup()
+
+    const fastaContent = [
+      '>protein_1',
+      'MKT',
+      '>protein_2',
+      'MKTT',
+      '>protein_3',
+      'MKT',
+    ].join('\n')
+
+    const createProteinReport = (id, sequence) => ({
+      metadata: {
+        report_type: 'reverse_vaccinology',
+        report_version: '1.0',
+        analysis_pipeline: 'protein_sequence_analysis',
+      },
+      protein: {
+        id,
+        name: `${id} description`,
+        organism: 'Example organism',
+        accession: null,
+        sequence,
+        length: sequence.length,
+        molecular_weight: 300,
+        gravy: 0,
+        isoelectric_point: 7,
+      },
+      measurements: {
+        composition: {
+          length: sequence.length,
+          counts: {},
+          percentages: {},
+        },
+        charge_and_hydrophobicity: { net_charge: 0 },
+        hydropathy_profile: [],
+        hydrophobic_regions: [],
+        transmembrane_candidates: [],
+      },
+      peptide_candidates: [],
+      conservation: { summary: null, regions: [] },
+      evidence: {
+        localization: [],
+        essentiality: [],
+        host_similarity: [],
+      },
+      interpretations: [],
+      candidate_assessment: {},
+      limitations: [],
+    })
+
+    submitFastaAnalysis.mockResolvedValueOnce({
+      analysis_id: '456',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '456',
+      status: 'completed',
+      report: {
+        records: [
+          { id: 'protein_1', sequence: 'MKT' },
+          { id: 'protein_2', sequence: 'MKTT' },
+          { id: 'protein_3', sequence: 'MKT' },
+        ],
+        alignment: ['MK-T', 'MKTT', 'MK-T'],
+        conservation: {
+          sequence_count: 3,
+          alignment_length: 4,
+        },
+        protein_analyses: [
+          createProteinReport('protein_1', 'MKT'),
+          createProteinReport('protein_2', 'MKTT'),
+          createProteinReport('protein_3', 'MKT'),
+        ],
+      },
+    })
+
+    render(<App />)
+
+    const file = new File(
+      [fastaContent],
+      'proteins.fasta',
+      { type: 'text/plain' },
+    )
+
+    fireEvent.change(screen.getByLabelText(/upload fasta file/i), {
+      target: { files: [file] },
+    })
+
+    await user.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    )
+
+    const alignmentTable = await screen.findByRole('table', {
+      name: /multiple-sequence alignment/i,
+    })
+
+    expect(within(alignmentTable).getByText('protein_1')).toBeInTheDocument()
+    expect(within(alignmentTable).getByText('protein_2')).toBeInTheDocument()
+    expect(within(alignmentTable).getAllByText('MK-T')).toHaveLength(2)
+    expect(within(alignmentTable).getByText('MKTT')).toBeInTheDocument()
+
+    expect(screen.getAllByText(/sequences analyzed:\s*3/i)).toHaveLength(2)
+    expect(screen.getAllByText(/alignment length:\s*4/i)).toHaveLength(2)
+    expect(
+      screen.getByText(/Protein ID:\s*protein_1/i),
+    ).toBeInTheDocument()
+
+    const proteinSelector = screen.getByLabelText(/select protein report/i)
+
+    await user.selectOptions(proteinSelector, '1')
+
+    expect(
+      screen.getByText(/Protein ID:\s*protein_2/i),
+    ).toBeInTheDocument()
+  })
+
 })

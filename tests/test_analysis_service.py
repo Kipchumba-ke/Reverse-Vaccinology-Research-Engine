@@ -82,6 +82,17 @@ def test_analyze_fasta_records_with_multiple_records_returns_workflow_dict():
     assert len(result["protein_analyses"]) == 2
     assert result["alignment"] is not None
     assert result["conservation"] is not None
+    for protein_report in result["protein_analyses"]:
+        assert "protein" in protein_report
+        assert "measurements" in protein_report
+        assert "evidence" in protein_report
+        assert "interpretations" in protein_report
+        assert "candidate_assessment" in protein_report
+        assert "limitations" in protein_report
+        assert "conservation" in protein_report
+        assert "metadata" in protein_report
+    assert result["protein_analyses"][0]["protein"]["id"] == "sp|P12345|EXAMPLE1"
+    assert result["protein_analyses"][1]["protein"]["id"] == "sp|P67890|EXAMPLE2"
 
 
 def test_persist_analysis_saves_analysis(db_session):

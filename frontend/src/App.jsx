@@ -3,6 +3,7 @@ import { submitAnalysis, submitFastaAnalysis ,getAnalysisStatus } from './servic
 import AnalysisReport from "./components/AnalysisReport"
 import Register from './components/Register'
 import Login from "./components/Login"
+import MultiSequenceReport from "./components/MultiSequenceReport"
 import './App.css'
 
 
@@ -162,7 +163,9 @@ async function handleSubmit() {
       </div>
 
       {report && (
-        <AnalysisReport report={report} />
+        Array.isArray(report.alignment) && Array.isArray(report.records)
+          ? <MultiSequenceReport report={report} />
+          : <AnalysisReport report={report} />
       )}
 
       {status && (
