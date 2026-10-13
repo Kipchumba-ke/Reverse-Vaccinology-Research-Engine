@@ -2887,6 +2887,7 @@ it('renders composition counts and percentages in a compact table', async () => 
         conservation: {
           sequence_count: 3,
           alignment_length: 4,
+          conservation_percentage: 24.203821656050955,
         },
         protein_analyses: [
           createProteinReport('protein_1', 'MKT'),
@@ -2934,6 +2935,19 @@ it('renders composition counts and percentages in a compact table', async () => 
     expect(
       screen.getByText(/Protein ID:\s*protein_2/i),
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        name: 'Protein Report: protein_2',
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Conservation:\s*24\.20%/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('table', {
+        name: /multiple-sequence alignment/i,
+      }),
+    ).toHaveClass('alignment-table')
   })
 
 })

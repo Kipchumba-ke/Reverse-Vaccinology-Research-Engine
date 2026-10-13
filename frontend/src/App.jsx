@@ -128,9 +128,14 @@ async function handleSubmit() {
           Protein Sequence
         </label>
 
+        <p className="input-help" id="protein-sequence-help">
+          Paste a single protein sequence using the standard one-letter amino acid codes.
+        </p>
+
         <textarea 
           id="protein-sequence" 
-          name="protein-sequence" 
+          name="protein-sequence"
+          aria-describedby="protein-sequence-help"
           value={sequence}
           onChange={(e) => setSequence(e.target.value)}
         />
@@ -139,6 +144,10 @@ async function handleSubmit() {
         <label htmlFor="fasta-file">
           Upload FASTA File
         </label>
+        <p className="input-help" id="fasta-file-help">
+          Alternatively, upload a .fasta, .fa, or .fna file. Multiple FASTA records
+          can be analyzed together.
+        </p>
 
         <input
           id="fasta-file"

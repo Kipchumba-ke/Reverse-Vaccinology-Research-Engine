@@ -286,6 +286,30 @@
   white-space: pre;
 }
 
+.alignment-table {
+  table-layout: auto;
+}
+
+.alignment-table tbody td code {
+  min-width: max-content;
+  white-space: pre;
+  line-height: 1.8;
+  letter-spacing: 0.12em;
+  font-variant-ligatures: none;
+}
+
+.alignment-table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--card-bg);
+}
+
+.alignment-table thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
 
 .protein-report-selector {
   display: grid;
@@ -339,6 +363,12 @@
   line-height: 1.4;
 }
 
+.input-help {
+  margin: -4px 0 14px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
 
 .measurement-values {
   display: grid;

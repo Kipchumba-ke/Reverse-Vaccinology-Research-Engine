@@ -27,7 +27,7 @@ function MultiSequenceReport({ report }) {
 
         {alignment.length > 0 ? (
           <div className="alignment-table-container">
-            <table aria-label="Multiple-sequence alignment">
+            <table aria-label="Multiple-sequence alignment" className="alignment-table">
               <thead>
                 <tr>
                   <th scope="col">Protein</th>
@@ -62,7 +62,10 @@ function MultiSequenceReport({ report }) {
           <p>Alignment length: {conservation.alignment_length}</p>
         )}
         {conservation.conservation_percentage != null && (
-          <p>Conservation: {conservation.conservation_percentage}%</p>
+          <p>
+            Conservation: {' '}
+            {Number(conservation.conservation_percentage).toFixed(2)}%
+          </p>
         )}
         {conservation.regions?.length > 0 && (
           <>
@@ -115,7 +118,15 @@ function MultiSequenceReport({ report }) {
 
           {selectedProteinReport && (
             <div className='individual-protein-report'>
-              <AnalysisReport report={selectedProteinReport} />
+              <AnalysisReport
+                report={selectedProteinReport}
+                title={`Protein Report: ${
+                  selectedProteinReport.protein?.id ??
+                  selectedProteinReport.protein_id ??
+                  records[selectedProteinIndex]?.id ??
+                  `Protein ${selectedProteinIndex + 1}`
+                }`}
+              />
             </div>
           )}
         </section>

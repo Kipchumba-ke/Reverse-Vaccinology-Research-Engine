@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function AnalysisReport({ report }) {
+function AnalysisReport({ report, title = 'Analysis Report'  }) {
   const [showAllPeptides, setShowAllPeptides] = useState(false);
   const [showFullSequence, setShowFullSequence] = useState(false);
 
@@ -19,7 +19,7 @@ function AnalysisReport({ report }) {
       : proteinSequence;
   return (
     <div className="analysis-report">
-      <h2>Analysis Report</h2>
+      <h2>{title}</h2>
 
       
       <div className="report-overview">
