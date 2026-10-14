@@ -623,6 +623,195 @@
   border-bottom: 1px solid #ddd;
 }
 
+.hydropathy-axis-label {
+  fill: var(--text-secondary);
+  font-size: 12px;
+}
+
+.hydropathy-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.transmembrane-map-container {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.transmembrane-region-map {
+  display: block;
+  width: 100%;
+  min-width: 480px;
+  height: auto;
+}
+
+.transmembrane-sequence-line {
+  stroke: var(--border);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.transmembrane-axis-tick {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.transmembrane-axis-label {
+  fill: var(--text-secondary);
+  font-size: 12px;
+}
+
+.transmembrane-region {
+  fill: var(--accent-green);
+  stroke: var(--primary-green);
+  stroke-width: 1;
+}
+
+/* Per-position conservation profile */
+
+.conservation-profile-container {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.conservation-profile {
+  display: block;
+  width: 100%;
+  min-width: 600px;
+  height: auto;
+}
+
+.conservation-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.conservation-axis-label {
+  fill: var(--text-secondary);
+  font-size: 11px;
+}
+
+.conservation-profile-line {
+  fill: none;
+  stroke: var(--accent-green);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.conservation-profile-point {
+  fill: var(--primary-green);
+}
+
+.conservation-profile-note {
+  color: var(--text-secondary) !important;
+  font-size: 0.85rem;
+}
+
+
+.conservation-profile-container {
+  width: 100%;
+  min-width: 0;
+  margin-top: 1rem;
+}
+
+.conservation-profile-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.conservation-profile-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface, #f8fbf9);
+}
+
+.conservation-profile-stat-label {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.conservation-profile-stat strong {
+  color: var(--text-primary);
+  font-size: 1.15rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.conservation-profile-chart-scroll {
+  width: 100%;
+  min-width: 0;
+}
+
+.conservation-profile {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  overflow: visible;
+}
+
+.conservation-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.conservation-reference-line {
+  stroke-dasharray: 5 4;
+  opacity: 0.8;
+}
+
+.conservation-axis-label {
+  fill: var(--text-secondary);
+  font-size: 12px;
+}
+
+.conservation-axis-title {
+  fill: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.conservation-profile-line {
+  fill: none;
+  stroke: var(--accent, #23845b);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.conservation-profile-point {
+  fill: var(--accent, #23845b);
+  stroke: var(--surface, #ffffff);
+  stroke-width: 1;
+}
+
+.conservation-gap-marker {
+  stroke: var(--text-secondary);
+  stroke-width: 1.5;
+  opacity: 0.65;
+}
+
+.conservation-profile-note {
+  margin-top: 0.85rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
 
 /* Tablet and smaller */
 
@@ -659,6 +848,10 @@
 
   .analysis-submit {
     width: 100%;
+  }
+
+  .conservation-profile-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -750,5 +943,8 @@
   .individual-protein-report {
     margin-top: 20px;
     padding-top: 20px;
+  }
+  .conservation-profile-summary {
+    grid-template-columns: 1fr;
   }
 }

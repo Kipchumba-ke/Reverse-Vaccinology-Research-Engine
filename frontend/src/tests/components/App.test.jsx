@@ -838,12 +838,21 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       analysis_id: '123',
       status: 'completed',
       report: {
+        protein: {
+          length: 100,
+          sequence: 'M'.repeat(100),
+        },
         measurements: {
           transmembrane_candidates: [
             {
               start: 20,
               end: 42,
               length: 23,
+            },
+            {
+              start: 80,
+              end: 100,
+              length: 21,
             },
           ],
         },
@@ -873,6 +882,90 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     expect(
       screen.getByText(/transmembrane candidate: 20-42/i),
     ).toBeInTheDocument()
+
+    const regionMap = screen.getByRole('img', {
+      name: /transmembrane region map/i,
+    })
+
+    expect(regionMap).toBeInTheDocument()
+
+    expect(
+      regionMap.querySelectorAll('.transmembrane-region'),
+    ).toHaveLength(2)
+
+    expect(
+      regionMap.querySelector('.transmembrane-region'),
+    ).toHaveAttribute('aria-label', 'Candidate region from residue 20 to 42')
+    expect(
+      regionMap.querySelectorAll('.transmembrane-region'),
+    ).toHaveLength(2)
+
+    expect(
+      regionMap.querySelector(
+        '[aria-label="Candidate region from residue 80 to 100"]',
+      ),
+    ).toBeInTheDocument()
+  })
+
+
+  it('explains when no transmembrane candidates are detected', async () => {
+    submitAnalysis.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'pending',
+    })
+
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        protein: {
+          length: 100,
+          sequence: 'M'.repeat(100),
+        },
+        measurements: {
+          hydrophobic_regions: [],
+          transmembrane_candidates: [],
+        },
+      },
+    })
+
+    render(<App />)
+
+    const input = screen.getByLabelText(/protein sequence/i)
+
+    fireEvent.change(input, {
+      target: {
+        value: 'MKT',
+      },
+    })
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /analyze protein/i,
+        }),
+      )
+
+      await Promise.resolve()
+    })
+
+    expect(
+      screen.getByText(
+        /no transmembrane candidates met the current heuristic criteria/i,
+      ),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.getByText(
+        /this does not rule out membrane association/i,
+      ),
+    ).toBeInTheDocument()
+
+    expect(
+      screen.queryByRole('img', {
+        name: /transmembrane region map/i,
+      }),
+    ).not.toBeInTheDocument()
   })
 
   it('displays conservation results from the analysis report', async () => {
@@ -2166,6 +2259,9 @@ it('renders composition counts and percentages in a compact table', async () => 
       analysis_id: '123',
       status: 'completed',
       report: {
+        protein: {
+          length: 9,
+        },
         measurements: {         
           hydropathy_profile: [
             { start: 1, end: 19, hydropathy: 0.5 },
@@ -2213,6 +2309,28 @@ it('renders composition counts and percentages in a compact table', async () => 
     const hydropathy = screen.getByRole('img', {
       name: /hydropathy profile chart/i,
     })
+
+    expect(
+      hydropathy.querySelectorAll('.hydropathy-axis-label').length,
+    ).toBeGreaterThan(0)
+
+    expect(
+      hydropathy.querySelectorAll('.hydropathy-grid-line').length,
+    ).toBeGreaterThan(0)
+
+    expect(
+      hydropathy.textContent,
+    ).toMatch(/Residue position/i)
+
+    expect(
+      hydropathy.querySelectorAll('.hydropathy-axis-label').length,
+    ).toBeGreaterThanOrEqual(7)
+
+    expect(hydropathy).toHaveTextContent('1')
+    expect(hydropathy).toHaveTextContent('3')
+    expect(hydropathy).toHaveTextContent('5')
+    expect(hydropathy).toHaveTextContent('7')
+    expect(hydropathy).toHaveTextContent('9')
 
     expect(
       hydropathy.closest('.measurement-hydropathy'),
@@ -2924,6 +3042,11 @@ it('renders composition counts and percentages in a compact table', async () => 
 
     expect(screen.getAllByText(/sequences analyzed:\s*3/i)).toHaveLength(2)
     expect(screen.getAllByText(/alignment length:\s*4/i)).toHaveLength(2)
+    expect(
+      screen.getByRole('img', {
+        name: /per-position conservation profile/i,
+      }),
+    ).toBeInTheDocument()
     expect(
       screen.getByText(/Protein ID:\s*protein_1/i),
     ).toBeInTheDocument()

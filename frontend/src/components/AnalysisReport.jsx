@@ -135,55 +135,161 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             }
 
             const width = 1000;
-            const height = 240;
-            const padding = 24;
+            const height = 280;
+            const padding = { top: 24, right: 30, bottom: 48, left: 60 };
             const minHydropathy = -4.5;
             const maxHydropathy = 4.5;
-            const plotWidth = width - padding * 2;
-            const plotHeight = height - padding * 2;
+            const plotWidth = width - padding.left - padding.right;
+            const plotHeight = height - padding.top - padding.bottom;
 
+            
             const points = profile
-              .map((point, index) => {
+              .map((point) => {
+                const value = Number(point.hydropathy);
+                const start = Number(point.start);
+                const end = Number(point.end);
+
+                if (
+                  !Number.isFinite(value) ||
+                  !Number.isFinite(start) ||
+                  !Number.isFinite(end) ||
+                  start < 1 ||
+                  end < start
+                ) {
+                  return null;
+                }
+
+                const position = (start + end) / 2;
                 const x =
-                  padding +
+                  padding.left +
                   (profile.length === 1
                     ? plotWidth / 2
-                    : (index / (profile.length - 1)) * plotWidth);
+                    : ((position - 1) /
+                        Math.max(1, Number(report.protein?.length || proteinSequence.length) - 1)) *
+                      plotWidth);
 
-                const value = Number(point.hydropathy);
                 const normalized =
                   (value - minHydropathy) /
                   (maxHydropathy - minHydropathy);
 
-                const y = padding + (1 - normalized) * plotHeight;
+                const y =
+                  padding.top +
+                  (1 - normalized) * plotHeight;
 
                 return {
                   x,
-                  y: Math.max(padding, Math.min(height - padding, y)),
+                  y: Math.max(
+                    padding.top,
+                    Math.min(height - padding.bottom, y),
+                  ),
+                  position,
                 };
               })
-              .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+              .filter(Boolean);
 
-            const zeroY =
-              padding +
-              (1 - (0 - minHydropathy) / (maxHydropathy - minHydropathy)) *
-                plotHeight;
+          const yForValue = (value) =>
+            padding.top +
+            (1 - (value - minHydropathy) /
+              (maxHydropathy - minHydropathy)) *
+              plotHeight;
+
+          const zeroY = yForValue(0);
+
 
             return (
               <>
                 <p>{profile.length} sliding windows</p>
 
                 <div className="hydropathy-chart-container">
-                  <svg
-                    className="hydropathy-chart"
-                    viewBox={`0 0 ${width} ${height}`}
-                    role="img"
-                    aria-label="Hydropathy profile chart"
+                  
+                <svg
+                  className="hydropathy-chart"
+                  viewBox={`0 0 ${width} ${height}`}
+                  role="img"
+                  aria-label="Hydropathy profile chart"
+                >
+                  {(() => {
+                    const sequenceLength = Number(
+                      report.protein?.length || proteinSequence.length,
+                    );
+
+                    if (!Number.isFinite(sequenceLength) || sequenceLength <= 0) {
+                      return null;
+                    }
+
+                    return [0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+                      const position =
+                        Math.round(fraction * (sequenceLength - 1)) + 1;
+                      const x = padding.left + fraction * plotWidth;
+
+                      return (
+                        <g key={fraction}>
+                          <line
+                            x1={x}
+                            y1={height - padding.bottom}
+                            x2={x}
+                            y2={height - padding.bottom + 5}
+                            className="hydropathy-grid-line"
+                          />
+                          <text
+                            x={x}
+                            y={height - padding.bottom + 19}
+                            textAnchor="middle"
+                            className="hydropathy-axis-label"
+                          >
+                            {position}
+                          </text>
+                        </g>
+                      );
+                    });
+                  })()}
+
+                  <text
+                    x={width / 2}
+                    y={height - 8}
+                    textAnchor="middle"
+                    className="hydropathy-axis-label"
                   >
+                    Residue position (window midpoint)
+                  </text>
+
+
+                    {[-4, -2, 0, 2, 4].map((value) => {
+                      const y = yForValue(value);
+
+                      return (
+                        <g key={value}>
+                          <line
+                            x1={padding.left}
+                            y1={y}
+                            x2={width - padding.right}
+                            y2={y}
+                            className="hydropathy-grid-line"
+                          />
+                          <text
+                            x={padding.left - 10}
+                            y={y + 4}
+                            textAnchor="end"
+                            className="hydropathy-axis-label"
+                          >
+                            {value}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    <text
+                      x={padding.left}
+                      y={padding.top - 8}
+                      className="hydropathy-axis-label"
+                    >
+                      Hydropathy score
+                    </text>
+
                     <line
-                      x1={padding}
+                      x1={padding.left}
                       y1={zeroY}
-                      x2={width - padding}
+                      x2={width - padding.right}
                       y2={zeroY}
                       className="hydropathy-zero-line"
                     />
@@ -259,15 +365,144 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
           <div className="measurement-transmembrane measurement-card">
             <h4>Transmembrane Candidates</h4>
 
+            {(() => {
+              const candidates = report.measurements.transmembrane_candidates;
+              const sequenceLength = Number(
+                report.protein?.length || proteinSequence.length,
+              );
+
+              if (!Number.isFinite(sequenceLength) || sequenceLength <= 0) {
+                return (
+                  <p>
+                    A sequence length is required to display the region map.
+                  </p>
+                );
+              }
+
+              const width = 800;
+              const height = 120;
+              const leftPadding = 40;
+              const rightPadding = 20;
+              const plotWidth = width - leftPadding - rightPadding;
+
+              return (
+                <div className="transmembrane-map-container">
+                  <svg
+                    className="transmembrane-region-map"
+                    viewBox={`0 0 ${width} ${height}`}
+                    role="img"
+                    aria-label="Transmembrane region map"
+                  >
+                    <line
+                      x1={leftPadding}
+                      y1="55"
+                      x2={width - rightPadding}
+                      y2="55"
+                      className="transmembrane-sequence-line"
+                    />
+
+                    {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+                      const x = leftPadding + fraction * plotWidth;
+                      const position = Math.round(fraction * sequenceLength);
+
+                      return (
+                        <g key={fraction}>
+                          <line
+                            x1={x}
+                            y1="45"
+                            x2={x}
+                            y2="70"
+                            className="transmembrane-axis-tick"
+                          />
+                          <text
+                            x={x}
+                            y="88"
+                            textAnchor="middle"
+                            className="transmembrane-axis-label"
+                          >
+                            {position}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {candidates.map((candidate, index) => {
+                      const start = Number(candidate.start);
+                      const end = Number(candidate.end);
+
+                      if (
+                        !Number.isFinite(start) ||
+                        !Number.isFinite(end) ||
+                        start < 1 ||
+                        end < start ||
+                        start > sequenceLength
+                      ) {
+                        return null;
+                      }
+
+                      const boundedEnd = Math.min(end, sequenceLength);
+                      const x =
+                        leftPadding +
+                        ((start - 1) / sequenceLength) * plotWidth;
+                      const regionWidth = Math.max(
+                        2,
+                        ((boundedEnd - start + 1) / sequenceLength) *
+                          plotWidth,
+                      );
+
+                      return (
+                        <rect
+                          key={`${start}-${end}-${index}`}
+                          x={x}
+                          y="43"
+                          width={Math.min(
+                            regionWidth,
+                            width - rightPadding - x,
+                          )}
+                          height="24"
+                          rx="4"
+                          className="transmembrane-region"
+                          aria-label={`Candidate region from residue ${start} to ${end}`}
+                        >
+                          <title>
+                            Candidate region: residues {start} to {end}
+                          </title>
+                        </rect>
+                      );
+                    })}
+
+                    <text
+                      x={width / 2}
+                      y="112"
+                      textAnchor="middle"
+                      className="transmembrane-axis-label"
+                    >
+                      Amino acid position
+                    </text>
+                  </svg>
+                </div>
+              );
+            })()}
+
             <div className="measurement-values">
               {report.measurements.transmembrane_candidates.map(
                 (candidate, index) => (
-                  <p key={index}>
+                  <p key={`${candidate.start}-${candidate.end}-${index}`}>
                     Transmembrane Candidate: {candidate.start}-{candidate.end}
                   </p>
                 ),
               )}
             </div>
+          </div>
+        )}
+
+        {!(report.measurements?.transmembrane_candidates?.length > 0) && (
+          <div className="measurement-transmembrane measurement-card">
+            <h4>Transmembrane Candidates</h4>
+            <p>
+              No transmembrane candidates met the current heuristic
+              criteria. This does not rule out membrane association.
+            </p>
           </div>
         )}
       </section>

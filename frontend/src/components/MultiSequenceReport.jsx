@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import AnalysisReport from './AnalysisReport'
+import ConservationProfile from './ConservationProfile'
 
 
 function MultiSequenceReport({ report }) {
@@ -67,6 +68,9 @@ function MultiSequenceReport({ report }) {
             {Number(conservation.conservation_percentage).toFixed(2)}%
           </p>
         )}
+        <h4>Per-position Conservation</h4>
+        <ConservationProfile alignment={alignment} />
+
         {conservation.regions?.length > 0 && (
           <>
             <h4>Conserved Regions</h4>
