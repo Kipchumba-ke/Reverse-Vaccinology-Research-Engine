@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { login } from '../services/authService'
+import './Auth.css'
 
 function Login({ onLogin, onRegister }) {
   const [email, setEmail] = useState('')
@@ -12,7 +13,7 @@ function Login({ onLogin, onRegister }) {
 
     try {
       await login(email, password)
-      onLogin()
+      onLogin?.()
       setSuccess(true)
       setError(null)
     } catch (err) {
@@ -22,28 +23,82 @@ function Login({ onLogin, onRegister }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label htmlFor="login-email">Email</label>
-      <input
-        id="login-email"
-        type="email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-      />
+    <main className="auth-page">
+      <section className="auth-card" aria-labelledby="login-heading">
+        <div className="auth-brand">
+          <span className="auth-brand-mark" aria-hidden="true">
+            ⬡
+          </span>
+          <span>ReverseVax</span>
+        </div>
 
-      <label htmlFor="login-password">Password</label>
-      <input
-        id="login-password"
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-      />
+        <h1 className="auth-heading" id="login-heading">
+          Welcome back
+        </h1>
 
-      <button type="submit">Login</button>
-      <button type="button" onClick={onRegister}>Don't have an account? Register</button>
-      {success && <p>Login successful!</p>}
-      {error && <p>{error}</p>}
-    </form>
+        <p className="auth-description">
+          Sign in to continue your protein analysis and research.
+        </p>
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label className="auth-label" htmlFor="login-email">
+            Email address
+          </label>
+          <input
+            className="auth-input"
+            id="login-email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+
+          <label className="auth-label" htmlFor="login-password">
+            Password
+          </label>
+          <input
+            className="auth-input"
+            id="login-password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+
+          <button className="auth-primary-button" type="submit">
+            Login
+          </button>
+
+          {success && (
+            <p className="auth-message auth-message-success" role="status">
+              Login successful!
+            </p>
+          )}
+
+          {error && (
+            <p className="auth-message auth-message-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <p className="auth-switch">
+            Don't have an account?{' '}
+            <button
+              className="auth-switch-button"
+              type="button"
+              onClick={onRegister}
+            >
+              Register
+            </button>
+          </p>
+
+        </form>
+      </section>
+    </main>
   )
 }
 

@@ -1,5 +1,7 @@
+
 import { useState } from 'react'
 import { register } from '../services/authService'
+import './Auth.css'
 
 function Register({ onRegister, onLogin }) {
   const [email, setEmail] = useState('')
@@ -12,9 +14,9 @@ function Register({ onRegister, onLogin }) {
 
     try {
       await register(email, password)
-      onRegister()
       setSuccess(true)
       setError(null)
+      onRegister?.()
     } catch (err) {
       setError(err.message)
       setSuccess(false)
@@ -22,28 +24,81 @@ function Register({ onRegister, onLogin }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label htmlFor="register-email">Email</label>
-      <input
-        id="register-email"
-        type="email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-      />
+    <main className="auth-page">
+      <section className="auth-card" aria-labelledby="register-heading">
+        <div className="auth-brand">
+          <span className="auth-brand-mark" aria-hidden="true">
+            ⬡
+          </span>
+          <span>ReverseVax</span>
+        </div>
 
-      <label htmlFor="register-password">Password</label>
-      <input
-        id="register-password"
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-      />
+        <h1 className="auth-heading" id="register-heading">
+          Create your account
+        </h1>
 
-      <button type="submit">Register</button>
-      <button type="button" onClick={onLogin}>Already have an account? Login</button>
-      {success && <p>Registration successful!</p>}
-      {error && <p>{error}</p>}
-    </form>
+        <p className="auth-description">
+          Get started with protein analysis and explainable research insights.
+        </p>
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label className="auth-label" htmlFor="register-email">
+            Email address
+          </label>
+          <input
+            className="auth-input"
+            id="register-email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+
+          <label className="auth-label" htmlFor="register-password">
+            Password
+          </label>
+          <input
+            className="auth-input"
+            id="register-password"
+            type="password"
+            autoComplete="new-password"
+            placeholder="Create a password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+
+          <button className="auth-primary-button" type="submit">
+            Register
+          </button>
+
+          {success && (
+            <p className="auth-message auth-message-success" role="status">
+              Registration successful!
+            </p>
+          )}
+
+          {error && (
+            <p className="auth-message auth-message-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <p className="auth-switch">
+            <button
+              className="auth-switch-button"
+              type="button"
+              onClick={onLogin}
+              aria-label="Already have an account? Login"
+            >
+              Already have an account? Login
+            </button>
+          </p>
+        </form>
+      </section>
+    </main>
   )
 }
 

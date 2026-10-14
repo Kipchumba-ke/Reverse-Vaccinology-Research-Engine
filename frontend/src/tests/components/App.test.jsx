@@ -1849,25 +1849,28 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     ).toBeInTheDocument()
   })
 
-  it('shows the login screen when the user is not authenticated', () => {
+  it('shows the login screen when the user is not authenticated', async () => {
     localStorage.removeItem('token')
+
+    const user = userEvent.setup()
 
     render(<App />)
 
-    expect(
-      screen.getByRole('button', {
-        name: /login/i,
-      }),
-    ).toBeInTheDocument()
+    await user.click(
+      screen.getByRole('button', { name: /^sign in$/i }),
+    )
 
     expect(
-      screen.getByLabelText(/email/i),
+      screen.getByRole('button', { name: /^login$/i }),
     ).toBeInTheDocument()
+
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
 
     expect(
       screen.queryByLabelText(/protein sequence/i),
     ).not.toBeInTheDocument()
   })
+
 
   it('shows the analysis application after a successful login', async () => {
     localStorage.removeItem('token')
@@ -1875,6 +1878,10 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     const user = userEvent.setup()
 
     render(<App />)
+
+    await user.click(
+      screen.getByRole('button', { name: /^sign in$/i }),
+    )
 
     await user.type(
       screen.getByLabelText(/email/i),
@@ -1903,9 +1910,9 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     render(<App />)
 
     await user.click(
-      screen.getByRole('button', {
-        name: /register/i,
-      }),
+      screen.getAllByRole('button', {
+        name: /get started/i,
+      })[0],
     )
 
     expect(
@@ -1927,9 +1934,9 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     render(<App />)
 
     await user.click(
-      screen.getByRole('button', {
-        name: /register/i,
-      }),
+      screen.getAllByRole('button', {
+        name: /get started/i,
+      })[0],
     )
 
     await user.click(

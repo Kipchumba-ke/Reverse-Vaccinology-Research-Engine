@@ -4,35 +4,47 @@ import AnalysisReport from "./components/AnalysisReport"
 import Register from './components/Register'
 import Login from "./components/Login"
 import MultiSequenceReport from "./components/MultiSequenceReport"
+import LandingPage from './components/LandingPage'
 import './App.css'
 
 
-function App() {
-  
-  const [authenticated, setAuthenticated] = useState(
-    Boolean(localStorage.getItem('token'))
-  )
-  const [showRegister, setShowRegister] = useState(false)
 
-  if (!authenticated) {
-  if (showRegister) {
+function App() {
+  const [authenticated, setAuthenticated] = useState(
+    Boolean(localStorage.getItem('token')),
+  )
+  const [view, setView] = useState('landing')
+
+  if (authenticated) {
+    return <AnalysisApp />
+  }
+
+  if (view === 'register') {
     return (
       <Register
-        onRegister={() => setShowRegister(false)}
-        onLogin={() => setShowRegister(false)}
+        onRegister={() => setView('login')}
+        onLogin={() => setView('login')}
       />
     )
   }
 
+  if (view === 'login') {
+    return (
+      <Login
+        onLogin={() => setAuthenticated(true)}
+        onRegister={() => setView('register')}
+      />
+    )
+  }
 
   return (
-    <Login
-      onLogin={() => setAuthenticated(true)}
-      onRegister={() => setShowRegister(true)}
+    <LandingPage
+      onLogin={() => setView('login')}
+      onRegister={() => setView('register')}
     />
-  )}
-  return <AnalysisApp />
+  )
 }
+
 
 function AnalysisApp() {
   const [submitted, setSubmitted] = useState(false) 
