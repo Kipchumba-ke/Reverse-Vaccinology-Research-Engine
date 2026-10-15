@@ -1,5 +1,5 @@
 import { useEffect ,useState } from "react"
-import { submitAnalysis, submitFastaAnalysis ,getAnalysisStatus } from './services/analysisService'
+import { submitAnalysis, submitFastaAnalysis ,getAnalysisStatus, downloadAnalysisReport } from './services/analysisService'
 import AnalysisReport from "./components/AnalysisReport"
 import Register from './components/Register'
 import Login from "./components/Login"
@@ -131,6 +131,17 @@ async function handleSubmit() {
   }
 }
 
+async function handleDownloadReport() {
+  setError(null)
+
+  try {
+    const token = localStorage.getItem('token')
+
+    await downloadAnalysisReport(analysisId, token)
+  } catch (downloadError) {
+    setError(downloadError.message || 'Unable to download the report.')
+  }
+}
 
   return (
     <main className="analysis-page">
@@ -184,10 +195,23 @@ async function handleSubmit() {
       </div>
 
       {report && (
-        Array.isArray(report.alignment) && Array.isArray(report.records)
-          ? <MultiSequenceReport report={report} />
-          : <AnalysisReport report={report} />
+        <>
+          {Array.isArray(report.alignment) && Array.isArray(report.records)
+            ? <MultiSequenceReport report={report} />
+            : <AnalysisReport report={report} />}
+
+          {status === 'completed' && (
+            <button
+              type="button"
+              className="analysis-submit"
+              onClick={handleDownloadReport}
+            >
+              Download PDF Report
+            </button>
+          )}
+        </>
       )}
+
 
       {status && (
         <p>

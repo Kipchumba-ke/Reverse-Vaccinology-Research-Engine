@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from flask_cors import CORS
 from uuid import UUID
 import jwt
@@ -22,6 +22,7 @@ from app.services.analysis_job import AnalysisJob
 from app.services.auth_service import AuthService
 from app.repositories.user_repository import UserRepository
 from app.models.user_orm import UserModel
+from app.reporting.pdf_export import generate_report_pdf
 
 
 def create_repository():
@@ -272,6 +273,51 @@ def create_app(repository=None, queue=None):
             "status": analysis.status,
             "report": analysis.report,
         }, 200
+
+    @app.get("/api/analyses/<analysis_id>/report.pdf")
+    def download_analysis_report(analysis_id):
+        repository = app.config["ANALYSIS_REPOSITORY"]
+
+        try:
+            user_id = get_authenticated_user_id(request)
+        except ValueError as error:
+            return {"error": str(error)}, 401
+
+        try:
+            parsed_analysis_id = UUID(analysis_id)
+        except ValueError:
+            return {"error": "Invalid analysis ID."}, 400
+
+        analysis = repository.find_by_id(parsed_analysis_id)
+
+        if analysis is None:
+            return {"error": "Analysis not found."}, 404
+
+        if analysis.user_id != user_id:
+            return {
+                "error": "You do not have access to this analysis."
+            }, 403
+
+        if analysis.status != "completed" or not analysis.report:
+            return {
+                "error": "A completed analysis report is required for export."
+            }, 409
+
+        try:
+            pdf = generate_report_pdf(analysis.report)
+        except (ValueError, TypeError) as error:
+            app.logger.exception("Failed to generate analysis PDF")
+            return {"error": "Unable to generate the analysis PDF."}, 500
+
+        filename = f"analysis-{analysis.id}.pdf"
+
+        return send_file(
+            pdf,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=filename,
+        ), 200
+
     @app.get("/api/protected")
     def protected():
 

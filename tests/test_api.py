@@ -1553,3 +1553,148 @@ def test_analyze_endpoint_requires_authentication(api_client):
     assert response.get_json() == {
         "error": "Authentication required."
     }
+
+
+
+def test_download_analysis_report_requires_authentication(api_client):
+    response = api_client.get(
+        "/api/analyses/00000000-0000-0000-0000-000000000000/report.pdf"
+    )
+
+    assert response.status_code == 401
+
+
+def test_download_analysis_report_rejects_invalid_id(api_client, auth_token):
+    response = api_client.get(
+        "/api/analyses/not-a-uuid/report.pdf",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Invalid analysis ID."}
+
+
+def test_download_analysis_report_returns_404_for_unknown_analysis(
+    api_client,
+    auth_token,
+):
+    response = api_client.get(
+        "/api/analyses/00000000-0000-0000-0000-000000000000/report.pdf",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "Analysis not found."}
+
+
+def test_download_analysis_report_rejects_pending_analysis(
+    api_client,
+    auth_token,
+):
+    response = api_client.post(
+        "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"sequence": "MKT", "protein_id": "P0A911"},
+    )
+
+    assert response.status_code == 202
+
+    analysis_id = response.get_json()["analysis_id"]
+
+    response = api_client.get(
+        f"/api/analyses/{analysis_id}/report.pdf",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 409
+    assert response.get_json() == {
+        "error": "A completed analysis report is required for export."
+    }
+
+
+def test_download_analysis_report_returns_pdf(api_client, auth_token):
+    response = api_client.post(
+        "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"sequence": "MKT", "protein_id": "P0A911"},
+    )
+
+    assert response.status_code == 202
+
+    analysis_id = response.get_json()["analysis_id"]
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+
+    analysis = repository.find_by_id(UUID(analysis_id))
+    analysis.status = "completed"
+    analysis.report = {
+        "metadata": {"report_type": "reverse_vaccinology"},
+        "protein": {"id": "P0A911", "name": "Example protein", "length": 3},
+        "limitations": ["Illustrative test report."],
+    }
+
+    repository.update(analysis)
+    repository.session.commit()
+
+    response = api_client.get(
+        f"/api/analyses/{analysis_id}/report.pdf",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.mimetype == "application/pdf"
+    assert response.data.startswith(b"%PDF-")
+    assert "attachment" in response.headers["Content-Disposition"]
+
+
+
+def test_download_analysis_report_forbidden_for_another_user(
+    api_client,
+    auth_token,
+    db_session,
+):
+    owner_response = api_client.get("/api/protected", headers={
+        "Authorization": f"Bearer {auth_token}"
+    })
+    assert owner_response.status_code == 200
+    owner_id = UUID(owner_response.get_json()["user_id"])
+
+    response = api_client.post(
+        "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"sequence": "MKT", "protein_id": "P0A911"},
+    )
+    assert response.status_code == 202
+
+    analysis_id = response.get_json()["analysis_id"]
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+
+    analysis = repository.find_by_id(UUID(analysis_id))
+    analysis.status = "completed"
+    analysis.report = {
+        "protein": {"id": "P0A911", "name": "Example protein"},
+        "limitations": ["Illustrative test report."],
+    }
+    repository.update(analysis)
+    repository.session.commit()
+
+    other_user = User(
+        email="another-user@example.com",
+        password_hash="hashed-password",
+    )
+    user_repository = UserRepository(db_session)
+    user_repository.save(other_user)
+    db_session.commit()
+
+    other_token = create_token(other_user)
+
+    assert other_user.id != owner_id
+
+    response = api_client.get(
+        f"/api/analyses/{analysis_id}/report.pdf",
+        headers={"Authorization": f"Bearer {other_token}"},
+    )
+
+    assert response.status_code == 403
+    assert response.get_json() == {
+        "error": "You do not have access to this analysis."
+    }

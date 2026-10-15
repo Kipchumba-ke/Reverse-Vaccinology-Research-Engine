@@ -103,7 +103,17 @@ def generate_protein_report(
         },
         "peptide_candidates": result.peptide_candidates,
         "conservation": {
-            "summary": conservation_data if conservation_summary is not None else None,
+            "status": (
+                "completed"
+                if conservation_summary is not None
+                else "not_performed"
+            ),
+            "summary": (
+                conservation_data
+                if conservation_summary is not None
+                else None
+            ),
+            "columns": result.conservation_columns,
             "regions": conserved_regions,
         },
         "evidence": {
