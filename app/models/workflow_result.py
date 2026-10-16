@@ -10,6 +10,7 @@ class AnalysisWorkflowResult:
     protein_analyses: list[ProteinAnalysisResult]
     alignment: list[str]
     conservation: ConservationResult
+    conserved_regions: list[dict]
 
     def to_dict(self) -> dict:
         return {
@@ -20,4 +21,5 @@ class AnalysisWorkflowResult:
             ],
             "alignment": self.alignment,
             "conservation": self.conservation.to_dict(),
+            "conserved_regions": self.conserved_regions,
         }

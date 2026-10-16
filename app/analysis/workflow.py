@@ -1,4 +1,8 @@
-from app.analysis.conservation import calculate_conservation_summary
+from app.analysis.conservation import (
+    calculate_conservation_summary,
+    calculate_conserved_columns,
+    find_conserved_regions,
+)
 from app.analysis.msa import align_sequences
 from app.models.workflow_result import AnalysisWorkflowResult
 from app.input.fasta import parse_fasta_records
@@ -49,13 +53,22 @@ def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, 
         for record in records
     ]
     alignment = align_sequences(sequences)
+    conservation_columns = calculate_conserved_columns(alignment)
     conservation = calculate_conservation_summary(alignment)
+    conserved_regions = find_conserved_regions(
+        conservation_columns
+    )
+    for analysis in protein_analyses:
+        analysis.conservation_columns = conservation_columns
+        analysis.conservation_summary = conservation
 
     return AnalysisWorkflowResult(
         records=records,
         protein_analyses=protein_analyses,
         alignment=alignment,
         conservation=conservation,
+        conserved_regions=conserved_regions,
+        
     )
 
 def analyze_fasta(fasta_text: str, localization_evidence: dict[str, list] | None = None, essentiality_evidence: dict[str, list] | None = None, host_similarity_evidence: dict[str, list] | None = None,) -> AnalysisWorkflowResult:

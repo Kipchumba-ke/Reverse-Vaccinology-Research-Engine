@@ -9,6 +9,7 @@ from app.analysis.interpretation import (
     interpret_essentiality,
 )
 from app.analysis.candidate_assessment import assess_candidate
+from app.analysis.conservation import find_conserved_regions
 
 
 def generate_protein_report(
@@ -27,7 +28,9 @@ def generate_protein_report(
         conservation_summary = result.conservation_summary
 
     if conserved_regions is None:
-        conserved_regions = []
+        conserved_regions = find_conserved_regions(
+            result.conservation_columns
+        )
 
     interpretations = [
         interpret_hydrophobicity(result.gravy),

@@ -32,6 +32,13 @@ def generate_report_pdf(report: dict) -> BytesIO:
     if not isinstance(report, dict):
         raise ValueError("A valid analysis report is required.")
 
+    protein_analyses = report.get("protein_analyses")
+    is_multi_report = (
+        isinstance(protein_analyses, list)
+        and len(protein_analyses) > 0
+        and all(isinstance(item, dict) for item in protein_analyses)
+    )
+
     buffer = BytesIO()
     document = SimpleDocTemplate(
         buffer,
@@ -262,66 +269,129 @@ def generate_report_pdf(report: dict) -> BytesIO:
             ),
         ]))
 
+    
     def add_composition_chart(composition):
+        """Render composition chart and a combined count/percentage table."""
+        if not isinstance(composition, dict):
+            story.append(paragraph(
+                "Amino-acid composition unavailable."
+            ))
+            return
+
+        counts = composition.get("counts", {})
+        sequence_length = composition.get("length")
         percentages = composition.get("percentages", {})
-        if not isinstance(percentages, dict) or not percentages:
+
+        if not isinstance(counts, dict):
+            counts = {}
+        if not isinstance(percentages, dict):
+            percentages = {}
+
+        residues = sorted(set(counts) | set(percentages))
+
+        if not residues:
             story.append(paragraph(
-                "Amino-acid composition chart unavailable: percentages "
-                "were not supplied."
+                "Amino-acid counts and percentages were not supplied."
             ))
             return
 
-        values = []
-        for residue, value in percentages.items():
+        rows = [[
+            Paragraph("<b>Residue</b>", styles["ReportBody"]),
+            Paragraph("<b>Count</b>", styles["ReportBody"]),
+            Paragraph("<b>Percentage</b>", styles["ReportBody"]),
+        ]]
+
+        if sequence_length is not None:
+            story.append(paragraph(
+                f"Sequence length: {sequence_length} amino acids."
+            ))
+
+        chart_values = []
+
+        for residue in residues:
+            count = counts.get(residue)
+            percentage = percentages.get(residue)
+
             try:
-                number = float(value)
-                if number == number and number >= 0:
-                    values.append((str(residue), number))
+                numeric_percentage = float(percentage)
+                if (
+                    numeric_percentage == numeric_percentage
+                    and numeric_percentage >= 0
+                ):
+                    chart_values.append(
+                        (str(residue), numeric_percentage)
+                    )
             except (TypeError, ValueError):
-                continue
+                pass
 
-        if not values:
+            rows.append([
+                paragraph(residue),
+                paragraph(count),
+                paragraph(
+                    f"{float(percentage):.2f}%"
+                    if percentage is not None
+                    else "Not available"
+                ),
+            ])
+
+        story.append(Paragraph(
+            "Amino-acid Composition",
+            styles["SubHeading"],
+        ))
+
+        if chart_values:
+            chart_values.sort(key=lambda item: item[1], reverse=True)
+            chart_values = chart_values[:10]
+
+            width = 480
+            row_height = 17
+            height = max(55, 25 + row_height * len(chart_values))
+            drawing = Drawing(width, height)
+
+            label_width = 28
+            bar_width = 330
+            max_value = max(value for _, value in chart_values) or 1
+
+            for index, (residue, value) in enumerate(chart_values):
+                y = height - 23 - index * row_height
+                drawing.add(String(
+                    2, y, residue,
+                    fontSize=8,
+                    fillColor=NAVY,
+                ))
+                drawing.add(Rect(
+                    label_width,
+                    y - 2,
+                    bar_width * value / max_value,
+                    9,
+                    fillColor=TEAL,
+                    strokeColor=None,
+                ))
+                drawing.add(String(
+                    label_width + bar_width + 6,
+                    y,
+                    f"{value:.2f}%",
+                    fontSize=7.5,
+                    fillColor=DARK_GREY,
+                ))
+
             story.append(paragraph(
-                "Amino-acid composition chart unavailable: no valid "
-                "percentage values were supplied."
-            ))
-            return
-
-        values.sort(key=lambda item: item[1], reverse=True)
-        values = values[:10]
-
-        width = 480
-        row_height = 17
-        height = max(55, 25 + row_height * len(values))
-        drawing = Drawing(width, height)
-        label_width = 28
-        bar_width = 330
-        max_value = max(v for _, v in values) or 1
-
-        for index, (residue, value) in enumerate(values):
-            y = height - 23 - index * row_height
-            drawing.add(String(
-                2, y, residue, fontSize=8, fillColor=NAVY,
-            ))
-            drawing.add(Rect(
-                label_width, y - 2,
-                bar_width * value / max_value, 9,
-                fillColor=TEAL, strokeColor=None,
-            ))
-            drawing.add(String(
-                label_width + bar_width + 6, y,
-                f"{value:.2f}%",
-                fontSize=7.5, fillColor=DARK_GREY,
-            ))
-
-        story.append(KeepTogether([
-            Paragraph("Amino-acid Composition", styles["SubHeading"]),
-            paragraph(
                 "Top 10 residues by reported percentage.",
                 "SmallNote",
-            ),
-            drawing,
-        ]))
+            ))
+            story.append(drawing)
+
+        story.append(Spacer(1, 2 * mm))
+        story.append(Paragraph(
+            "Residue Counts and Percentages",
+            styles["SubHeading"],
+        ))
+        composition_table = make_table(
+            rows,
+            [45 * mm, 45 * mm, 70 * mm],
+        )
+        composition_table.hAlign = "LEFT"
+        story.append(composition_table)
 
     
     def add_conservation_chart(conservation):
@@ -642,7 +712,6 @@ def generate_report_pdf(report: dict) -> BytesIO:
 
         if key == "composition" and isinstance(value, dict):
             add_composition_chart(value)
-            add_nested(value, key="composition_details")
             return
 
         if key == "peptide_candidates" and isinstance(value, list):
@@ -756,23 +825,130 @@ def generate_report_pdf(report: dict) -> BytesIO:
         ("limitations", "Limitations"),
     ]
 
-    for key, title in sections:
-        if key not in report:
-            continue
+    if is_multi_report:
+        shared_conservation = report.get("conservation", {})
+        records = report.get("records", [])
 
         story.append(Paragraph(
-            escape(title), styles["SectionHeading"]
+            "Multi-FASTA Comparative Analysis",
+            styles["ReportTitle"],
         ))
-        content = report[key]
 
-        if key == "protein" and isinstance(content, dict):
-            add_scalar_table(content)
-            if content.get("sequence"):
-                add_nested(content["sequence"], key="sequence")
+        story.append(Paragraph(
+            "Shared Alignment and Conservation",
+            styles["SectionHeading"],
+        ))
+
+        sequence_count = shared_conservation.get("sequence_count")
+        alignment_length = shared_conservation.get("alignment_length")
+        mean_identity = shared_conservation.get("mean_identity")
+        conservation_percentage = shared_conservation.get(
+            "conservation_percentage"
+        )
+
+        summary_rows = [["Measurement", "Result"]]
+
+        for label, value in [
+            ("Sequences analyzed", sequence_count),
+            ("Alignment length", alignment_length),
+            ("Mean identity", mean_identity),
+            ("Conservation percentage", conservation_percentage),
+        ]:
+            if value is not None:
+                summary_rows.append([label, str(value)])
+
+        if len(summary_rows) > 1:
+            story.append(make_table(
+                summary_rows,
+                [75 * mm, 75 * mm],
+            ))
+
+        conserved_regions = report.get("conserved_regions") or []
+
+        story.append(Paragraph(
+            "Conserved Regions",
+            styles["SubHeading"],
+        ))
+
+        if conserved_regions:
+            add_nested(conserved_regions)
         else:
-            add_nested(content, key=key)
+            story.append(paragraph(
+                "No conserved regions were reported by the analysis."
+            ))
 
-        story.append(Spacer(1, 4 * mm))
+        story.append(Spacer(1, 5 * mm))
+
+        for index, protein_report in enumerate(
+            protein_analyses,
+            start=1,
+        ):
+            report = protein_report
+
+            protein = report.get("protein", {})
+            protein_id = (
+                protein.get("id")
+                or report.get("protein_id")
+                or f"Protein {index}"
+            )
+
+            story.append(PageBreak())
+            story.append(Paragraph(
+                f"Protein Analysis: {escape(str(protein_id))}",
+                styles["ReportTitle"],
+            ))
+
+            for key, title in sections:
+                if key == "conservation":
+                    continue
+
+                if key not in report:
+                    continue
+
+                story.append(Paragraph(
+                    escape(title),
+                    styles["SectionHeading"],
+                ))
+
+                content = report[key]
+
+                if key == "protein" and isinstance(content, dict):
+                    add_scalar_table(content)
+
+                    if content.get("sequence"):
+                        add_nested(
+                            content["sequence"],
+                            key="sequence",
+                        )
+                else:
+                    add_nested(content, key=key)
+
+                story.append(Spacer(1, 4 * mm))
+
+    else:
+        for key, title in sections:
+            if key not in report:
+                continue
+
+            story.append(Paragraph(
+                escape(title),
+                styles["SectionHeading"],
+            ))
+
+            content = report[key]
+
+            if key == "protein" and isinstance(content, dict):
+                add_scalar_table(content)
+
+                if content.get("sequence"):
+                    add_nested(
+                        content["sequence"],
+                        key="sequence",
+                    )
+            else:
+                add_nested(content, key=key)
+
+            story.append(Spacer(1, 4 * mm))
 
     def draw_page(canvas, doc):
         canvas.saveState()

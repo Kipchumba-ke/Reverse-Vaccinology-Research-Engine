@@ -4,6 +4,10 @@ from app import (
 )
 import io
 import pytest
+import subprocess
+import tempfile
+from pathlib import Path
+from io import BytesIO
 from app.repositories.analysis_repository import AnalysisRepository
 from app.models.analysis_orm import AnalysisModel
 from uuid import UUID
@@ -15,6 +19,7 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.services.password_service import hash_password
 from app.models.user_orm import UserModel
+
 
 
 def test_create_app_returns_flask_application():
@@ -1698,3 +1703,87 @@ def test_download_analysis_report_forbidden_for_another_user(
     assert response.get_json() == {
         "error": "You do not have access to this analysis."
     }
+
+def test_download_multifasta_report_includes_all_proteins(
+    api_client, auth_token
+):
+
+    response = api_client.post(
+        "/api/analyses",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"sequence": "MKT"},
+    )
+    assert response.status_code == 202
+
+    analysis_id = response.get_json()["analysis_id"]
+    repository = api_client.application.config["ANALYSIS_REPOSITORY"]
+
+    analysis = repository.find_by_id(UUID(analysis_id))
+    analysis.status = "completed"
+    analysis.report = {
+        "records": [
+            {"id": "PROTEIN_A", "sequence": "MKT"},
+            {"id": "PROTEIN_B", "sequence": "MKA"},
+            {"id": "PROTEIN_C", "sequence": "MKG"},
+        ],
+        "alignment": ["MKT", "MKA", "MKG"],
+        "conservation": {
+            "sequence_count": 3,
+            "alignment_length": 3,
+            "mean_identity": 66.7,
+            "conservation_percentage": 33.3,
+        },
+        "conserved_regions": [{"start": 1, "end": 1}],
+        "protein_analyses": [
+            {
+                "metadata": {"report_type": "reverse_vaccinology"},
+                "protein": {
+                    "id": protein_id,
+                    "name": f"Example {protein_id}",
+                    "sequence": sequence,
+                    "length": len(sequence),
+                },
+                "measurements": {},
+                "limitations": [f"Limitations for {protein_id}"],
+            }
+            for protein_id, sequence in [
+                ("PROTEIN_A", "MKT"),
+                ("PROTEIN_B", "MKA"),
+                ("PROTEIN_C", "MKG"),
+            ]
+        ],
+    }
+
+    repository.update(analysis)
+    repository.session.commit()
+
+    response = api_client.get(
+        f"/api/analyses/{analysis_id}/report.pdf",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    with tempfile.TemporaryDirectory() as temp_dir:
+        pdf_path = Path(temp_dir) / "multi-protein-report.pdf"
+        text_path = Path(temp_dir) / "multi-protein-report.txt"
+
+        pdf_path.write_bytes(response.data)
+
+        subprocess.run(
+            [
+                "pdftotext",
+                str(pdf_path),
+                str(text_path),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        pdf_text = text_path.read_text()
+
+    for protein_id in ("PROTEIN_A", "PROTEIN_B", "PROTEIN_C"):
+        assert protein_id in pdf_text
+
+    assert "Shared Alignment and Conservation" in pdf_text
+    assert "Sequences analyzed" in pdf_text

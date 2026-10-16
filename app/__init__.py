@@ -102,6 +102,7 @@ def create_app(repository=None, queue=None):
                 protein_name=data.get("protein_name"),
                 organism=data.get("organism"),
                 accession=data.get("accession"),
+                msa_sequences=data.get("msa_sequences"),
             )
 
             repository.session.commit()

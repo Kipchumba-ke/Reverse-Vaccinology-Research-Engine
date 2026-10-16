@@ -4,6 +4,7 @@ from app.analysis.workflow import analyze_fasta_records as run_fasta_workflow
 from app.models.analysis import Analysis
 from app.utils.validation import validate_protein_sequence
 from app.services.integration_service import run_integrations
+from app.analysis.conservation import find_conserved_regions
 
 
 def analyze_sequence(
@@ -55,7 +56,13 @@ def analyze_fasta_records(records: list[dict]):
     workflow_data["protein_analyses"] = [
         {
             **analysis.to_dict(),
-            **generate_protein_report(analysis),
+            **generate_protein_report(
+                analysis,
+                conservation_summary=workflow_result.conservation,
+                conserved_regions=find_conserved_regions(
+                    analysis.conservation_columns
+                ),
+            ),
         }
         for analysis in workflow_result.protein_analyses
     ]
@@ -91,6 +98,7 @@ def run_analysis(
     protein_name: str | None = None,
     organism: str | None = None,
     accession: str | None = None,
+    msa_sequences: list[str] | None = None,
 ):
     analysis = create_analysis(
         sequence,
@@ -108,4 +116,5 @@ def run_analysis(
         protein_name=analysis.protein_name,
         organism=analysis.organism,
         accession=analysis.accession,
+        msa_sequences=msa_sequences
     )
