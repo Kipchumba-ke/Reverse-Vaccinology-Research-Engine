@@ -1,4 +1,5 @@
 import pytest
+import json
 
 from app.models.analysis import Analysis
 from app.repositories.analysis_repository import AnalysisRepository
@@ -77,6 +78,7 @@ def test_analyze_fasta_records_with_multiple_records_returns_workflow_dict():
     ]
 
     result = analyze_fasta_records(records)
+    json.dumps(result)
 
     assert result["records"] == records
     assert len(result["protein_analyses"]) == 2
@@ -91,6 +93,21 @@ def test_analyze_fasta_records_with_multiple_records_returns_workflow_dict():
         assert "limitations" in protein_report
         assert "conservation" in protein_report
         assert "metadata" in protein_report
+        assert protein_report["conservation"]["status"] == "completed"
+        assert protein_report["conservation"]["summary"] is not None
+
+        assessment = protein_report["candidate_assessment"]
+
+        assert any(
+            "conserved positions" in item.lower()
+            for item in assessment["supporting_evidence"]
+        )
+
+        assert not any(
+            "multiple-sequence alignment and conservation analysis"
+            in item.lower()
+            for item in assessment["missing_evidence"]
+        )
     assert result["protein_analyses"][0]["protein"]["id"] == "sp|P12345|EXAMPLE1"
     assert result["protein_analyses"][1]["protein"]["id"] == "sp|P67890|EXAMPLE2"
 

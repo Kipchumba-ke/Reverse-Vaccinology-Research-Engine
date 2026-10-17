@@ -64,5 +64,9 @@ class ProteinAnalysisResult:
             "accession": self.accession,
             "peptide_candidates": self.peptide_candidates,
             "conservation_columns": self.conservation_columns,
-            "conservation_summary": self.conservation_summary,
+            "conservation_summary": (
+                self.conservation_summary.to_dict()
+                if hasattr(self.conservation_summary, "to_dict")
+                else self.conservation_summary
+            ),
         }

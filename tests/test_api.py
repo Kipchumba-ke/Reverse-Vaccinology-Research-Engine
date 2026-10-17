@@ -1744,6 +1744,27 @@ def test_download_multifasta_report_includes_all_proteins(
                     "length": len(sequence),
                 },
                 "measurements": {},
+                "conservation": {
+                    "status": "completed",
+                    "summary": {
+                        "sequence_count": 3,
+                        "alignment_length": 3,
+                        "mean_identity": 66.7,
+                        "conservation_percentage": 33.3,
+                    },
+                    "regions": [{"start": 1, "end": 1}],
+                },
+                "candidate_assessment": {
+                    "supporting_evidence": [
+                        "The supplied alignment contains conserved positions.",
+                        "One or more conserved regions were detected.",
+                    ],
+                    "concerns": [],
+                    "missing_evidence": [
+                        "Localization evidence.",
+                        "Essentiality evidence.",
+                    ],
+                },
                 "limitations": [f"Limitations for {protein_id}"],
             }
             for protein_id, sequence in [
@@ -1756,6 +1777,21 @@ def test_download_multifasta_report_includes_all_proteins(
 
     repository.update(analysis)
     repository.session.commit()
+    saved_analysis = repository.find_by_id(UUID(analysis_id))
+    saved_report = saved_analysis.report
+
+    for protein_report in saved_report["protein_analyses"]:
+        protein_id = protein_report["protein"]["id"]
+        conservation = protein_report.get("conservation", {})
+        assessment = protein_report.get("candidate_assessment", {})
+
+        print(f"\n{protein_id}")
+        print("Conservation status:", conservation.get("status"))
+        print("Conservation summary:", conservation.get("summary"))
+        print(
+            "Missing evidence:",
+            assessment.get("missing_evidence"),
+        )
 
     response = api_client.get(
         f"/api/analyses/{analysis_id}/report.pdf",
@@ -1787,3 +1823,8 @@ def test_download_multifasta_report_includes_all_proteins(
 
     assert "Shared Alignment and Conservation" in pdf_text
     assert "Sequences analyzed" in pdf_text
+    assert "The supplied alignment contains conserved positions." in pdf_text
+    assert "One or more conserved regions were detected." in pdf_text
+    assert "Localization evidence." in pdf_text
+    assert "Essentiality evidence." in pdf_text
+    assert "Multiple-sequence alignment and conservation analysis." not in pdf_text
