@@ -112,6 +112,7 @@ MKT
     assert result == [
         {
             "id": "protein_1",
+            "entry_name": None,
             "description": "",
             "organism": None,
             "accession": None,
@@ -119,6 +120,7 @@ MKT
         },
         {
             "id": "protein_2",
+            "entry_name": None,
             "description": "",
             "organism": None,
             "accession": None,
@@ -126,6 +128,7 @@ MKT
         },
         {
             "id": "protein_3",
+            "entry_name": None,
             "description": "",
             "organism": None,
             "accession": None,
@@ -256,3 +259,54 @@ def test_parse_fasta_extracts_accession_from_uniprot_style_header():
     assert record["description"] == "Example protein OS=Escherichia coli"
     assert record["organism"] == "Escherichia coli"
     assert record["accession"] == "P12345"
+
+
+def test_parse_fasta_extracts_trembl_accession_and_entry_name():
+    fasta_text = (
+        ">tr|A0A123|EXAMPLE OS=Bacillus subtilis OX=1423\n"
+        "MKTAYIAKQRQISFVKSHFSRQ\n"
+    )
+
+    record = parse_fasta(fasta_text)
+
+    assert record["accession"] == "A0A123"
+    assert record["entry_name"] == "EXAMPLE"
+    assert record["organism"] == "Bacillus subtilis"
+
+
+def test_parse_fasta_extracts_uniprot_organism_without_taxonomy_metadata():
+    fasta_text = (
+        ">sp|P12345|EXAMPLE OS=Escherichia coli OX=562 GN=example PE=1 SV=1\n"
+        "MKTAYIAKQRQISFVKSHFSRQ\n"
+    )
+
+    record = parse_fasta(fasta_text)
+
+    assert record["organism"] == "Escherichia coli"
+    assert record["accession"] == "P12345"
+    assert record["entry_name"] == "EXAMPLE"
+
+def test_parse_fasta_extracts_ncbi_accession_and_organism():
+    fasta_text = (
+        ">ALR82097.1 polymerase [Zaire ebolavirus]\n"
+        "MKTIIALSYIFCLVFAD\n"
+    )
+
+    record = parse_fasta(fasta_text)
+
+    assert record["id"] == "ALR82097.1"
+    assert record["accession"] == "ALR82097.1"
+    assert record["description"] == "polymerase [Zaire ebolavirus]"
+    assert record["organism"] == "Zaire ebolavirus"
+
+
+def test_parse_fasta_does_not_treat_generic_id_as_accession():
+    record = parse_fasta(">protein_1 Example protein\nMKTIIALSYIFCLVFAD\n")
+
+    assert record["accession"] is None
+
+
+def test_parse_fasta_preserves_versioned_refseq_accession():
+    record = parse_fasta(">NP_123456.1 Example protein\nMKTIIALSYIFCLVFAD\n")
+
+    assert record["accession"] == "NP_123456.1"

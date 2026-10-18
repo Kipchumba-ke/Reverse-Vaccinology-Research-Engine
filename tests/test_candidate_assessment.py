@@ -1311,3 +1311,49 @@ def test_candidate_assessment_identifies_broad_high_identity_host_similarity():
         "broad host-protein similarity" in concern.lower()
         for concern in assessment.concerns
     )
+
+
+def test_candidate_assessment_does_not_treat_multiple_uniprot_locations_as_conflicting():
+    virion_membrane = create_localization_evidence(
+        location="Virion membrane",
+        source="UniProt",
+        confidence="low",
+        description="Location reported by UniProt.",
+    )
+
+    host_cell_membrane = create_localization_evidence(
+        location="Host cell membrane",
+        source="UniProt",
+        confidence="low",
+        description="Location reported by UniProt.",
+    )
+
+    result = analyze_protein(
+        "MKTIIALSYIFCLVFAD",
+        localization_evidence=[
+            virion_membrane,
+            host_cell_membrane,
+        ],
+    )
+
+    assessment = assess_candidate(result)
+
+    assert not any(
+        "conflicting localization predictions" in concern.lower()
+        for concern in assessment.concerns
+    )
+
+    assert any(
+        "multiple distinct localization annotations" in evidence.lower()
+        for evidence in assessment.supporting_evidence
+    )
+
+    assert any(
+        "Reported localization: Virion membrane" in evidence
+        for evidence in assessment.supporting_evidence
+    )
+
+    assert any(
+        "Reported localization: Host cell membrane" in evidence
+        for evidence in assessment.supporting_evidence
+    )

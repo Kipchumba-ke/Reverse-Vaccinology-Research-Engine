@@ -205,6 +205,7 @@ def interpret_host_similarity(
         confidence=confidence,
     )
 
+
 def interpret_localization(
     evidence: list[dict],
 ) -> Evidence:
@@ -216,6 +217,51 @@ def interpret_localization(
                 "Localization assessment is unavailable "
                 "for the current candidate."
             ),
+            confidence="low",
+        )
+
+    uniprot_evidence = [
+        item
+        for item in evidence
+        if item.get("source", "").lower() == "uniprot"
+    ]
+
+    if uniprot_evidence:
+        locations = list(
+            dict.fromkeys(
+                item["location"] for item in uniprot_evidence
+            )
+        )
+        sources = ", ".join(
+            dict.fromkeys(item["source"] for item in uniprot_evidence)
+        )
+        descriptions = " ".join(
+            dict.fromkeys(
+                item["description"]
+                for item in uniprot_evidence
+                if item.get("description")
+            )
+        )
+
+        location_text = "; ".join(
+            location.replace("_", " ") for location in locations
+        )
+        finding = (
+            f"Database-reported localization annotations: "
+            f"{'; '.join(locations)}; source={sources}"
+        )
+        interpretation = (
+            f"UniProt reports the following localization annotations: "
+            f"{location_text}. These are database annotations, not "
+            f"independent localization predictions, and multiple "
+            f"annotations are not necessarily contradictory. "
+            f"{descriptions}"
+        )
+
+        return Evidence(
+            category="localization",
+            finding=finding,
+            interpretation=interpretation,
             confidence="low",
         )
 
@@ -251,6 +297,7 @@ def interpret_localization(
         interpretation=interpretation,
         confidence=confidence,
     )
+
 
 def interpret_essentiality(
     evidence: list[dict],

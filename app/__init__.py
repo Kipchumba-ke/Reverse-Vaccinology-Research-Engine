@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 from uuid import UUID
 import jwt
@@ -111,7 +111,12 @@ def create_app(repository=None, queue=None):
             repository.session.rollback()
             return {"error": str(error)}, 400
 
-        return report, 200
+        response = {
+            key: value
+            for key, value in report.items()
+            if key != "evidence_status"
+        }
+        return jsonify(response), 200
 
     @app.post("/api/login")
     def login():

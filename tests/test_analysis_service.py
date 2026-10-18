@@ -272,3 +272,137 @@ def test_db_session_rolls_back_all_changes_after_test(db_session):
     db_session.commit()
 
     assert db_session.query(AnalysisModel).count() == 1
+
+def test_analyze_sequence_includes_uniprot_localization_evidence(monkeypatch):
+    annotation = {
+        "accession": "P12345",
+        "protein_name": "Example protein",
+        "localization_annotations": [
+            {
+                "location": "Cell membrane",
+                "source": "UniProt",
+                "evidence_codes": ["ECO:0000269"],
+            }
+        ],
+    }
+
+    monkeypatch.setattr(
+        "app.services.analysis_service.fetch_protein_annotation",
+        lambda accession: annotation,
+    )
+
+    report = analyze_sequence(
+        "MKTAYIAKQRQISFVKSHFSRQ",
+        accession="P12345",
+    )
+
+    localization = report["evidence"]["localization"]
+
+    assert len(localization) == 1
+    assert localization[0]["location"] == "Cell membrane"
+    assert localization[0]["source"] == "UniProt"
+    assert "ECO:0000269" in localization[0]["description"]
+
+
+def test_analyze_fasta_records_attaches_localization_to_correct_protein(
+    monkeypatch,
+):
+    records = [
+        {
+            "id": "protein_1",
+            "description": "Protein one",
+            "accession": "P12345",
+            "sequence": "MKTAYIAKQRQISFVKSHFSRQ",
+        },
+        {
+            "id": "protein_2",
+            "description": "Protein two",
+            "accession": "P67890",
+            "sequence": "MKTAYIAKQRQISFVKSHFSRQ",
+        },
+    ]
+
+    annotations = {
+        "P12345": {
+            "accession": "P12345",
+            "protein_name": "Protein one",
+            "localization_annotations": [
+                {
+                    "location": "Cell membrane",
+                    "source": "UniProt",
+                    "evidence_codes": ["ECO:0000269"],
+                }
+            ],
+        },
+        "P67890": {
+            "accession": "P67890",
+            "protein_name": "Protein two",
+            "localization_annotations": [
+                {
+                    "location": "Cytoplasm",
+                    "source": "UniProt",
+                    "evidence_codes": ["ECO:0000256"],
+                }
+            ],
+        },
+    }
+
+    monkeypatch.setattr(
+        "app.services.analysis_service.fetch_protein_annotation",
+        lambda accession: annotations[accession],
+    )
+
+    result = analyze_fasta_records(records)
+
+    protein_reports = result["protein_analyses"]
+    first = protein_reports[0]["evidence"]["localization"]
+    second = protein_reports[1]["evidence"]["localization"]
+
+    assert len(first) == 1
+    assert first[0]["location"] == "Cell membrane"
+    assert "ECO:0000269" in first[0]["description"]
+
+    assert len(second) == 1
+    assert second[0]["location"] == "Cytoplasm"
+    assert "ECO:0000256" in second[0]["description"]
+
+
+def test_analyze_sequence_enriches_missing_protein_name(monkeypatch):
+    annotation = {
+        "accession": "P12345",
+        "protein_name": "Example protein",
+        "localization_annotations": [],
+    }
+
+    monkeypatch.setattr(
+        "app.services.analysis_service.fetch_protein_annotation",
+        lambda accession: annotation,
+    )
+
+    report = analyze_sequence(
+        "MKTAYIAKQRQISFVKSHFSRQ",
+        accession="P12345",
+    )
+
+    assert report["protein"]["name"] == "Example protein"
+
+
+def test_analyze_sequence_preserves_supplied_protein_name(monkeypatch):
+    annotation = {
+        "accession": "P12345",
+        "protein_name": "UniProt protein name",
+        "localization_annotations": [],
+    }
+
+    monkeypatch.setattr(
+        "app.services.analysis_service.fetch_protein_annotation",
+        lambda accession: annotation,
+    )
+
+    report = analyze_sequence(
+        "MKTAYIAKQRQISFVKSHFSRQ",
+        protein_name="User supplied name",
+        accession="P12345",
+    )
+
+    assert report["protein"]["name"] == "User supplied name"

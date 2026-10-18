@@ -125,6 +125,7 @@ MKT
     assert result.records == [
         {
             "id": "protein_1",
+            "entry_name": None,
             "description": "",
             "organism": None,
             "accession": None,
@@ -132,6 +133,7 @@ MKT
         },
         {
             "id": "protein_2",
+            "entry_name": None,
             "description": "",
             "organism": None,
             "accession": None,
@@ -139,6 +141,7 @@ MKT
         },
         {
             "id": "protein_3",
+            "entry_name": None,
             "description": "",
             "organism": None,
             "accession": None,

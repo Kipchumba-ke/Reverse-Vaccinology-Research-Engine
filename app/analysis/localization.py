@@ -31,25 +31,27 @@ def create_localization_evidence(
     prediction tool, database, or experimental source.
     """
 
-    if location not in VALID_LOCATIONS:
-        raise ValueError(
-            f"Unsupported localization: {location}"
-        )
+    if not isinstance(location, str) or not location.strip():
+        raise ValueError("Localization cannot be empty.")
 
-    if not source.strip():
-        raise ValueError(
-            "Localization evidence source cannot be empty."
-        )
+    EXTERNAL_ANNOTATION_SOURCES = {
+        "UniProt",
+        "NCBI Protein",
+    }
+    if (
+        location not in VALID_LOCATIONS
+        and source not in EXTERNAL_ANNOTATION_SOURCES
+    ):
+        raise ValueError(f"Unsupported localization: {location}")
+
+    if not isinstance(source, str) or not source.strip():
+        raise ValueError("Localization evidence source cannot be empty.")
 
     if confidence not in VALID_CONFIDENCE_LEVELS:
-        raise ValueError(
-            f"Unsupported confidence level: {confidence}"
-        )
+        raise ValueError("Unsupported confidence level: " + str(confidence))
 
-    if not description.strip():
-        raise ValueError(
-            "Localization evidence description cannot be empty."
-        )
+    if not isinstance(description, str) or not description.strip():
+        raise ValueError("Localization evidence description cannot be empty.")
 
     return LocalizationEvidence(
         location=location,

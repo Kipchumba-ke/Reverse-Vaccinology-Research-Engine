@@ -118,3 +118,31 @@ def test_all_supported_localizations_are_accepted(location):
 
     assert evidence.location == location
 
+
+def test_uniprot_location_preserves_original_term():
+    evidence = create_localization_evidence(
+        location="Cell membrane",
+        source="UniProt",
+        confidence="medium",
+        description=(
+            "UniProt reports this subcellular location. "
+            "Confidence has not been independently assessed."
+        ),
+    )
+
+    assert evidence.location == "Cell membrane"
+    assert evidence.source == "UniProt"
+
+def test_ncbi_localization_preserves_original_term():
+    evidence = create_localization_evidence(
+        location="Virion",
+        source="NCBI Protein",
+        confidence="low",
+        description="Location reported by NCBI Protein.",
+    )
+
+    serialized = evidence.to_dict()
+
+    assert serialized["location"] == "Virion"
+    assert serialized["source"] == "NCBI Protein"
+    assert serialized["confidence"] == "low"

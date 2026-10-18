@@ -39,6 +39,7 @@ def _get_conservation_percentage(
 
     return float(conservation_percentage)
 
+
 def _assess_localization_evidence(
     result: ProteinAnalysisResult,
 ) -> EvidenceAssessment:
@@ -61,23 +62,44 @@ def _assess_localization_evidence(
     supporting_evidence.append(
         "Localization evidence has been supplied."
     )
+
     locations = {
         evidence.location
         for evidence in result.localization_evidence
         if evidence.location != "unknown"
     }
+
+    # Only compare predictions from independent sources.
+    predicted_evidence = [
+        evidence
+        for evidence in result.localization_evidence
+        if evidence.source != "UniProt"
+    ]
+
+    predicted_locations = {
+        evidence.location
+        for evidence in predicted_evidence
+        if evidence.location != "unknown"
+    }
+
     if (
-        len(result.localization_evidence) > 1
-        and len(locations) == 1
+        len(predicted_evidence) > 1
+        and len(predicted_locations) == 1
     ):
         supporting_evidence.append(
             "Multiple localization predictions agree on the same location."
         )
 
-    if len(locations) > 1:
+    if len(predicted_locations) > 1:
         concerns.append(
             "Conflicting localization predictions were supplied "
-            f"for: {', '.join(sorted(locations))}."
+            f"for: {', '.join(sorted(predicted_locations))}."
+        )
+
+    if len(locations) > 1 and not predicted_evidence:
+        supporting_evidence.append(
+            "Multiple distinct localization annotations were reported "
+            "by UniProt; these are not automatically treated as conflicting."
         )
 
     for evidence in result.localization_evidence:
@@ -89,15 +111,15 @@ def _assess_localization_evidence(
             )
             continue
 
-        supporting_evidence.append(
-            f"Predicted localization: {evidence.location}."
-        )
+        if evidence.source == "UniProt":
+            label = "Reported localization"
+        else:
+            label = "Predicted localization"
 
         supporting_evidence.append(
-            "Predicted localization: "
-            f"{evidence.location} "
-            f"(confidence={evidence.confidence}, "
-            f"source={evidence.source})."
+            f"{label}: {evidence.location}."
+            f" (confidence={evidence.confidence}, "
+            f"source={evidence.source}). "
             f"Description: {evidence.description}"
         )
 
@@ -106,6 +128,7 @@ def _assess_localization_evidence(
         concerns=concerns,
         missing_evidence=missing_evidence,
     )
+
 
 def _assess_essentiality_evidence(
     result: ProteinAnalysisResult,

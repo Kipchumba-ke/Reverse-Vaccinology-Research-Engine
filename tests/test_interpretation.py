@@ -295,3 +295,29 @@ def test_interpret_essentiality_does_not_overclaim_vaccine_value():
 
     assert "vaccine candidate" not in result.interpretation.lower()
     assert "safety" not in result.interpretation.lower()
+
+
+def test_interpret_localization_preserves_multiple_uniprot_annotations():
+    evidence = [
+        {
+            "location": "Virion membrane",
+            "source": "UniProt",
+            "confidence": "low",
+            "description": "Evidence codes: ECO:0000255, ECO:0000269.",
+        },
+        {
+            "location": "Host cell membrane",
+            "source": "UniProt",
+            "confidence": "low",
+            "description": "Evidence codes: ECO:0000255, ECO:0000269.",
+        },
+    ]
+
+    result = interpret_localization(evidence)
+
+    assert "Virion membrane" in result.finding
+    assert "Host cell membrane" in result.finding
+    assert "database annotations" in result.interpretation
+    assert "not independent localization predictions" in result.interpretation
+    assert "ECO:0000255" in result.interpretation
+    assert result.confidence == "low"

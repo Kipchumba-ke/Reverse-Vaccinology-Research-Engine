@@ -127,3 +127,79 @@ def test_fetch_protein_annotation_handles_missing_recommended_name(monkeypatch):
 
     assert annotation["accession"] == "P12345"
     assert annotation["protein_name"] is None
+
+def test_fetch_protein_annotation_extracts_localization_and_evidence_codes(
+    monkeypatch,
+):
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "primaryAccession": "P12345",
+                "proteinDescription": {},
+                "comments": [
+                    {
+                        "commentType": "SUBCELLULAR LOCATION",
+                        "subcellularLocations": [
+                            {
+                                "location": {
+                                    "value": "Cell membrane",
+                                    "evidences": [
+                                        {"evidenceCode": "ECO:0000269"},
+                                        {"evidenceCode": "ECO:0000256"},
+                                    ],
+                                }
+                            }
+                        ],
+                    }
+                ],
+            }
+
+    monkeypatch.setattr(
+        "app.integrations.uniprot.requests.get",
+        lambda *args, **kwargs: FakeResponse(),
+    )
+
+    annotation = fetch_protein_annotation("P12345")
+
+    assert annotation["localization_annotations"] == [
+        {
+            "location": "Cell membrane",
+            "source": "UniProt",
+            "evidence_codes": [
+                "ECO:0000269",
+                "ECO:0000256",
+            ],
+        }
+    ]
+
+
+def test_fetch_protein_annotation_returns_empty_localizations_when_unavailable(
+    monkeypatch,
+):
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "primaryAccession": "P12345",
+                "proteinDescription": {},
+                "comments": [
+                    {
+                        "commentType": "FUNCTION",
+                        "texts": [{"value": "Example function"}],
+                    }
+                ],
+            }
+
+    monkeypatch.setattr(
+        "app.integrations.uniprot.requests.get",
+        lambda *args, **kwargs: FakeResponse(),
+    )
+
+    annotation = fetch_protein_annotation("P12345")
+
+    assert annotation["localization_annotations"] == []
