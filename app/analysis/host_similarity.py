@@ -1,3 +1,5 @@
+import math
+
 from app.models.host_similarity import HostSimilarityEvidence
 
 
@@ -32,6 +34,17 @@ def create_host_similarity_evidence(
         raise ValueError(
             "Similarity method cannot be empty."
         )
+
+    numeric_values = {
+        "Identity percentage": identity_percentage,
+        "Query coverage percentage": query_coverage_percentage,
+        "Subject coverage percentage": subject_coverage_percentage,
+        "E-value": e_value,
+    }
+
+    for name, value in numeric_values.items():
+        if not math.isfinite(value):
+            raise ValueError(f"{name} must be finite.")
 
     if not 0 <= identity_percentage <= 100:
         raise ValueError(

@@ -171,3 +171,23 @@ def test_subject_coverage_must_be_between_zero_and_one_hundred():
             description="Test evidence.",
         )
 
+@pytest.mark.parametrize(
+    "e_value",
+    [float("nan"), float("inf"), float("-inf")],
+)
+def test_non_finite_e_value_rejected(e_value):
+    with pytest.raises(ValueError, match="E-value must be finite"):
+        create_host_similarity_evidence(
+            target_id="target_A",
+            host_id="host_A",
+            similarity_method="BLASTP",
+            identity_percentage=20,
+            alignment_length=100,
+            query_coverage_percentage=80,
+            subject_coverage_percentage=75,
+            e_value=e_value,
+            source="Database",
+            confidence="medium",
+            description="Evidence.",
+        )
+

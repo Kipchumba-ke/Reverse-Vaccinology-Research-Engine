@@ -3,6 +3,7 @@ from app.services.analysis_service import analyze_sequence
 from app.analysis.essentiality import create_essentiality_evidence
 from app.services.analysis_service import analyze_fasta_records
 from app.analysis.pipeline import analyze_protein as real_analyze_protein
+from app.analysis.host_similarity import create_host_similarity_evidence
 
 
 def test_analyze_sequence_runs_external_integrations(monkeypatch):
@@ -243,3 +244,74 @@ def test_multi_record_analysis_runs_pipeline_once_per_protein(
             sequence, **kwargs
         )
     )
+
+@patch("app.services.analysis_service.run_blast_analysis")
+def test_analysis_service_reports_host_similarity_hits(mock_blast):
+    host_evidence = create_host_similarity_evidence(
+        target_id="pathogen_protein",
+        host_id="host_protein",
+        similarity_method="BLASTP",
+        identity_percentage=35.0,
+        alignment_length=120,
+        query_coverage_percentage=40.0,
+        subject_coverage_percentage=35.0,
+        e_value=1e-8,
+        source="Host proteome BLAST",
+        confidence="medium",
+        description="Host-protein similarity requires review.",
+    )
+    mock_blast.return_value = [host_evidence]
+
+    with patch.dict(
+        "os.environ",
+        {"HOST_BLAST_DATABASE": "/mock/host_database"},
+    ):
+        report = analyze_sequence("MKTAYIAKQRQISFVKSHFSRQ")
+
+    assert (
+        report["evidence_status"]["host_similarity"]["status"]
+        == "hits_found"
+    )
+    assert len(report["evidence"]["host_similarity"]) == 1
+    assert (
+        report["evidence"]["host_similarity"][0]["host_id"]
+        == "host_protein"
+    )
+
+@patch("app.services.analysis_service.run_blast_analysis")
+def test_analysis_service_reports_no_significant_host_hits(mock_blast):
+    mock_blast.return_value = []
+
+    with patch.dict(
+        "os.environ",
+        {"HOST_BLAST_DATABASE": "/mock/host_database"},
+    ):
+        report = analyze_sequence("MKTAYIAKQRQISFVKSHFSRQ")
+
+    assert (
+        report["evidence_status"]["host_similarity"]["status"]
+        == "no_significant_hits"
+    )
+    assert report["evidence"]["host_similarity"] == []
+    assert "does not prove" in (
+        report["evidence_status"]["host_similarity"]["message"].lower()
+    )
+
+@patch("app.services.analysis_service.run_blast_analysis")
+def test_analysis_service_survives_host_similarity_lookup_failure(
+    mock_blast,
+):
+    mock_blast.side_effect = RuntimeError("BLAST database unavailable.")
+
+    with patch.dict(
+        "os.environ",
+        {"HOST_BLAST_DATABASE": "/mock/host_database"},
+    ):
+        report = analyze_sequence("MKTAYIAKQRQISFVKSHFSRQ")
+
+    assert (
+        report["evidence_status"]["host_similarity"]["status"]
+        == "lookup_failed"
+    )
+    assert report["evidence"]["host_similarity"] == []
+    assert report["conservation"] is not None

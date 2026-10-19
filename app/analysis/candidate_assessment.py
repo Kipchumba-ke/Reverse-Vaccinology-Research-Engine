@@ -214,13 +214,16 @@ def _get_highest_identity_host_match(
 def _get_strongest_host_match(
     evidence: list[HostSimilarityEvidence],
 ) -> HostSimilarityEvidence:
-    return max(
+    return min(
         evidence,
         key=lambda item: (
-            item.query_coverage_percentage,
-            item.subject_coverage_percentage,
-            item.identity_percentage,
-            -item.e_value,
+            item.e_value,
+            -item.identity_percentage,
+            -item.alignment_length,
+            -(
+                item.query_coverage_percentage
+                + item.subject_coverage_percentage
+            ),
         ),
     )
 

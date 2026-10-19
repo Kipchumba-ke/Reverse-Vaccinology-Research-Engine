@@ -141,18 +141,22 @@ def interpret_host_similarity(
             confidence="low",
         )
 
-    strongest_match = max(
+    strongest_match = min(
         evidence,
         key=lambda item: (
-            item["query_coverage_percentage"],
-            item["subject_coverage_percentage"],
-            item["identity_percentage"],
-            -item["e_value"],
+            item["e_value"],
+            -item["identity_percentage"],
+            -item["alignment_length"],
+            -(
+                item["query_coverage_percentage"]
+                + item["subject_coverage_percentage"]
+            ),
         ),
     )
 
     identity = strongest_match["identity_percentage"]
     e_value = strongest_match["e_value"]
+    alignment_length = strongest_match["alignment_length"]
     query_coverage = strongest_match["query_coverage_percentage"]
     subject_coverage = strongest_match["subject_coverage_percentage"]
 
@@ -193,6 +197,7 @@ def interpret_host_similarity(
     finding = (
         f"Strongest reported host match: "
         f"{identity:.1f}% identity, "
+        f"alignment length={alignment_length}, "
         f"query coverage={query_coverage:.1f}%, "
         f"subject coverage={subject_coverage:.1f}%, "
         f"E-value={e_value:g}"

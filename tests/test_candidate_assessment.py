@@ -110,9 +110,9 @@ def test_candidate_assessment_reports_strongest_host_match():
     assessment = assess_candidate(result)
 
     assert (
-        "Strongest reported host match: 70.0% identity, "
-        "query coverage=90.0%, subject coverage=85.0%, "
-        "E-value=1e-20."
+        "Strongest reported host match: 95.0% identity, "
+        "query coverage=5.0%, subject coverage=4.0%, "
+        "E-value=1e-50."
         in assessment.concerns
     )
 
@@ -680,7 +680,7 @@ def test_candidate_assessment_identifies_asymmetric_host_similarity():
         for evidence in assessment.concerns
     )
 
-def test_candidate_assessment_reports_broadest_host_match():
+def test_candidate_assessment_reports_strongest_host_match_when_matches_differ():
     broad_match = create_host_similarity_evidence(
         target_id="candidate_protein",
         host_id="host_protein_broad",
@@ -720,8 +720,10 @@ def test_candidate_assessment_reports_broadest_host_match():
     assessment = assess_candidate(result)
 
     assert any(
-        "55.0% identity" in evidence
-        and "query coverage=95.0%" in evidence
+        "Strongest reported host match: 90.0% identity" in evidence
+        and "query coverage=70.0%" in evidence
+        and "subject coverage=70.0%" in evidence
+        and "E-value=1e-30" in evidence
         for evidence in assessment.concerns
     )
 

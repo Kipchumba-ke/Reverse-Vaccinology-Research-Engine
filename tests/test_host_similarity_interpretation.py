@@ -127,3 +127,28 @@ def test_finding_includes_coverage():
 
     assert "query coverage=92.0%" in evidence.finding
     assert "subject coverage=88.0%" in evidence.finding
+    assert "alignment length=1500" in evidence.finding
+
+def test_strongest_match_prioritizes_e_value_before_coverage():
+    records = [
+        {
+            "identity_percentage": 20.0,
+            "alignment_length": 300,
+            "query_coverage_percentage": 95.0,
+            "subject_coverage_percentage": 90.0,
+            "e_value": 1e-20,
+        },
+        {
+            "identity_percentage": 60.0,
+            "alignment_length": 100,
+            "query_coverage_percentage": 20.0,
+            "subject_coverage_percentage": 15.0,
+            "e_value": 1e-40,
+        },
+    ]
+
+    evidence = interpret_host_similarity(records)
+
+    assert "60.0% identity" in evidence.finding
+    assert "query coverage=20.0%" in evidence.finding
+    assert "subject coverage=15.0%" in evidence.finding
