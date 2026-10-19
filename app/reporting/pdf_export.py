@@ -144,6 +144,76 @@ def generate_report_pdf(report: dict) -> BytesIO:
         ]))
         return table
 
+    def add_conserved_regions_table(regions):
+        if not regions:
+            story.append(paragraph("No conserved regions were reported."))
+            return
+
+        rows = [[
+            paragraph("Region"),
+            paragraph("Start"),
+            paragraph("End"),
+            paragraph("Length"),
+            paragraph("Consensus"),
+        ]]
+
+        for index, region in enumerate(regions, start=1):
+            start = region.get("start")
+            end = region.get("end")
+            length = region.get(
+                "length",
+                end - start + 1 if start is not None and end is not None else None,
+            )
+            consensus = region.get("consensus", region.get("sequence", "Not available"))
+
+            rows.append([
+                paragraph(index),
+                paragraph(start),
+                paragraph(end),
+                paragraph(length),
+                paragraph(consensus),
+            ])
+
+        story.append(make_table(
+            rows,
+            [15 * mm, 18 * mm, 18 * mm, 18 * mm, 100 * mm],
+        ))
+
+    def add_peptide_candidates_table(candidates):
+        story.append(paragraph(
+            f"Total peptide candidate records: {len(candidates)}."
+        ))
+
+        if not candidates:
+            story.append(paragraph("No peptide candidate records are available."))
+            return
+
+        rows = [[
+            paragraph("Start"),
+            paragraph("End"),
+            paragraph("Length"),
+            paragraph("Sequence"),
+            paragraph("GRAVY"),
+            paragraph("Net charge"),
+            paragraph("Transmembrane overlap"),
+        ]]
+
+        for candidate in candidates:
+            rows.append([
+                paragraph(candidate.get("start")),
+                paragraph(candidate.get("end")),
+                paragraph(candidate.get("length")),
+                paragraph(candidate.get("sequence", "Not available")),
+                paragraph(candidate.get("gravy")),
+                paragraph(candidate.get("net_charge")),
+                paragraph(candidate.get("overlaps_transmembrane")),
+            ])
+
+        story.append(make_table(
+            rows,
+            [13 * mm, 13 * mm, 15 * mm, 65 * mm, 18 * mm, 20 * mm, 35 * mm],
+        ))
+
     def add_scalar_table(data):
         rows = [[
             Paragraph("<b>Field</b>", styles["ReportBody"]),
@@ -715,36 +785,9 @@ def generate_report_pdf(report: dict) -> BytesIO:
             return
 
         if key == "peptide_candidates" and isinstance(value, list):
-            story.append(paragraph(
-                f"Total peptide candidate records: {len(value)}."
-            ))
-
-            if not value:
-                story.append(paragraph(
-                    "No peptide candidate records are available."
-                ))
-                return
-
-            story.append(paragraph(
-                "The following is a sample of at most five records. "
-                "The full candidate list remains in the underlying report data.",
-                "SmallNote",
-            ))
-
-            for index, candidate in enumerate(value[:5], start=1):
-                story.append(Paragraph(
-                    f"Candidate sample {index}",
-                    styles["SubHeading"],
-                ))
-                add_nested(candidate)
-
-            omitted = len(value) - min(len(value), 5)
-            if omitted:
-                story.append(paragraph(
-                    f"{omitted} additional candidate records omitted "
-                    "from the PDF display."
-                ))
+            add_peptide_candidates_table(value)
             return
+
 
         if isinstance(value, dict):
             if not value:
@@ -870,12 +913,7 @@ def generate_report_pdf(report: dict) -> BytesIO:
             styles["SubHeading"],
         ))
 
-        if conserved_regions:
-            add_nested(conserved_regions)
-        else:
-            story.append(paragraph(
-                "No conserved regions were reported by the analysis."
-            ))
+        add_conserved_regions_table(conserved_regions)
 
         story.append(Spacer(1, 5 * mm))
 

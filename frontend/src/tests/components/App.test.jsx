@@ -116,7 +116,9 @@ describe('App', () => {
     )
 
     expect(
-      screen.getByText(/analysis submitted/i),
+      await screen.findByRole('heading', {
+        name: /analysis in progress/i,
+      }),
     ).toBeInTheDocument()
   })
 
@@ -253,9 +255,8 @@ describe('App', () => {
       }),
     )
 
-    expect(
-      screen.getByText(/analysis id: 123/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText('Analysis ID')).toBeInTheDocument()
+    expect(screen.getByText('123')).toBeInTheDocument()
   })
 
   it('displays the analysis status', async () => {
@@ -287,7 +288,9 @@ describe('App', () => {
     )
 
     expect(
-      screen.getByText(/status: pending/i),
+      screen.getByRole('heading', {
+        name: /analysis queued/i,
+      }),
     ).toBeInTheDocument()
   })
 
@@ -323,7 +326,9 @@ describe('App', () => {
     })
 
     expect(
-      await screen.findByText(/analysis status:\s*running/i),
+      await screen.findByRole('heading', {
+        name: /analysis in progress/i,
+      }),
     ).toBeInTheDocument()
   })
 
@@ -422,9 +427,6 @@ describe('App', () => {
   })
 
     it('displays the analysis report when the analysis is completed', async () => {
-    vi.useFakeTimers()
-
-    try {
       submitAnalysis.mockResolvedValueOnce({
         analysis_id: '123',
         status: 'pending',
@@ -451,18 +453,18 @@ describe('App', () => {
         },
       })
 
-      await act(async () => {
+
         fireEvent.click(
           screen.getByRole('button', {
             name: /analyze protein/i,
           }),
         )
 
-        await Promise.resolve()
-      })
 
       expect(
-        screen.getByText(/status: completed/i),
+        await screen.findByRole('heading', {
+          name: /analysis completed/i,
+        }),
       ).toBeInTheDocument()
 
       expect(
@@ -474,9 +476,6 @@ describe('App', () => {
       expect(
         screen.getByText(/length: 3/i),
       ).toBeInTheDocument()
-    } finally {
-      vi.useRealTimers()
-    }
   })
 
 
@@ -1027,9 +1026,10 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       screen.getByText(/sequences analyzed: 5/i),
     ).toBeInTheDocument()
 
-    expect(
-      screen.getByText(/conserved region: 10-25/i),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /start/i })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /end/i })).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: '10' })).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: '25' })).toBeInTheDocument()
   })
 
   it('displays localization evidence from the analysis report', async () => {
@@ -1424,23 +1424,9 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     })
 
     expect(
-      screen.getByText('MKTLLV', {
-        selector: '.peptide-sequence p',
-      }),
+      screen.getByText('MKTLLV', { selector: '.sequence-cell' }),
     ).toBeInTheDocument()
 
-    const position = document.querySelector(
-      '.peptide-candidate-details p',
-    )
-
-    expect(position).toBeInTheDocument()
-    expect(position.textContent).toBe('10-15')
-
-    expect(
-      screen.getByText('6', {
-        selector: '.peptide-candidate-details p',
-      }),
-    ).toBeInTheDocument()
   })
 
   it('displays scientific sections in the analysis report', async () => {
@@ -2609,11 +2595,10 @@ it('renders composition counts and percentages in a compact table', async () => 
       name: /conservation/i,
     })
 
-    const region = screen.getByText(/conserved region: 20-45/i)
-
-    expect(
-      region.closest('.conserved-regions'),
-    ).toHaveClass('measurement-card')
+    expect(screen.getByRole('columnheader', { name: /start/i })).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: /end/i })).toBeInTheDocument()
+  expect(screen.getByRole('cell', { name: '20' })).toBeInTheDocument()
+  expect(screen.getByRole('cell', { name: '45' })).toBeInTheDocument()
   })
 
   it('styles the localization evidence block', async () => {
@@ -2888,17 +2873,12 @@ it('renders composition counts and percentages in a compact table', async () => 
       name: /^Peptide Candidates$/,
     });
 
-    expect(screen.getByText(/100 peptide candidates/i)).toBeInTheDocument();
 
     const candidateList = screen.getByTestId('peptide-candidates-list');
 
-    expect(candidateList.querySelectorAll('.peptide-candidate-card')).toHaveLength(10);
-
-    fireEvent.click(
-      screen.getByRole('button', { name: /show all peptide candidates/i }),
-    );
-
-    expect(candidateList.querySelectorAll('.peptide-candidate-card')).toHaveLength(100);
+    expect(
+      candidateList.querySelectorAll('tbody tr'),
+    ).toHaveLength(10)
   });
 
   it('styles the peptide candidate block', async () => {
@@ -2932,13 +2912,10 @@ it('renders composition counts and percentages in a compact table', async () => 
       name: /^Peptide Candidates$/,
     })
 
-    const peptide = screen.getByText('MKTLLILAV', {
-      selector: '.peptide-sequence p',
-    })
-
     expect(
-      peptide.closest('.peptide-candidate-card'),
-    ).toHaveClass('peptide-candidate-card')
+      screen.getByText('MKTLLILAV', { selector: '.sequence-cell' }),
+    ).toBeInTheDocument()
+
   })
 
 

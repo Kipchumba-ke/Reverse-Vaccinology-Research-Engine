@@ -564,6 +564,107 @@
   color: var(--text-primary);
 }
 
+.report-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 0.75rem;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.report-table th,
+.report-table td {
+  padding: 0.65rem;
+  border: 1px solid #d9e1e8;
+  text-align: left;
+  vertical-align: top;
+}
+
+.report-table th {
+  background: #eef3f8;
+  font-weight: 600;
+}
+
+.report-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.report-table .sequence-cell {
+  min-width: 180px;
+  overflow-wrap: anywhere;
+  font-family: monospace;
+}
+
+.peptide-candidates-table-wrapper {
+  max-height: 650px;
+  overflow: auto;
+}
+
+.peptide-candidates-table-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+
+.peptide-candidates-table-wrapper {
+  max-height: 420px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 6px;
+}
+
+.peptide-candidates-table-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.peptide-candidates-table-wrapper .sequence-cell {
+  min-width: 180px;
+  overflow-wrap: anywhere;
+}
+
+.peptide-candidates-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.peptide-candidates-visible-count {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.peptide-candidates-toggle {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.peptide-candidates-toggle:hover {
+  background: #eff6ff;
+}
+
+.peptide-candidates-toggle:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+
 .hydropathy-chart-container {
   width: 100%;
   min-width: 0;
@@ -813,6 +914,229 @@
 }
 
 
+/* Analysis status panel */
+
+.analysis-status-panel {
+  width: min(100%, 1100px);
+  box-sizing: border-box;
+  margin: 28px auto 0;
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--accent-green);
+  border-radius: 12px;
+  background: var(--card-bg);
+  box-shadow: 0 4px 16px rgba(23, 53, 42, 0.05);
+  text-align: left;
+}
+
+.status-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.status-indicator {
+  display: flex;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e8f4ed;
+  color: var(--primary-green);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.status-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.status-copy h3 {
+  margin: 2px 0 5px;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.status-copy p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.status-in-progress {
+  border-left-color: #b7791f;
+}
+
+.status-in-progress .status-indicator {
+  background: #fff5df;
+  color: #925d0b;
+}
+
+.status-completed {
+  border-color: #cce7d6;
+  border-left-color: var(--primary-green);
+  background: #fbfefc;
+}
+
+.status-completed .status-indicator {
+  background: #dff3e6;
+  color: var(--primary-green);
+}
+
+.status-failed {
+  border-color: #f0cccc;
+  border-left-color: #b42318;
+  background: #fffafa;
+}
+
+.status-failed .status-indicator {
+  background: #fde8e7;
+  color: #b42318;
+}
+
+.status-spinner {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 5px 2px 0 8px;
+  border: 2px solid #dce9e1;
+  border-top-color: var(--primary-green);
+  border-radius: 50%;
+  animation: analysis-status-spin 0.8s linear infinite;
+}
+
+@keyframes analysis-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.status-id {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 18px 0 0 48px;
+  padding-top: 14px;
+  border-top: 1px solid #e7eee9;
+}
+
+.status-id > span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.status-id code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  background: #f1f6f3;
+  font-size: 0.8rem;
+}
+
+.copy-analysis-id {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  color: var(--primary-green-dark);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copy-analysis-id:hover {
+  border-color: var(--accent-green);
+  background: #f2f8f4;
+}
+
+@media (max-width: 600px) {
+  .analysis-status-panel {
+    margin-top: 20px;
+    padding: 18px 16px;
+  }
+
+  .status-heading {
+    gap: 10px;
+  }
+
+  .status-id {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-spinner {
+    animation-duration: 2s;
+  }
+}
+
+
+.conserved-regions-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.regions-count {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.conserved-regions-toggle {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.conserved-regions-toggle:hover {
+  background: #eff6ff;
+}
+
+.conserved-regions-toggle:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+
+.conserved-regions-table-wrapper {
+  max-height: 350px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 6px;
+}
+
+.conserved-regions-table-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.conserved-regions-table-wrapper .sequence-cell {
+  min-width: 180px;
+  overflow-wrap: anywhere;
+}
+
+
+
+
 /* Tablet and smaller */
 
 @media (max-width: 768px) {
@@ -946,5 +1270,23 @@
   }
   .conservation-profile-summary {
     grid-template-columns: 1fr;
+  }
+
+  .conserved-regions-controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .conserved-regions-table-wrapper {
+    max-height: 300px;
+  }
+
+  .peptide-candidates-controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .peptide-candidates-table-wrapper {
+    max-height: 350px;
   }
 }

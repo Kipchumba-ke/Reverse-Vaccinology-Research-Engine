@@ -213,34 +213,78 @@ async function handleDownloadReport() {
       )}
 
 
-      {status && (
-        <p>
-          Analysis Status: {status}
-        </p>
-      )}
+      {(status || submitted || error) && (
+        <section
+          className={`analysis-status-panel ${
+            error || status === 'failed'
+              ? 'status-failed'
+              : status === 'completed'
+                ? 'status-completed'
+                : 'status-in-progress'
+          }`}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div className="status-heading">
+            <span className="status-indicator" aria-hidden="true">
+              {status === 'completed'
+                ? '✓'
+                : error || status === 'failed'
+                  ? '!'
+                  : ''}
+            </span>
 
-      {status === 'failed' && (
-        <p>
-          Analysis failed. Please try again.
-        </p>
-      )}
+            <div className="status-copy">
+              <h3>
+                {error || status === 'failed'
+                  ? 'Analysis failed'
+                  : status === 'completed'
+                    ? 'Analysis completed'
+                    : status === 'running'
+                      ? 'Analysis in progress'
+                      : status === 'pending'
+                        ? 'Analysis queued'
+                        : 'Submitting analysis'}
+              </h3>
 
-      {analysisId && (
-        <p>
-          Analysis ID: {analysisId}
-        </p>
-      )}
+              <p>
+                {error
+                  ? error
+                  : status === 'failed'
+                    ? 'The analysis could not be completed. Please try again.'
+                    : status === 'completed'
+                      ? 'Your results are ready to review.'
+                      : status === 'running'
+                        ? 'Your protein sequence is being analyzed. This may take a little while.'
+                        : 'Your request has been received and is waiting to be processed.'}
+              </p>
+            </div>
 
-      {submitted && (
-        <p>
-          Analysis submitted!
-        </p>
-      )}
+            {(status === 'pending' || status === 'running' || (!status && submitted)) && (
+              <span className="status-spinner" aria-hidden="true" />
+            )}
+          </div>
 
-      {error && (
-        <p>
-          {error}
-        </p>
+          {analysisId && (
+            <div className="status-id">
+              <span>Analysis ID</span>
+              <code>{analysisId}</code>
+              <button
+                type="button"
+                className="copy-analysis-id"
+                onClick={() => {
+                  if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(analysisId)
+                  }
+                }}
+                aria-label="Copy analysis ID"
+                title="Copy analysis ID"
+              >
+                Copy
+              </button>
+            </div>
+          )}
+        </section>
       )}
     </main>
   )

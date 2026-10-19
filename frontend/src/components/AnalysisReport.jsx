@@ -3,6 +3,8 @@ import { useState } from "react";
 function AnalysisReport({ report, title = 'Analysis Report'  }) {
   const [showAllPeptides, setShowAllPeptides] = useState(false);
   const [showFullSequence, setShowFullSequence] = useState(false);
+  const [visibleRegionCount, setVisibleRegionCount] = useState(10)
+  const [visiblePeptideCount, setVisiblePeptideCount] = useState(10)
 
   const peptideCandidates = report.peptide_candidates ?? [];
   const visiblePeptides = showAllPeptides
@@ -537,17 +539,78 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
           <div className="conserved-regions measurement-card">
             <h4>Conserved Regions</h4>
 
-            <div className="measurement-values">
-              {report.conservation.regions.map(
-                (region, index) => (
-                  <p key={index}>
-                    Conserved Region: {region.start}-{region.end}
-                  </p>
-                ),
-              )}
+            <div className="report-table-wrapper conserved-regions-table-wrapper">
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>Region</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Length</th>
+                    <th>Consensus</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {report.conservation.regions
+                    .slice(0, visibleRegionCount)
+                    .map((region, index) => (
+                      <tr key={`${region.start}-${region.end}-${index}`}>
+                        <td>{index + 1}</td>
+                        <td>{region.start}</td>
+                        <td>{region.end}</td>
+                        <td>
+                          {region.length ?? region.end - region.start + 1}
+                        </td>
+                        <td className="sequence-cell">
+                          {region.consensus ??
+                            region.sequence ??
+                            "Not available"}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
+
+            {report.conservation.regions.length > 10 && (
+              <div className="conserved-regions-controls">
+                <span className="regions-count">
+                  Showing {Math.min(
+                    visibleRegionCount,
+                    report.conservation.regions.length
+                  )} of {report.conservation.regions.length} regions
+                </span>
+
+                {visibleRegionCount < report.conservation.regions.length ? (
+                  <button
+                    type="button"
+                    className="conserved-regions-toggle"
+                    onClick={() =>
+                      setVisibleRegionCount((current) =>
+                        Math.min(
+                          current + 10,
+                          report.conservation.regions.length
+                        )
+                      )
+                    }
+                  >
+                    Show 10 more regions
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="conserved-regions-toggle"
+                    onClick={() => setVisibleRegionCount(10)}
+                  >
+                    Show fewer regions
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
+
 
 
         {!report.conservation?.summary &&
@@ -753,7 +816,6 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
 
       <section className="analysis-report-section">
         <h3>Peptide Candidates</h3>
-
         {peptideCandidates.length === 0 ? (
           <p>No peptide candidates are available.</p>
         ) : (
@@ -763,48 +825,84 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             </p>
 
             <div
-              className="peptide-candidates-list"
+              className="report-table-wrapper peptide-candidates-table-wrapper"
               data-testid="peptide-candidates-list"
             >
-              {visiblePeptides.map((candidate, index) => (
-                <div
-                  key={`${candidate.start}-${candidate.end}-${index}`}
-                  className="peptide-candidate-card"
-                >
-                  <div className="peptide-sequence">
-                    <span className="peptide-candidate-label">
-                      Peptide Candidate
-                    </span>
-                    <p>{candidate.sequence}</p>
-                  </div>
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Length</th>
+                    <th>Sequence</th>
+                    <th>GRAVY</th>
+                    <th>Net charge</th>
+                    <th>Transmembrane overlap</th>
+                  </tr>
+                </thead>
 
-                  <div className="peptide-candidate-details">
-                    <div>
-                      <span className="peptide-candidate-label">Position</span>
-                      <p>
-                        {candidate.start}-{candidate.end}
-                      </p>
-                    </div>
-
-                    <div>
-                      <span className="peptide-candidate-label">Length</span>
-                      <p>{candidate.length}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                <tbody>
+                  {peptideCandidates
+                    .slice(0, visiblePeptideCount)
+                    .map((candidate, index) => (
+                      <tr
+                        key={`${candidate.start}-${candidate.end}-${index}`}
+                      >
+                        <td>{candidate.start}</td>
+                        <td>{candidate.end}</td>
+                        <td>{candidate.length}</td>
+                        <td className="sequence-cell">
+                          {candidate.sequence}
+                        </td>
+                        <td>{candidate.gravy ?? "Not available"}</td>
+                        <td>{candidate.net_charge ?? "Not available"}</td>
+                        <td>
+                          {candidate.overlaps_transmembrane == null
+                            ? "Not available"
+                            : candidate.overlaps_transmembrane
+                              ? "Yes"
+                              : "No"}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
 
             {peptideCandidates.length > 10 && (
-              <button
-                type="button"
-                className="peptide-candidates-toggle"
-                onClick={() => setShowAllPeptides((previous) => !previous)}
-              >
-                {showAllPeptides
-                  ? 'Show fewer peptide candidates'
-                  : 'Show all peptide candidates'}
-              </button>
+              <div className="peptide-candidates-controls">
+                <span className="peptide-candidates-visible-count">
+                  Showing {Math.min(
+                    visiblePeptideCount,
+                    peptideCandidates.length
+                  )} of {peptideCandidates.length} candidates
+                </span>
+
+                {visiblePeptideCount < peptideCandidates.length ? (
+                  <button
+                    type="button"
+                    className="peptide-candidates-toggle"
+                    onClick={() =>
+                      setVisiblePeptideCount((current) =>
+                        Math.min(
+                          current + 10,
+                          peptideCandidates.length
+                        )
+                      )
+                    }
+                  >
+                    Show 10 more candidates
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="peptide-candidates-toggle"
+                    onClick={() => setVisiblePeptideCount(10)}
+                  >
+                    Show fewer candidates
+                  </button>
+                )}
+              </div>
             )}
           </>
         )}
