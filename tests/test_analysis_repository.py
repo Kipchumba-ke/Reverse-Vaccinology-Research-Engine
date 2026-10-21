@@ -1,6 +1,7 @@
 import pytest
 
 from uuid import uuid4
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.exc import IntegrityError, PendingRollbackError
 
@@ -230,3 +231,56 @@ def test_repository_update_preserves_analysis_report(db_session):
 
     assert found.report == report
     assert found.status == "completed"
+
+
+def test_find_all_by_user_id_returns_only_that_users_analyses(db_session):
+    repository = AnalysisRepository(db_session)
+    user_a = uuid4()
+    user_b = uuid4()
+
+    analysis_a = Analysis(
+        user_id=user_a,
+        sequence="MKTAYIAK",
+        protein_name="User A protein",
+    )
+    analysis_b = Analysis(
+        user_id=user_b,
+        sequence="MKQLV",
+        protein_name="User B protein",
+    )
+
+    repository.save(analysis_a)
+    repository.save(analysis_b)
+
+    results = repository.find_all_by_user_id(user_a)
+
+    assert [item.id for item in results] == [analysis_a.id]
+    assert all(item.user_id == user_a for item in results)
+
+
+def test_find_all_by_user_id_orders_newest_first(db_session):
+    repository = AnalysisRepository(db_session)
+    user_id = uuid4()
+
+    older = Analysis(
+        user_id=user_id,
+        sequence="MKTAYIAK",
+        protein_name="Older protein",
+    )
+    newer = Analysis(
+        user_id=user_id,
+        sequence="MKQLV",
+        protein_name="Newer protein",
+    )
+
+    now = datetime.now(timezone.utc)
+
+    older.created_at = now - timedelta(minutes=1)
+    newer.created_at = now
+
+    repository.save(older)
+    repository.save(newer)
+
+    results = repository.find_all_by_user_id(user_id)
+
+    assert [item.id for item in results] == [newer.id, older.id]

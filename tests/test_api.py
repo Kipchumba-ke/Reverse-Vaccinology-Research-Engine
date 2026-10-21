@@ -1828,3 +1828,96 @@ def test_download_multifasta_report_includes_all_proteins(
     assert "Localization evidence." in pdf_text
     assert "Essentiality evidence." in pdf_text
     assert "Multiple-sequence alignment and conservation analysis." not in pdf_text
+
+
+def test_list_analyses_requires_authentication(api_client):
+    response = api_client.get("/api/analyses")
+
+    assert response.status_code == 401
+
+
+def test_list_analyses_returns_only_authenticated_users_records(
+    api_client,
+    db_session,
+    auth_headers,
+):
+    from uuid import uuid4
+
+    from app.models.analysis import Analysis
+    from app.repositories.analysis_repository import AnalysisRepository
+
+    repository = AnalysisRepository(db_session)
+    authenticated_user_id = UUID(
+        api_client.get(
+            "/api/protected",
+            headers=auth_headers,
+        ).get_json()["user_id"]
+    )
+    other_user_id = uuid4()
+
+    own_analysis = Analysis(
+        user_id=authenticated_user_id,
+        protein_name="My protein",
+        organism="Example organism",
+        accession="OWN123",
+        sequence="MKTAYIAK",
+    )
+    other_analysis = Analysis(
+        user_id=other_user_id,
+        protein_name="Other user's protein",
+        sequence="MKQLV",
+    )
+
+    repository.save(own_analysis)
+    repository.save(other_analysis)
+    db_session.commit()
+
+    response = api_client.get("/api/analyses", headers=auth_headers)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    returned_ids = [item["analysis_id"] for item in data["analyses"]]
+
+    assert str(own_analysis.id) in returned_ids
+    assert str(other_analysis.id) not in returned_ids
+    assert all("sequence" not in item for item in data["analyses"])
+
+
+
+def test_user_cannot_access_another_users_analysis(
+    api_client,
+    db_session,
+    auth_headers,
+):
+    from uuid import uuid4
+
+    from app.models.analysis import Analysis
+    from app.repositories.analysis_repository import AnalysisRepository
+
+    repository = AnalysisRepository(db_session)
+
+    authenticated_user_id = UUID(
+        api_client.get(
+            "/api/protected",
+            headers=auth_headers,
+        ).get_json()["user_id"]
+    )
+
+    other_analysis = Analysis(
+        user_id=uuid4(),
+        protein_name="Private protein",
+        sequence="MKTAYIAK",
+    )
+
+    repository.save(other_analysis)
+    db_session.commit()
+
+    response = api_client.get(
+        f"/api/analyses/{other_analysis.id}",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 403
+    assert response.get_json()["error"] == (
+        "You do not have access to this analysis."
+    )

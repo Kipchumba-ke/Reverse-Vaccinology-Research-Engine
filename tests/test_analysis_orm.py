@@ -28,6 +28,7 @@ def test_analysis_model_has_expected_columns():
         "status",
         "user_id",
         "report",
+        "created_at",
     }
 
 def test_analysis_model_requires_sequence_and_status():
