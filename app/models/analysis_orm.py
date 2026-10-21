@@ -2,8 +2,9 @@ import uuid
 from uuid import UUID
 
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
-from sqlalchemy import JSON ,String, Text
+from sqlalchemy import JSON ,String, Text, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
 
 from app.database import Base
 
@@ -30,6 +31,11 @@ class AnalysisModel(Base):
         default="pending",
     )
     report: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
     def __init__(self, **kwargs):
         kwargs.setdefault("id", uuid.uuid4())
         kwargs.setdefault("status", "pending")

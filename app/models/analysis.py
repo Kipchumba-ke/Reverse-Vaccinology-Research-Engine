@@ -1,4 +1,5 @@
 from dataclasses import dataclass,field
+from datetime import datetime
 from uuid import UUID, uuid4
 
 
@@ -13,3 +14,4 @@ class Analysis:
     sequence: str = ""
     status: str = "pending"
     report: dict | None = None
+    created_at: datetime | None = None

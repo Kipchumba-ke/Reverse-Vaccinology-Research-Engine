@@ -178,6 +178,36 @@ def create_app(repository=None, queue=None):
             "user_id": str(user.id),
         }, 201
 
+    @app.get("/api/analyses")
+    def list_analyses():
+        try:
+            user_id = get_authenticated_user_id(request)
+        except ValueError as error:
+            return jsonify({"error": str(error)}), 401
+
+        if not user_id:
+            return jsonify({"error": "Authentication required"}), 401
+
+        analyses = repository.find_all_by_user_id(user_id)
+
+        return jsonify({
+            "analyses": [
+                {
+                    "analysis_id": str(analysis.id),
+                    "status": analysis.status,
+                    "protein_name": analysis.protein_name,
+                    "organism": analysis.organism,
+                    "accession": analysis.accession,
+                    "created_at": (
+                        analysis.created_at.isoformat()
+                        if analysis.created_at
+                        else None
+                    ),
+                }
+                for analysis in analyses
+            ]
+        }), 200
+
     @app.post("/api/analyses")
     def submit_analysis():
         repository = app.config["ANALYSIS_REPOSITORY"]

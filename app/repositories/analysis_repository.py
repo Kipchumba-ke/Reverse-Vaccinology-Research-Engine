@@ -1,5 +1,6 @@
 from app.models.analysis import Analysis
 from app.models.analysis_orm import AnalysisModel
+from sqlalchemy import select
 
 
 class AnalysisRepository:
@@ -18,6 +19,7 @@ class AnalysisRepository:
             sequence=analysis.sequence,
             status=analysis.status,
             report=analysis.report,
+            created_at=analysis.created_at,
 
         )
 
@@ -33,6 +35,7 @@ class AnalysisRepository:
             sequence=model.sequence,
             status=model.status,
             report=model.report,
+            created_at=model.created_at,
         )
 
     def save(self, analysis: Analysis) -> Analysis:
@@ -40,6 +43,10 @@ class AnalysisRepository:
 
         self.session.add(model)
         self.session.flush()
+        self.session.refresh(model)
+
+        analysis.created_at = model.created_at
+
 
         return analysis
 
@@ -72,3 +79,17 @@ class AnalysisRepository:
         self.session.flush()
 
         return analysis
+
+    def find_all_by_user_id(self, user_id):
+        statement = (
+            select(AnalysisModel)
+            .where(AnalysisModel.user_id == user_id)
+            .order_by(
+                AnalysisModel.created_at.desc(),
+                AnalysisModel.id.desc(),
+            )
+        )
+
+        models = self.session.scalars(statement).all()
+
+        return [self._to_domain(model) for model in models]
