@@ -1,4 +1,5 @@
 import { act ,render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import { beforeEach ,describe, expect, it, vi } from 'vitest'
 import { submitAnalysis, submitFastaAnalysis ,getAnalysisStatus } from '../../services/analysisService'
@@ -14,6 +15,14 @@ vi.mock('../../services/analysisService', () => ({
 vi.mock('../../services/authService', () => ({
   login: vi.fn(),
 }))
+
+function renderApp() {
+  return render(
+    <MemoryRouter>
+      <App />
+    </MemoryRouter>,
+  )
+}
 
 describe('App', () => {
 
@@ -47,7 +56,7 @@ describe('App', () => {
   })
 
   it('renders the reverse vaccinology application', () => {
-    render(<App />)
+    renderApp()
 
     expect(
       screen.getByRole('heading', {
@@ -57,7 +66,7 @@ describe('App', () => {
   })
 
   it('renders a protein sequence input', () => {
-    render(<App />)
+    renderApp()
 
     expect(
       screen.getByLabelText(/protein sequence/i),
@@ -65,7 +74,7 @@ describe('App', () => {
   })
 
   it('renders a button to submit the protein sequence', () => {
-    render(<App />)
+    renderApp()
 
     expect(
       screen.getByRole('button', {
@@ -77,7 +86,7 @@ describe('App', () => {
   it('captures the submitted protein sequence', async () => {
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -100,7 +109,7 @@ describe('App', () => {
   it('shows that the protein analysis has been submitted', async () => {
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -126,7 +135,7 @@ describe('App', () => {
     const user = userEvent.setup()
     localStorage.setItem('token', 'test_token')
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -152,7 +161,7 @@ describe('App', () => {
 
     localStorage.setItem('token', 'test_token')
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -178,7 +187,7 @@ describe('App', () => {
 
     localStorage.setItem('token', 'test_token')
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -208,7 +217,7 @@ describe('App', () => {
       new Error('Analysis submission failed'),
     )
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -240,7 +249,7 @@ describe('App', () => {
       status: 'pending',
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -272,7 +281,7 @@ describe('App', () => {
       status: 'pending',
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -305,7 +314,7 @@ describe('App', () => {
       status: 'running',
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -346,7 +355,7 @@ describe('App', () => {
         status: 'running',
       })
 
-      render(<App />)
+      renderApp()
 
       const input = screen.getByLabelText(/protein sequence/i)
 
@@ -392,7 +401,7 @@ describe('App', () => {
         status: 'running',
       })
 
-      const { unmount } = render(<App />)
+      const { unmount } = renderApp()
 
       const input = screen.getByLabelText(/protein sequence/i)
 
@@ -443,7 +452,7 @@ describe('App', () => {
         },
       })
 
-      render(<App />)
+      renderApp()
 
       const input = screen.getByLabelText(/protein sequence/i)
 
@@ -480,7 +489,7 @@ describe('App', () => {
 
 
 it('renders a FASTA file input accepting supported extensions', () => {
-  render(<App />)
+  renderApp()
 
   const fileInput = screen.getByLabelText(/upload fasta file/i)
 
@@ -499,7 +508,7 @@ it('submits selected FASTA file contents through the analysis service', async ()
     { type: 'text/plain' },
   )
 
-  render(<App />)
+  renderApp()
 
   const fileInput = screen.getByLabelText(/upload fasta file/i)
 
@@ -526,7 +535,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     type: 'text/plain',
   })
 
-  render(<App />)
+  renderApp()
 
   await user.upload(
     screen.getByLabelText(/upload fasta file/i),
@@ -561,7 +570,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     report: null,
   })
 
-  render(<App />)
+  renderApp()
 
   const input = screen.getByLabelText(/protein sequence/i)
 
@@ -599,7 +608,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByRole('textbox'),
@@ -651,7 +660,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -750,7 +759,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -858,7 +867,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -928,7 +937,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -994,7 +1003,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -1054,7 +1063,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -1109,7 +1118,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -1166,7 +1175,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -1227,7 +1236,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -1287,7 +1296,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -1349,7 +1358,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -1403,7 +1412,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const input = screen.getByLabelText(/protein sequence/i)
 
@@ -1464,7 +1473,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByRole('textbox'),
@@ -1565,7 +1574,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByRole('textbox'),
@@ -1672,7 +1681,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByRole('textbox'),
@@ -1731,7 +1740,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByRole('textbox'),
@@ -1760,7 +1769,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
   })
 
   it('provides styling hooks for the analysis interface', () => {
-    render(<App />)
+    renderApp()
 
     expect(
       screen.getByRole('heading', {
@@ -1807,7 +1816,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       report,
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -1840,7 +1849,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
 
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp()
 
     await user.click(
       screen.getByRole('button', { name: /^sign in$/i }),
@@ -1863,7 +1872,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
 
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp()
 
     await user.click(
       screen.getByRole('button', { name: /^sign in$/i }),
@@ -1893,7 +1902,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
 
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp()
 
     await user.click(
       screen.getAllByRole('button', {
@@ -1917,7 +1926,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
 
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp()
 
     await user.click(
       screen.getAllByRole('button', {
@@ -1961,7 +1970,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2000,7 +2009,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2043,7 +2052,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       },
     });
 
-    render(<App />);
+    renderApp();
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2113,7 +2122,7 @@ it('groups composition measurements into a dedicated block', async () => {
     },
   })
 
-  render(<App />)
+  renderApp()
 
   fireEvent.change(
     screen.getByLabelText(/protein sequence/i),
@@ -2165,7 +2174,7 @@ it('renders composition counts and percentages in a compact table', async () => 
     },
   });
 
-  render(<App />);
+  renderApp();
 
   fireEvent.change(
     screen.getByLabelText(/protein sequence/i),
@@ -2219,7 +2228,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2264,7 +2273,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2344,7 +2353,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2386,7 +2395,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2429,7 +2438,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2466,7 +2475,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     });
 
-    render(<App />);
+    renderApp();
 
     fireEvent.change(screen.getByLabelText(/protein sequence/i), {
       target: { value: 'MKTLLILAV' },
@@ -2497,7 +2506,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     });
 
-    render(<App />);
+    renderApp();
 
     fireEvent.change(screen.getByLabelText(/protein sequence/i), {
       target: { value: 'MKTLLILAV' },
@@ -2534,7 +2543,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2574,7 +2583,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2618,7 +2627,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2659,7 +2668,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2702,7 +2711,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2741,7 +2750,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2780,7 +2789,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2819,7 +2828,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2859,7 +2868,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     });
 
-    render(<App />);
+    renderApp();
 
     fireEvent.change(screen.getByLabelText(/protein sequence/i), {
       target: { value: 'MKTLLILAV' },
@@ -2897,7 +2906,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     fireEvent.change(
       screen.getByLabelText(/protein sequence/i),
@@ -2999,7 +3008,7 @@ it('renders composition counts and percentages in a compact table', async () => 
       },
     })
 
-    render(<App />)
+    renderApp()
 
     const file = new File(
       [fastaContent],
