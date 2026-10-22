@@ -19,7 +19,6 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
     isLongSequence && !showFullSequence
       ? `${proteinSequence.slice(0, sequencePreviewLength)}...`
       : proteinSequence;
-  console.log(report.evidence)
   return (
     <div className="analysis-report">
       <h2>{title}</h2>
