@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react'
 import {
   Link,
@@ -22,6 +21,7 @@ import Register from './components/Register'
 import Login from './components/Login'
 import MultiSequenceReport from './components/MultiSequenceReport'
 import LandingPage from './components/LandingPage'
+import Dashboard from './components/Dashboard'
 import './App.css'
 
 const ACTIVE_ANALYSIS_KEY = 'activeAnalysisId'
@@ -42,7 +42,7 @@ function App() {
         path="/"
         element={
           authenticated ? (
-            <Navigate to="/analyses" replace />
+            <Navigate to="/dashboard" replace />
           ) : (
             <LandingPage
               onLogin={() => navigate('/login')}
@@ -56,7 +56,7 @@ function App() {
         path="/login"
         element={
           authenticated
-            ? <Navigate to="/analyses" replace />
+            ? <Navigate to="/dashboard" replace />
             : <Login onLogin={() => setAuthenticated(true)} />
         }
       />
@@ -65,7 +65,7 @@ function App() {
         path="/register"
         element={
           authenticated ? (
-            <Navigate to="/analyses" replace />
+            <Navigate to="/dashboard" replace />
           ) : (
             <Register
               onRegister={() => navigate('/login')}
@@ -74,6 +74,18 @@ function App() {
           )
         }
       />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute authenticated={authenticated}>
+            <Dashboard
+              onLogout={() => setAuthenticated(false)}
+            />
+          </ProtectedRoute>
+        }
+      />
+
 
       <Route
         path="/analyses/:analysisId?"
@@ -109,15 +121,25 @@ function AuthenticatedLayout({ children, onLogout }) {
     localStorage.removeItem('token')
     localStorage.removeItem(ACTIVE_ANALYSIS_KEY)
     onLogout()
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (
     <>
       <nav className="app-navigation" aria-label="Main navigation">
-        <Link to="/analyses">New analysis</Link>
-        <Link to="/history">Analysis history</Link>
-        <button type="button" onClick={handleLogout}>Log out</button>
+        <Link to="/dashboard" className="nav-brand">
+          <span className="nav-brand-icon" aria-hidden="true">V</span>
+          <span>ReverseVax</span>
+        </Link>
+
+        <div className="nav-links">
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/analyses">New analysis</Link>
+          <Link to="/history">Analysis history</Link>
+          <button type="button" onClick={handleLogout}>
+            Log out
+          </button>
+        </div>
       </nav>
       {children}
     </>
@@ -136,12 +158,6 @@ function AnalysisWorkspace() {
   const [report, setReport] = useState(null)
   const [fastaFile, setFastaFile] = useState(null)
 
-  useEffect(() => {
-    if (routeAnalysisId) {
-      setAnalysisId(routeAnalysisId)
-    }
-    setError(null)
-  }, [routeAnalysisId])
 
   useEffect(() => {
     setAnalysisId(routeAnalysisId || '')
@@ -248,7 +264,14 @@ function AnalysisWorkspace() {
   }
   return (
     <main className="analysis-page">
-      <h1>Reverse Vaccinology</h1>
+        <header className="workspace-header">
+          <p className="eyebrow">PROTEIN ANALYSIS</p>
+          <h1>Explore a protein sequence</h1>
+          <p>
+            Submit a protein sequence or FASTA file to generate computational
+            results, evidence, interpretations, and a research report.
+          </p>
+        </header>
 
       <div className="analysis-form">
         <label htmlFor="protein-sequence">Protein Sequence</label>

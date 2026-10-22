@@ -16,9 +16,9 @@ vi.mock('../../services/authService', () => ({
   login: vi.fn(),
 }))
 
-function renderApp() {
+function renderApp(initialEntry = '/analyses') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <App />
     </MemoryRouter>,
   )
@@ -60,7 +60,7 @@ describe('App', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /reverse vaccinology/i,
+        name: /explore a protein sequence/i,
       }),
     ).toBeInTheDocument()
   })
@@ -1773,7 +1773,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /reverse vaccinology/i,
+        name: /explore a protein sequence/i,
       }).closest('.analysis-page'),
     ).toBeInTheDocument()
 
@@ -1849,7 +1849,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
 
     const user = userEvent.setup()
 
-    renderApp()
+    renderApp('/')
 
     await user.click(
       screen.getByRole('button', { name: /^sign in$/i }),
@@ -1862,8 +1862,10 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
 
     expect(
-      screen.queryByLabelText(/protein sequence/i),
-    ).not.toBeInTheDocument()
+      await screen.findByRole('heading', {
+        name: /welcome back/i,
+      }),
+    ).toBeInTheDocument()
   })
 
 
@@ -1871,8 +1873,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     localStorage.removeItem('token')
 
     const user = userEvent.setup()
-
-    renderApp()
+    renderApp('/')
 
     await user.click(
       screen.getByRole('button', { name: /^sign in$/i }),
@@ -1893,7 +1894,39 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     )
 
     expect(
-      screen.getByLabelText(/protein sequence/i),
+      await screen.findByRole('heading', {
+        name: /from protein sequences/i,
+      }),
+    ).toBeInTheDocument()
+
+    expect(login).toHaveBeenCalledWith(
+      'test@example.com',
+      'password123',
+    )
+
+    expect(
+      screen.getByRole('navigation', { name: /main navigation/i }),
+    ).toBeInTheDocument()
+  })
+
+
+  it('navigates from the dashboard to the analysis workspace', async () => {
+    localStorage.setItem('token', 'test_token')
+
+    const user = userEvent.setup()
+
+    renderApp('/dashboard')
+
+    await user.click(
+      within(
+        screen.getByRole('navigation', { name: /main navigation/i }),
+      ).getByRole('link', { name: /new analysis/i }),
+    )
+
+    expect(
+      await screen.findByRole('heading', {
+        name: /explore a protein sequence/i,
+      }),
     ).toBeInTheDocument()
   })
 
@@ -1902,7 +1935,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
 
     const user = userEvent.setup()
 
-    renderApp()
+    renderApp('/')
 
     await user.click(
       screen.getAllByRole('button', {
@@ -1926,7 +1959,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
 
     const user = userEvent.setup()
 
-    renderApp()
+    renderApp('/')
 
     await user.click(
       screen.getAllByRole('button', {
