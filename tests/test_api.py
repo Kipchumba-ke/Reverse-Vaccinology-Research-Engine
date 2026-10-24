@@ -11,6 +11,7 @@ from io import BytesIO
 from app.repositories.analysis_repository import AnalysisRepository
 from app.models.analysis_orm import AnalysisModel
 from uuid import UUID
+from uuid import uuid4
 
 from app.services.analysis_worker import AnalysisWorker
 from app.repositories.analysis_repository import AnalysisRepository
@@ -19,6 +20,7 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.services.password_service import hash_password
 from app.models.user_orm import UserModel
+from app.models.analysis import Analysis
 
 
 
@@ -1841,10 +1843,6 @@ def test_list_analyses_returns_only_authenticated_users_records(
     db_session,
     auth_headers,
 ):
-    from uuid import uuid4
-
-    from app.models.analysis import Analysis
-    from app.repositories.analysis_repository import AnalysisRepository
 
     repository = AnalysisRepository(db_session)
     authenticated_user_id = UUID(
@@ -1882,6 +1880,28 @@ def test_list_analyses_returns_only_authenticated_users_records(
     assert str(other_analysis.id) not in returned_ids
     assert all("sequence" not in item for item in data["analyses"])
 
+    own_item = next(
+        item
+        for item in data["analyses"]
+        if item["analysis_id"] == str(own_analysis.id)
+    )
+
+    assert own_item["protein_name"] == "My protein"
+    assert own_item["organism"] == "Example organism"
+    assert own_item["accession"] == "OWN123"
+
+    own_record = next(
+        item
+        for item in data["analyses"]
+        if item["analysis_id"] == str(own_analysis.id)
+    )
+
+    assert own_record["protein_name"] == "My protein"
+    assert own_record["organism"] == "Example organism"
+    assert own_record["accession"] == "OWN123"
+    assert own_record["protein_id"] is None
+    assert "sequence" not in own_record
+
 
 
 def test_user_cannot_access_another_users_analysis(
@@ -1889,10 +1909,6 @@ def test_user_cannot_access_another_users_analysis(
     db_session,
     auth_headers,
 ):
-    from uuid import uuid4
-
-    from app.models.analysis import Analysis
-    from app.repositories.analysis_repository import AnalysisRepository
 
     repository = AnalysisRepository(db_session)
 
@@ -1921,3 +1937,201 @@ def test_user_cannot_access_another_users_analysis(
     assert response.get_json()["error"] == (
         "You do not have access to this analysis."
     )
+
+
+def test_delete_analysis_requires_authentication(api_client):
+    response = api_client.delete(
+        "/api/analyses/660cbfba-f1ad-4e3d-b5db-737fcfc82a29"
+    )
+
+    assert response.status_code == 401
+
+
+def test_delete_analysis_rejects_invalid_id(api_client, auth_headers):
+    response = api_client.delete(
+        "/api/analyses/not-a-valid-uuid",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Invalid analysis ID."
+
+
+def test_delete_analysis_returns_not_found(api_client, auth_headers):
+
+    response = api_client.delete(
+        f"/api/analyses/{uuid4()}",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 404
+    assert response.get_json()["error"] == "Analysis not found."
+
+
+def test_delete_analysis_removes_own_completed_analysis(
+    api_client,
+    db_session,
+    auth_headers,
+):
+
+    repository = AnalysisRepository(db_session)
+
+    user_id = UUID(
+        api_client.get(
+            "/api/protected",
+            headers=auth_headers,
+        ).get_json()["user_id"]
+    )
+
+    analysis = Analysis(
+        user_id=user_id,
+        protein_name="Completed protein",
+        sequence="MKTAYIAK",
+        status="completed",
+        report={"protein": {"name": "Completed protein"}},
+    )
+
+    repository.save(analysis)
+    db_session.commit()
+
+    response = api_client.delete(
+        f"/api/analyses/{analysis.id}",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["analysis_id"] == str(analysis.id)
+    assert repository.find_by_id(analysis.id) is None
+
+
+def test_delete_analysis_forbids_deleting_another_users_analysis(
+    api_client,
+    db_session,
+    auth_headers,
+):
+
+    repository = AnalysisRepository(db_session)
+
+    analysis = Analysis(
+        user_id=uuid4(),
+        protein_name="Another user's protein",
+        sequence="MKTAYIAK",
+        status="completed",
+        report={"protein": {"name": "Another user's protein"}},
+    )
+
+    repository.save(analysis)
+    db_session.commit()
+
+    response = api_client.delete(
+        f"/api/analyses/{analysis.id}",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 403
+    assert response.get_json()["error"] == (
+        "You do not have access to this analysis."
+    )
+    assert repository.find_by_id(analysis.id) is not None
+
+
+def test_delete_analysis_rejects_pending_analysis(
+    api_client,
+    db_session,
+    auth_headers,
+):
+
+    repository = AnalysisRepository(db_session)
+
+    user_id = UUID(
+        api_client.get(
+            "/api/protected",
+            headers=auth_headers,
+        ).get_json()["user_id"]
+    )
+
+    analysis = Analysis(
+        user_id=user_id,
+        protein_name="Pending protein",
+        sequence="MKTAYIAK",
+        status="pending",
+    )
+
+    repository.save(analysis)
+    db_session.commit()
+
+    response = api_client.delete(
+        f"/api/analyses/{analysis.id}",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 409
+    assert repository.find_by_id(analysis.id) is not None
+
+
+def test_delete_analysis_rejects_running_analysis(
+    api_client,
+    db_session,
+    auth_headers,
+):
+
+    repository = AnalysisRepository(db_session)
+
+    user_id = UUID(
+        api_client.get(
+            "/api/protected",
+            headers=auth_headers,
+        ).get_json()["user_id"]
+    )
+
+    analysis = Analysis(
+        user_id=user_id,
+        protein_name="Running protein",
+        sequence="MKTAYIAK",
+        status="running",
+    )
+
+    repository.save(analysis)
+    db_session.commit()
+
+    response = api_client.delete(
+        f"/api/analyses/{analysis.id}",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 409
+    assert repository.find_by_id(analysis.id) is not None
+
+
+def test_delete_analysis_removes_own_failed_analysis(
+    api_client,
+    db_session,
+    auth_headers,
+):
+
+    repository = AnalysisRepository(db_session)
+
+    user_id = UUID(
+        api_client.get(
+            "/api/protected",
+            headers=auth_headers,
+        ).get_json()["user_id"]
+    )
+
+    analysis = Analysis(
+        user_id=user_id,
+        protein_name="Failed protein",
+        sequence="MKTAYIAK",
+        status="failed",
+    )
+
+    repository.save(analysis)
+    db_session.commit()
+
+    response = api_client.delete(
+        f"/api/analyses/{analysis.id}",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert repository.find_by_id(analysis.id) is None

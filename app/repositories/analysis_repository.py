@@ -93,3 +93,14 @@ class AnalysisRepository:
         models = self.session.scalars(statement).all()
 
         return [self._to_domain(model) for model in models]
+
+    def delete(self, analysis_id):
+        model = self.session.get(AnalysisModel, analysis_id)
+
+        if model is None:
+            return False
+
+        self.session.delete(model)
+        self.session.flush()
+
+        return True

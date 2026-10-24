@@ -190,23 +190,29 @@ def create_app(repository=None, queue=None):
 
         analyses = repository.find_all_by_user_id(user_id)
 
-        return jsonify({
-            "analyses": [
-                {
-                    "analysis_id": str(analysis.id),
-                    "status": analysis.status,
-                    "protein_name": analysis.protein_name,
-                    "organism": analysis.organism,
-                    "accession": analysis.accession,
-                    "created_at": (
-                        analysis.created_at.isoformat()
-                        if analysis.created_at
-                        else None
-                    ),
-                }
-                for analysis in analyses
-            ]
-        }), 200
+        history = []
+
+        for analysis in analyses:
+            report = analysis.report or {}
+            protein = report.get("protein") or {}
+
+            history.append({
+                "analysis_id": str(analysis.id),
+                "protein_id": analysis.protein_id or protein.get("id"),
+                "protein_name": (
+                    analysis.protein_name or protein.get("name")
+                ),
+                "organism": analysis.organism or protein.get("organism"),
+                "accession": analysis.accession or protein.get("accession"),
+                "status": analysis.status,
+                "created_at": (
+                    analysis.created_at.isoformat()
+                    if analysis.created_at
+                    else None
+                )
+            })
+
+        return jsonify({"analyses": history}), 200
 
     @app.post("/api/analyses")
     def submit_analysis():
@@ -308,6 +314,50 @@ def create_app(repository=None, queue=None):
             "analysis_id": str(analysis.id),
             "status": analysis.status,
             "report": analysis.report,
+        }, 200
+
+    @app.delete("/api/analyses/<analysis_id>")
+    def delete_analysis(analysis_id):
+        repository = app.config["ANALYSIS_REPOSITORY"]
+
+        try:
+            user_id = get_authenticated_user_id(request)
+        except ValueError as error:
+            return {"error": str(error)}, 401
+
+        try:
+            parsed_analysis_id = UUID(analysis_id)
+        except ValueError:
+            return {"error": "Invalid analysis ID."}, 400
+
+        analysis = repository.find_by_id(parsed_analysis_id)
+
+        if analysis is None:
+            return {"error": "Analysis not found."}, 404
+
+        if analysis.user_id != user_id:
+            return {
+                "error": "You do not have access to this analysis."
+            }, 403
+
+        if analysis.status in {"pending", "running"}:
+            return {
+                "error": (
+                    "Cannot delete an analysis while it is pending or running."
+                )
+            }, 409
+
+        try:
+            repository.delete(parsed_analysis_id)
+            repository.session.commit()
+        except Exception:
+            repository.session.rollback()
+            app.logger.exception("Failed to delete analysis")
+            return {"error": "Unable to delete analysis."}, 500
+
+        return {
+            "message": "Analysis deleted successfully.",
+            "analysis_id": str(parsed_analysis_id),
         }, 200
 
     @app.get("/api/analyses/<analysis_id>/report.pdf")
