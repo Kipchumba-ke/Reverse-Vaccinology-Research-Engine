@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getAnalysisHistory } from '../services/historyService'
+import { deleteAnalysis ,getAnalysisHistory } from '../services/historyService'
 
 function formatDate(value) {
   if (!value) return 'Date unavailable'
@@ -15,6 +15,9 @@ function AnalysisHistory() {
   const [analyses, setAnalyses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleteError, setDeleteError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -47,6 +50,43 @@ function AnalysisHistory() {
     }
   }, [])
 
+  async function handleDelete(analysis) {
+    const proteinName = analysis.protein_name || 'this analysis'
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${proteinName}"? This action cannot be undone.`,
+    )
+
+    if (!confirmed) return
+
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      setDeleteError('Please log in to delete an analysis.')
+      return
+    }
+
+    setDeletingId(analysis.analysis_id)
+    setDeleteError('')
+    setSuccessMessage('')
+
+    try {
+      await deleteAnalysis(analysis.analysis_id, token)
+
+      setAnalyses((current) =>
+        current.filter(
+          (item) => item.analysis_id !== analysis.analysis_id,
+        ),
+      )
+
+      setSuccessMessage(`${proteinName} was deleted successfully.`)
+    } catch (err) {
+      setDeleteError(err.message || 'Unable to delete analysis.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   if (loading) {
     return <main className="analysis-page"><p>Loading analysis history...</p></main>
   }
@@ -56,7 +96,9 @@ function AnalysisHistory() {
       <h1>Analysis History</h1>
       <p>Review your previously submitted protein analyses.</p>
 
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert" className="history-error">{error}</p>}
+      {deleteError && <p role="alert" className="history-error">{deleteError}</p>}
+      {successMessage && <p role="alert" className="history-success">{successMessage}</p>}
 
       {!error && analyses.length === 0 && (
         <p>You have no saved analyses yet.</p>
@@ -76,9 +118,23 @@ function AnalysisHistory() {
                 </p>
               </div>
 
-              <Link to={`/analyses/${analysis.analysis_id}`}>
-                View analysis
-              </Link>
+              <div className='view-delete'>
+                <Link to={`/analyses/${analysis.analysis_id}`}>
+                  View analysis
+                </Link>
+
+                <button
+                  type="button"
+                  className="delete-button"
+                  onClick={() => handleDelete(analysis)}
+                  disabled={deletingId === analysis.analysis_id}
+                  aria-label={`Delete ${analysis.protein_name || 'analysis'}`}
+                >
+                  {deletingId === analysis.analysis_id
+                    ? 'Deleting...'
+                    : 'Delete'}
+                </button>
+              </div>
             </article>
           ))}
         </div>

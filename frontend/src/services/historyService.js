@@ -19,3 +19,29 @@ export async function getAnalysisHistory(token) {
 
   return data.analyses
 }
+
+
+export async function deleteAnalysis(analysisId, token) {
+  const response = await fetch(
+    `/api/analyses/${encodeURIComponent(analysisId)}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  const data = await response.json()
+
+  if (response.status === 401) {
+    localStorage.removeItem('token')
+    throw new Error('Your session has expired. Please log in again.')
+  }
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Unable to delete analysis.')
+  }
+
+  return data
+}
