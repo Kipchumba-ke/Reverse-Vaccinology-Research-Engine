@@ -5,6 +5,7 @@ from app.analysis.blast import (
     parse_blast_tabular_hit,
     parse_blast_tabular_output,
     run_blast_analysis,
+    assess_blast_hit_confidence
 )
 from app.analysis.pipeline import analyze_protein
 from app.reporting.report import generate_protein_report
@@ -343,3 +344,62 @@ def test_run_blast_analysis_preserves_multiple_hits(monkeypatch):
     assert len(evidence) == 2
     assert evidence[0].host_id == "host_1"
     assert evidence[1].host_id == "host_2"
+
+
+@pytest.mark.parametrize(
+    ("hit", "expected"),
+    [
+        (
+            {
+                "identity_percentage": 75.0,
+                "alignment_length": 200,
+                "query_coverage_percentage": 90.0,
+                "subject_coverage_percentage": 85.0,
+                "e_value": 1e-50,
+            },
+            "high",
+        ),
+        (
+            {
+                "identity_percentage": 35.0,
+                "alignment_length": 120,
+                "query_coverage_percentage": 40.0,
+                "subject_coverage_percentage": 35.0,
+                "e_value": 1e-8,
+            },
+            "medium",
+        ),
+        (
+            {
+                "identity_percentage": 48.4,
+                "alignment_length": 31,
+                "query_coverage_percentage": 7.1,
+                "subject_coverage_percentage": 13.8,
+                "e_value": 9.5,
+            },
+            "low",
+        ),
+                (
+            {
+                "identity_percentage": 23.4,
+                "alignment_length": 411,
+                "query_coverage_percentage": 94.5,
+                "subject_coverage_percentage": 66.8,
+                "e_value": 0.000118,
+            },
+            "medium",
+        ),
+        (
+            {
+                "identity_percentage": 48.4,
+                "alignment_length": 31,
+                "query_coverage_percentage": 7.1,
+                "subject_coverage_percentage": 13.8,
+                "e_value": 9.5,
+            },
+            "low",
+        ),
+    ],
+)
+def test_assess_blast_hit_confidence(hit, expected):
+    assert assess_blast_hit_confidence(**hit) == expected

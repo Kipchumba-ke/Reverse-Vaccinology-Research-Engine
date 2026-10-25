@@ -1,0 +1,24 @@
+{
+  "version": "1.2",
+  "dbname": "mouse_proteome_db",
+  "dbtype": "Protein",
+  "db-version": 5,
+  "description": "Mus musculus reference proteome",
+  "number-of-letters": 23132845,
+  "number-of-sequences": 54855,
+  "last-updated": "2026-10-24T23:21:00",
+  "number-of-volumes": 1,
+  "bytes-total": 35877859,
+  "bytes-to-cache": 23626669,
+  "files": [
+    "mouse_proteome_db.pdb",
+    "mouse_proteome_db.phr",
+    "mouse_proteome_db.pin",
+    "mouse_proteome_db.pog",
+    "mouse_proteome_db.pos",
+    "mouse_proteome_db.pot",
+    "mouse_proteome_db.psq",
+    "mouse_proteome_db.ptf",
+    "mouse_proteome_db.pto"
+  ]
+}
