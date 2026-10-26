@@ -31,3 +31,9 @@ Thumbs.db
 
 # Alembic local configuration
 alembic.ini
+
+# Large ePath reference datasets and generated index
+data/reference/essentiality/a_Gene_sort.txt
+data/reference/essentiality/a_Gene_sort.rar
+data/reference/essentiality/epath.sqlite3
+data/reference/essentiality/epath.sqlite3-*
