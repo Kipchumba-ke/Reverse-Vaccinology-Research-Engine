@@ -8,6 +8,9 @@ from app.analysis.workflow import (
     analyze_fasta_records as run_fasta_workflow,
 )
 from app.integrations.essentiality import fetch_essentiality_evidence
+from app.integrations.epath_essentiality import (
+    fetch_epath_essentiality_evidence,
+)
 from app.integrations.ncbi import fetch_protein_record
 from app.integrations.uniprot import fetch_protein_annotation
 from app.models.analysis import Analysis
@@ -99,6 +102,39 @@ def fetch_localization_evidence(accession: str | None) -> list:
     return fetch_localization_result(accession)["evidence"]
 
 
+def _fetch_epath_evidence(
+    organism: str | None,
+    epath_gene_id: str | None = None,
+    epath_ko_id: str | None = None,
+) -> dict:
+    """Fetch ePath evidence only when an explicit ePath identifier is supplied.
+
+    Protein accessions and FASTA record IDs are deliberately not used as
+    ePath identifiers because they are not guaranteed to map to ePath genes.
+    """
+    if not epath_gene_id and not epath_ko_id:
+        return {
+            "evidence": [],
+            "status": "not_requested",
+            "message": (
+                "No explicit ePath gene or KO identifier was supplied."
+            ),
+        }
+
+    try:
+        return fetch_epath_essentiality_evidence(
+            organism=organism,
+            gene_id=epath_gene_id,
+            ko_id=epath_ko_id,
+        )
+    except (RuntimeError, ValueError) as exc:
+        return {
+            "evidence": [],
+            "status": "lookup_failed",
+            "message": str(exc),
+        }
+
+
 def _fetch_external_evidence(
     sequence: str,
     protein_id: str | None = None,
@@ -107,6 +143,8 @@ def _fetch_external_evidence(
     blast_database: str | None = None,
     essentiality_data_path: str | None = None,
     run_host_search: bool = True,
+    epath_gene_id: str | None = None,
+    epath_ko_id: str | None = None,
 ) -> dict:
     """Retrieve external evidence without running protein analysis."""
     essentiality_data_path = (
@@ -127,6 +165,12 @@ def _fetch_external_evidence(
             "status": "lookup_failed",
             "message": str(exc),
         }
+
+    epath_essentiality = _fetch_epath_evidence(
+        organism=organism,
+        epath_gene_id=epath_gene_id,
+        epath_ko_id=epath_ko_id,
+    )
 
     host_database = (
         blast_database or os.environ.get("HOST_BLAST_DATABASE")
@@ -194,6 +238,16 @@ def _fetch_external_evidence(
                 "Essentiality lookup status unavailable.",
             ),
         },
+        "epath_essentiality_evidence": epath_essentiality.get(
+            "evidence", []
+        ),
+        "epath_essentiality": {
+            "status": epath_essentiality.get("status", "unknown"),
+            "message": epath_essentiality.get(
+                "message",
+                "ePath essentiality lookup status unavailable.",
+            ),
+        },
         "host_similarity_evidence": host_evidence,
         "host_similarity": host_status,
     }
@@ -207,6 +261,8 @@ def _attach_external_evidence(
     blast_database: str | None = None,
     essentiality_data_path: str | None = None,
     run_host_search: bool = True,
+    epath_gene_id: str | None = None,
+    epath_ko_id: str | None = None,
 ) -> dict:
     """Attach available essentiality and host-similarity evidence."""
     essentiality_data_path = (
@@ -228,8 +284,17 @@ def _attach_external_evidence(
             "message": str(exc),
         }
 
+    epath_essentiality = _fetch_epath_evidence(
+        organism=organism,
+        epath_gene_id=epath_gene_id,
+        epath_ko_id=epath_ko_id,
+    )
+
     result.essentiality_evidence.extend(
         essentiality.get("evidence", [])
+    )
+    result.essentiality_evidence.extend(
+        epath_essentiality.get("evidence", [])
     )
 
     host_database = (
@@ -298,6 +363,13 @@ def _attach_external_evidence(
                 "Essentiality lookup status unavailable.",
             ),
         },
+        "epath_essentiality": {
+            "status": epath_essentiality.get("status", "unknown"),
+            "message": epath_essentiality.get(
+                "message",
+                "ePath essentiality lookup status unavailable.",
+            ),
+        },
         "host_similarity": host_status,
     }
 
@@ -321,6 +393,8 @@ def analyze_sequence(
     accession: str | None = None,
     blast_database: str | None = None,
     msa_sequences: list[str] | None = None,
+    epath_gene_id: str | None = None,
+    epath_ko_id: str | None = None,
 ):
     """Analyze one protein and attach available external evidence."""
     result = analyze_protein(
@@ -381,6 +455,8 @@ def analyze_sequence(
         organism=organism,
         blast_database=blast_database,
         run_host_search=not run_combined_integrations,
+        epath_gene_id=epath_gene_id,
+        epath_ko_id=epath_ko_id,
     )
 
     if run_combined_integrations and integrations:
@@ -510,6 +586,8 @@ def create_analysis(
     protein_name: str | None = None,
     organism: str | None = None,
     accession: str | None = None,
+    epath_gene_id: str | None = None,
+    epath_ko_id: str | None = None,
 ):
     """Validate input and create an analysis model."""
     cleaned_sequence = validate_protein_sequence(sequence)
@@ -520,6 +598,8 @@ def create_analysis(
         organism=organism,
         accession=accession,
         sequence=cleaned_sequence,
+        epath_gene_id=epath_gene_id,
+        epath_ko_id=epath_ko_id,
     )
 
 
@@ -531,6 +611,8 @@ def run_analysis(
     organism: str | None = None,
     accession: str | None = None,
     msa_sequences: list[str] | None = None,
+    epath_gene_id: str | None = None,
+    epath_ko_id: str | None = None,
 ):
     """Create, persist, and execute an analysis."""
     analysis = create_analysis(
@@ -539,6 +621,8 @@ def run_analysis(
         protein_name=protein_name,
         organism=organism,
         accession=accession,
+        epath_gene_id=epath_gene_id,
+        epath_ko_id=epath_ko_id,
     )
 
     persist_analysis(analysis, repository)
@@ -550,4 +634,6 @@ def run_analysis(
         organism=analysis.organism,
         accession=analysis.accession,
         msa_sequences=msa_sequences,
+        epath_gene_id=analysis.epath_gene_id,
+        epath_ko_id=analysis.epath_ko_id,
     )

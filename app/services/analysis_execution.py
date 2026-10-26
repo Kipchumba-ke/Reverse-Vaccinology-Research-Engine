@@ -23,6 +23,8 @@ def execute_analysis(analysis, repository=None):
                 protein_name=analysis.protein_name,
                 organism=analysis.organism,
                 accession=analysis.accession,
+                epath_gene_id=analysis.epath_gene_id,
+                epath_ko_id=analysis.epath_ko_id,
             )
     except Exception:
         analysis.status = "failed"

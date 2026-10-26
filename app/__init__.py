@@ -103,6 +103,8 @@ def create_app(repository=None, queue=None):
                 organism=data.get("organism"),
                 accession=data.get("accession"),
                 msa_sequences=data.get("msa_sequences"),
+                epath_gene_id=data.get("epath_gene_id"),
+                epath_ko_id=data.get("epath_ko_id"),
             )
 
             repository.session.commit()
@@ -262,6 +264,8 @@ def create_app(repository=None, queue=None):
                 protein_name=data.get("protein_name"),
                 organism=data.get("organism"),
                 accession=data.get("accession"),
+                epath_gene_id=data.get("epath_gene_id"),
+                epath_ko_id=data.get("epath_ko_id"),
             )
 
             repository.session.commit()

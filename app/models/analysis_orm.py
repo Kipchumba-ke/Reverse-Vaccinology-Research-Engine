@@ -36,6 +36,8 @@ class AnalysisModel(Base):
         nullable=False,
         server_default=func.now(),
     )
+    epath_gene_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    epath_ko_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     def __init__(self, **kwargs):
         kwargs.setdefault("id", uuid.uuid4())
         kwargs.setdefault("status", "pending")

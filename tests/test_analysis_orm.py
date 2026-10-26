@@ -29,6 +29,8 @@ def test_analysis_model_has_expected_columns():
         "user_id",
         "report",
         "created_at",
+        "epath_gene_id",
+        "epath_ko_id",
     }
 
 def test_analysis_model_requires_sequence_and_status():

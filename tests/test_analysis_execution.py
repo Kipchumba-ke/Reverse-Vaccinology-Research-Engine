@@ -686,3 +686,55 @@ def test_execution_processes_persisted_fasta_content(
     assert saved_result.status == "completed"
     assert saved_result.report == result
 
+def test_execution_passes_persisted_epath_identifiers_to_analysis(
+    db_session, monkeypatch
+):
+    repository = AnalysisRepository(db_session)
+
+    analysis = Analysis(
+        organism="Escherichia coli K-12 MG1655",
+        sequence="MKT",
+        epath_gene_id="b3945",
+        epath_ko_id="K00005",
+    )
+
+    repository.save(analysis)
+    db_session.commit()
+
+    persisted = repository.find_by_id(analysis.id)
+
+    assert persisted is not None
+    assert persisted.epath_gene_id == "b3945"
+    assert persisted.epath_ko_id == "K00005"
+
+    captured = {}
+    expected_report = {
+        "protein_id": "test-protein",
+        "essentiality_evidence": [],
+    }
+
+    def fake_analyze_sequence(sequence, **kwargs):
+        captured["sequence"] = sequence
+        captured["kwargs"] = kwargs
+        return expected_report
+
+    monkeypatch.setattr(
+        "app.services.analysis_execution.analyze_sequence",
+        fake_analyze_sequence,
+    )
+
+    result = execute_analysis(persisted, repository)
+    db_session.commit()
+
+    assert result == expected_report
+    assert captured["sequence"] == "MKT"
+    assert captured["kwargs"]["epath_gene_id"] == "b3945"
+    assert captured["kwargs"]["epath_ko_id"] == "K00005"
+    assert captured["kwargs"]["organism"] == "Escherichia coli K-12 MG1655"
+
+    saved_result = repository.find_by_id(analysis.id)
+
+    assert saved_result.status == "completed"
+    assert saved_result.report == expected_report
+    assert saved_result.epath_gene_id == "b3945"
+    assert saved_result.epath_ko_id == "K00005"

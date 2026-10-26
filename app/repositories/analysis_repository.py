@@ -20,6 +20,8 @@ class AnalysisRepository:
             status=analysis.status,
             report=analysis.report,
             created_at=analysis.created_at,
+            epath_gene_id=analysis.epath_gene_id,
+            epath_ko_id=analysis.epath_ko_id,
 
         )
 
@@ -36,6 +38,8 @@ class AnalysisRepository:
             status=model.status,
             report=model.report,
             created_at=model.created_at,
+            epath_gene_id=model.epath_gene_id,
+            epath_ko_id=model.epath_ko_id,
         )
 
     def save(self, analysis: Analysis) -> Analysis:
@@ -75,6 +79,8 @@ class AnalysisRepository:
         model.sequence = analysis.sequence
         model.status = analysis.status
         model.report = analysis.report
+        model.epath_gene_id = analysis.epath_gene_id
+        model.epath_ko_id = analysis.epath_ko_id
 
         self.session.flush()
 

@@ -14,6 +14,8 @@ class AnalysisSubmissionService:
         organism=None,
         accession=None,
         user_id=None,
+        epath_gene_id=None,
+        epath_ko_id=None,
     ):
         analysis = Analysis(
             user_id=user_id,
@@ -22,6 +24,8 @@ class AnalysisSubmissionService:
             organism=organism,
             accession=accession,
             sequence=sequence,
+            epath_gene_id=epath_gene_id,
+            epath_ko_id=epath_ko_id,
         )
 
         self.repository.save(analysis)

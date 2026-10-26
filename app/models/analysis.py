@@ -15,3 +15,5 @@ class Analysis:
     status: str = "pending"
     report: dict | None = None
     created_at: datetime | None = None
+    epath_gene_id: str | None = None
+    epath_ko_id: str | None = None
