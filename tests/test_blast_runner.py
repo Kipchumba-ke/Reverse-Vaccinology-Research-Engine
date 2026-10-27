@@ -6,6 +6,9 @@ from app.analysis.blast import parse_blast_tabular_hit
 
 
 def test_run_blastp_requires_blastp_executable(monkeypatch):
+
+    monkeypatch.delenv("BLASTP_EXECUTABLE", raising=False)
+
     monkeypatch.setattr(
         "app.analysis.blast_runner.shutil.which",
         lambda executable: None,
@@ -22,6 +25,9 @@ def test_run_blastp_requires_blastp_executable(monkeypatch):
 
 
 def test_run_blastp_returns_tabular_output(monkeypatch):
+
+    monkeypatch.delenv("BLASTP_EXECUTABLE", raising=False)
+
     class CompletedProcess:
         stdout = (
             "pathogen_protein_1\thuman_protein_123\t18.5\t142\t"
@@ -54,6 +60,9 @@ def test_run_blastp_returns_tabular_output(monkeypatch):
 
 
 def test_run_blastp_reports_execution_failure(monkeypatch):
+
+    monkeypatch.delenv("BLASTP_EXECUTABLE", raising=False)
+
     monkeypatch.setattr(
         "app.analysis.blast_runner.shutil.which",
         lambda executable: "/usr/bin/blastp",
@@ -78,6 +87,9 @@ def test_run_blastp_reports_execution_failure(monkeypatch):
 
 
 def test_run_blastp_allows_empty_output(monkeypatch):
+
+    monkeypatch.delenv("BLASTP_EXECUTABLE", raising=False)
+
     class CompletedProcess:
         stdout = ""
 
@@ -101,6 +113,9 @@ def test_run_blastp_allows_empty_output(monkeypatch):
 
 
 def test_blast_runner_output_can_be_parsed_into_evidence(monkeypatch):
+
+    monkeypatch.delenv("BLASTP_EXECUTABLE", raising=False)
+    
     class CompletedProcess:
         stdout = (
             "pathogen_1\thuman_123\t18.5\t142\t180\t190\t0.42\n"
@@ -148,6 +163,7 @@ def test_run_blastp_requires_database(monkeypatch):
 
 
 def test_run_blastp_includes_blast_error_message(monkeypatch):
+    monkeypatch.delenv("BLASTP_EXECUTABLE", raising=False)
     monkeypatch.setattr(
         "app.analysis.blast_runner.shutil.which",
         lambda executable: "/usr/bin/blastp",
@@ -173,3 +189,33 @@ def test_run_blastp_includes_blast_error_message(monkeypatch):
             "MKTIIALSYIFCLVFAD",
             database="/path/to/host_database",
         )
+
+def test_run_blastp_uses_configured_executable(monkeypatch):
+    class CompletedProcess:
+        stdout = "pathogen_1\thost_123\t85.0\t100\t100\t110\t1e-20\n"
+
+    monkeypatch.setenv(
+        "BLASTP_EXECUTABLE",
+        "/custom/bin/blastp",
+    )
+
+    monkeypatch.setattr(
+        "app.analysis.blast_runner.shutil.which",
+        lambda executable: None,
+    )
+
+    def fake_run(*args, **kwargs):
+        assert args[0][0] == "/custom/bin/blastp"
+        return CompletedProcess()
+
+    monkeypatch.setattr(
+        "app.analysis.blast_runner.subprocess.run",
+        fake_run,
+    )
+
+    output = run_blastp(
+        "MKTIIALSYIFCLVFAD",
+        database="/path/to/host_database",
+    )
+
+    assert output == CompletedProcess.stdout

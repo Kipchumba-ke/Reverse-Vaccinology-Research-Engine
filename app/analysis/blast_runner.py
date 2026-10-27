@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 
@@ -8,7 +9,7 @@ def run_blastp(sequence: str, database: str):
             "BLAST database is required."
         )
 
-    blastp = shutil.which("blastp")
+    blastp = os.environ.get("BLASTP_EXECUTABLE") or shutil.which("blastp")
 
     if blastp is None:
         raise RuntimeError(
