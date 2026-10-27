@@ -81,7 +81,10 @@ def create_app(repository=None, queue=None):
                 fasta_text = uploaded_file.read().decode("utf-8")
                 records = parse_fasta_records(fasta_text)
 
-                result = analyze_fasta_records(records)
+                result = analyze_fasta_records(
+                    records,
+                    host_reference=request.form.get("host_reference"),
+                )
 
                 return result, 200
 
@@ -105,6 +108,7 @@ def create_app(repository=None, queue=None):
                 msa_sequences=data.get("msa_sequences"),
                 epath_gene_id=data.get("epath_gene_id"),
                 epath_ko_id=data.get("epath_ko_id"),
+                host_reference=data.get("host_reference"),
             )
 
             repository.session.commit()
@@ -266,6 +270,7 @@ def create_app(repository=None, queue=None):
                 accession=data.get("accession"),
                 epath_gene_id=data.get("epath_gene_id"),
                 epath_ko_id=data.get("epath_ko_id"),
+                host_reference=data.get("host_reference"),
             )
 
             repository.session.commit()
@@ -317,6 +322,7 @@ def create_app(repository=None, queue=None):
         return {
             "analysis_id": str(analysis.id),
             "status": analysis.status,
+            "host_reference": analysis.host_reference,
             "report": analysis.report,
         }, 200
 

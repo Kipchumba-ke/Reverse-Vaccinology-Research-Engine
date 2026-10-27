@@ -22,6 +22,7 @@ class AnalysisRepository:
             created_at=analysis.created_at,
             epath_gene_id=analysis.epath_gene_id,
             epath_ko_id=analysis.epath_ko_id,
+            host_reference=analysis.host_reference,
 
         )
 
@@ -40,6 +41,7 @@ class AnalysisRepository:
             created_at=model.created_at,
             epath_gene_id=model.epath_gene_id,
             epath_ko_id=model.epath_ko_id,
+            host_reference=model.host_reference,
         )
 
     def save(self, analysis: Analysis) -> Analysis:
@@ -81,6 +83,7 @@ class AnalysisRepository:
         model.report = analysis.report
         model.epath_gene_id = analysis.epath_gene_id
         model.epath_ko_id = analysis.epath_ko_id
+        model.host_reference = analysis.host_reference
 
         self.session.flush()
 

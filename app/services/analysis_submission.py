@@ -16,6 +16,7 @@ class AnalysisSubmissionService:
         user_id=None,
         epath_gene_id=None,
         epath_ko_id=None,
+        host_reference=None,
     ):
         analysis = Analysis(
             user_id=user_id,
@@ -26,6 +27,7 @@ class AnalysisSubmissionService:
             sequence=sequence,
             epath_gene_id=epath_gene_id,
             epath_ko_id=epath_ko_id,
+            host_reference=host_reference,
         )
 
         self.repository.save(analysis)

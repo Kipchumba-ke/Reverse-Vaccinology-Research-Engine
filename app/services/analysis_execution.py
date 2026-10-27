@@ -15,7 +15,23 @@ def execute_analysis(analysis, repository=None):
     try:
         if analysis.sequence.lstrip().startswith(">"):
             records = parse_fasta_records(analysis.sequence)
-            result = analyze_fasta_records(records)
+
+            if len(records) == 1:
+                result = analyze_fasta_records(
+                    records,
+                    epath_gene_id=analysis.epath_gene_id,
+                    epath_ko_id=analysis.epath_ko_id,
+                    organism=analysis.organism,
+                    host_reference=analysis.host_reference,
+                )
+            else:
+                result = analyze_fasta_records(
+                    records,
+                    epath_gene_id=analysis.epath_gene_id,
+                    epath_ko_id=analysis.epath_ko_id,
+                    organism=analysis.organism,
+                    host_reference=analysis.host_reference,
+                )
         else:
             result = analyze_sequence(
                 analysis.sequence,
@@ -25,7 +41,9 @@ def execute_analysis(analysis, repository=None):
                 accession=analysis.accession,
                 epath_gene_id=analysis.epath_gene_id,
                 epath_ko_id=analysis.epath_ko_id,
+                host_reference=analysis.host_reference,
             )
+
     except Exception:
         analysis.status = "failed"
 

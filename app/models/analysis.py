@@ -17,3 +17,4 @@ class Analysis:
     created_at: datetime | None = None
     epath_gene_id: str | None = None
     epath_ko_id: str | None = None
+    host_reference: str | None = None

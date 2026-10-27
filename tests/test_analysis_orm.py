@@ -31,6 +31,7 @@ def test_analysis_model_has_expected_columns():
         "created_at",
         "epath_gene_id",
         "epath_ko_id",
+        "host_reference",
     }
 
 def test_analysis_model_requires_sequence_and_status():

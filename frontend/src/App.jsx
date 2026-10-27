@@ -157,6 +157,10 @@ function AnalysisWorkspace() {
   const [status, setStatus] = useState('')
   const [report, setReport] = useState(null)
   const [fastaFile, setFastaFile] = useState(null)
+  const [organism, setOrganism] = useState('')
+  const [epathGeneId, setEpathGeneId] = useState('')
+  const [epathKoId, setEpathKoId] = useState('')
+  const [hostReference, setHostReference] = useState('none')
 
 
   useEffect(() => {
@@ -215,6 +219,13 @@ function AnalysisWorkspace() {
 
       let result
 
+      const metadata = {
+        organism: organism.trim(),
+        epath_gene_id: epathGeneId.trim(),
+        epath_ko_id: epathKoId.trim(),
+        host_reference: hostReference,
+      }
+
       if (fastaFile) {
         if (!/\.(fasta|fa|fna)$/i.test(fastaFile.name)) {
           setError('Please select a .fasta, .fa, or .fna file.')
@@ -228,14 +239,14 @@ function AnalysisWorkspace() {
           return
         }
 
-        result = await submitFastaAnalysis(fastaContent, token)
+        result = await submitFastaAnalysis(fastaContent, token, metadata)
       } else {
         if (!sequence.trim()) {
           setError('Enter a protein sequence or select a FASTA file.')
           return
         }
 
-        result = await submitAnalysis(sequence, token)
+        result = await submitAnalysis(sequence, token, metadata)
       }
 
       if (!result.analysis_id) {
@@ -286,6 +297,64 @@ function AnalysisWorkspace() {
           value={sequence}
           onChange={(event) => setSequence(event.target.value)}
         />
+
+        <section className="analysis-metadata-fields" aria-labelledby="metadata-heading">
+          <h2 id="metadata-heading">Reference Metadata</h2>
+
+          <p className="input-help">
+            These fields are optional. Provide identifiers only when you know they
+            correspond to the selected organism and the ePath reference data.
+          </p>
+
+          <label htmlFor="organism">Organism</label>
+          <input
+            id="organism"
+            name="organism"
+            type="text"
+            value={organism}
+            onChange={(event) => setOrganism(event.target.value)}
+            placeholder="e.g. Escherichia coli K-12 MG1655"
+          />
+
+          <label htmlFor="host-reference">Host Similarity Reference</label>
+          <select
+            id="host-reference"
+            name="host_reference"
+            value={hostReference}
+            onChange={(event) => setHostReference(event.target.value)}
+            aria-describedby="host-reference-help"
+          >
+            <option value="none">None (skip host similarity search)</option>
+            <option value="human">Human</option>
+            <option value="mouse">Mouse</option>
+            <option value="pig">Pig</option>
+          </select>
+
+          <p className="input-help" id="host-reference-help">
+            Select the host proteome to use for similarity analysis.
+            Choose None to skip host similarity searching.
+          </p>
+
+          <label htmlFor="epath-gene-id">ePath Gene ID</label>
+          <input
+            id="epath-gene-id"
+            name="epath-gene-id"
+            type="text"
+            value={epathGeneId}
+            onChange={(event) => setEpathGeneId(event.target.value)}
+            placeholder="Optional gene identifier"
+          />
+
+          <label htmlFor="epath-ko-id">ePath KO ID</label>
+          <input
+            id="epath-ko-id"
+            name="epath-ko-id"
+            type="text"
+            value={epathKoId}
+            onChange={(event) => setEpathKoId(event.target.value)}
+            placeholder="Optional KO identifier"
+          />
+        </section>
 
         <label htmlFor="fasta-file">Upload FASTA File</label>
         <p className="input-help" id="fasta-file-help">

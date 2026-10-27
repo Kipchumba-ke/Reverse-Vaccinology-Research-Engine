@@ -1,6 +1,8 @@
 import os
 import re
 
+from pathlib import Path
+
 from app.analysis.blast import run_blast_analysis
 from app.analysis.conservation import find_conserved_regions
 from app.analysis.pipeline import analyze_protein
@@ -22,6 +24,58 @@ from app.services.integration_service import (
 from app.utils.validation import validate_protein_sequence
 from app.models.host_similarity import HostSimilarityEvidence
 
+
+def _resolve_host_reference(
+    host_reference: str | None,
+    blast_database: str | None = None,
+) -> tuple[str | None, bool]:
+    """Resolve the selected host reference to a BLAST database.
+
+    Returns:
+        (database_path, should_run_search)
+    """
+    if host_reference is None:
+        # Preserve compatibility with existing callers.
+        database = blast_database or os.environ.get(
+            "HOST_BLAST_DATABASE"
+        )
+        return database, True
+
+    reference = host_reference.strip().lower()
+
+    if reference == "none":
+        return None, False
+
+    if reference not in {"human", "mouse", "pig"}:
+        raise ValueError(
+            "host_reference must be human, mouse, pig, or none."
+        )
+
+    environment_variable = {
+        "human": "HOST_BLAST_DATABASE_HUMAN",
+        "mouse": "HOST_BLAST_DATABASE_MOUSE",
+        "pig": "HOST_BLAST_DATABASE_PIG",
+    }[reference]
+
+    database = os.environ.get(environment_variable)
+
+    if database:
+        return database, True
+
+    if reference == "mouse":
+        project_root = Path(__file__).resolve().parents[2]
+        mouse_database = (
+            project_root
+            / "data"
+            / "reference"
+            / "mouse"
+            / "mouse_proteome_db"
+        )
+
+        if Path(f"{mouse_database}.pin").is_file():
+            return str(mouse_database), True
+
+    return None, True
 
 def _is_ncbi_accession(accession: str) -> bool:
     """Recognize common NCBI/RefSeq protein accession formats."""
@@ -145,6 +199,7 @@ def _fetch_external_evidence(
     run_host_search: bool = True,
     epath_gene_id: str | None = None,
     epath_ko_id: str | None = None,
+    host_reference: str | None = None,
 ) -> dict:
     """Retrieve external evidence without running protein analysis."""
     essentiality_data_path = (
@@ -172,23 +227,38 @@ def _fetch_external_evidence(
         epath_ko_id=epath_ko_id,
     )
 
-    host_database = (
-        blast_database or os.environ.get("HOST_BLAST_DATABASE")
+    host_database, should_run_host_search = _resolve_host_reference(
+        host_reference=host_reference,
+        blast_database=blast_database,
     )
 
-    if not run_host_search:
+    should_run_host_search = should_run_host_search and run_host_search
+
+    if not should_run_host_search:
         host_status = {
             "status": "not_attempted",
+            "host_reference": host_reference,
             "message": (
-                "Host-similarity evidence was supplied by another "
-                "integration path or the search was skipped."
+                "Host-similarity search was explicitly disabled."
+                if host_reference is not None
+                and host_reference.strip().lower() == "none"
+                else (
+                    "Host-similarity evidence was supplied by another "
+                    "integration path or the search was skipped."
+                )
             ),
         }
         host_evidence = []
     elif not host_database:
         host_status = {
             "status": "not_configured",
-            "message": "No host-proteome BLAST database configured.",
+            "host_reference": host_reference,
+            "message": (
+                f"No BLAST database is configured for host reference "
+                f"'{host_reference}'."
+                if host_reference is not None
+                else "No host-proteome BLAST database configured."
+            ),
         }
         host_evidence = []
     else:
@@ -211,6 +281,7 @@ def _fetch_external_evidence(
                         "host-proteome match(es). Review identity, "
                         "coverage, and E-value."
                     ),
+                    "host_reference": host_reference,
                 }
                 if host_evidence
                 else {
@@ -220,6 +291,7 @@ def _fetch_external_evidence(
                         "configured BLAST search settings. This does not "
                         "prove host similarity is absent."
                     ),
+                    "host_reference": host_reference,
                 }
             )
         except (RuntimeError, ValueError) as exc:
@@ -227,6 +299,7 @@ def _fetch_external_evidence(
             host_status = {
                 "status": "lookup_failed",
                 "message": str(exc),
+                "host_reference": host_reference,
             }
 
     return {
@@ -263,6 +336,7 @@ def _attach_external_evidence(
     run_host_search: bool = True,
     epath_gene_id: str | None = None,
     epath_ko_id: str | None = None,
+    host_reference: str | None = None,
 ) -> dict:
     """Attach available essentiality and host-similarity evidence."""
     essentiality_data_path = (
@@ -297,25 +371,40 @@ def _attach_external_evidence(
         epath_essentiality.get("evidence", [])
     )
 
-    host_database = (
-        blast_database or os.environ.get("HOST_BLAST_DATABASE")
+    host_database, should_run_host_search = _resolve_host_reference(
+        host_reference=host_reference,
+        blast_database=blast_database,
     )
 
-    if not run_host_search:
+    should_run_host_search = should_run_host_search and run_host_search
+
+    if not should_run_host_search:
         host_status = {
             "status": "not_attempted",
+            "host_reference": host_reference,
             "message": (
-                "Host-similarity evidence was supplied by another "
-                "integration path or the search was skipped."
+                "Host-similarity search was explicitly disabled."
+                if host_reference is not None
+                and host_reference.strip().lower() == "none"
+                else (
+                    "Host-similarity evidence was supplied by another "
+                    "integration path or the search was skipped."
+                )
             ),
         }
+        host_evidence = []
     elif not host_database:
         host_status = {
             "status": "not_configured",
+            "host_reference": host_reference,
             "message": (
-                "No host-proteome BLAST database configured."
+                f"No BLAST database is configured for host reference "
+                f"'{host_reference}'."
+                if host_reference is not None
+                else "No host-proteome BLAST database configured."
             ),
         }
+        host_evidence = []
     else:
         try:
             host_evidence = run_blast_analysis(
@@ -338,6 +427,7 @@ def _attach_external_evidence(
                         "host-proteome match(es). Review identity, "
                         "coverage, and E-value."
                     ),
+                    "host_reference": host_reference,
                 }
             else:
                 host_status = {
@@ -347,12 +437,14 @@ def _attach_external_evidence(
                         "configured BLAST search settings. This does not "
                         "prove host similarity is absent."
                     ),
+                    "host_reference": host_reference,
                 }
 
         except (RuntimeError, ValueError) as exc:
             host_status = {
                 "status": "lookup_failed",
                 "message": str(exc),
+                "host_reference": host_reference,
             }
 
     return {
@@ -395,6 +487,7 @@ def analyze_sequence(
     msa_sequences: list[str] | None = None,
     epath_gene_id: str | None = None,
     epath_ko_id: str | None = None,
+    host_reference: str | None = None,
 ):
     """Analyze one protein and attach available external evidence."""
     result = analyze_protein(
@@ -418,8 +511,19 @@ def analyze_sequence(
     # When run_integrations is enabled, reuse its BLAST output rather
     # than performing a second host-similarity search.
     integrations = None
+
+    host_database, should_run_host_search = _resolve_host_reference(
+        host_reference=host_reference,
+        blast_database=blast_database,
+    )
+
+    host_search_disabled = not should_run_host_search
+
     run_combined_integrations = bool(
-        accession and blast_database and msa_sequences
+        not host_search_disabled
+        and host_database
+        and accession
+        and msa_sequences
     )
 
     if run_combined_integrations:
@@ -427,7 +531,7 @@ def analyze_sequence(
             integrations = run_integrations(
                 sequence=sequence,
                 accession=accession,
-                blast_database=blast_database,
+                blast_database=host_database,
                 msa_sequences=msa_sequences,
             )
 
@@ -457,6 +561,7 @@ def analyze_sequence(
         run_host_search=not run_combined_integrations,
         epath_gene_id=epath_gene_id,
         epath_ko_id=epath_ko_id,
+        host_reference=host_reference,
     )
 
     if run_combined_integrations and integrations:
@@ -486,7 +591,13 @@ def analyze_sequence(
     return report
 
 
-def analyze_fasta_records(records: list[dict]):
+def analyze_fasta_records(
+    records: list[dict],
+    epath_gene_id: str | None = None,
+    epath_ko_id: str | None = None,
+    organism: str | None = None,
+    host_reference: str | None = None,
+):
     """Analyze FASTA records and attach evidence to each protein."""
     if len(records) == 1:
         record = records[0]
@@ -494,8 +605,11 @@ def analyze_fasta_records(records: list[dict]):
             record["sequence"],
             protein_id=record.get("id"),
             protein_name=record.get("description"),
-            organism=record.get("organism"),
+            organism=organism or record.get("organism"),
             accession=record.get("accession"),
+            epath_gene_id=epath_gene_id,
+            epath_ko_id=epath_ko_id,
+            host_reference=host_reference,
         )
 
     localization_evidence = {}
@@ -521,6 +635,9 @@ def analyze_fasta_records(records: list[dict]):
             protein_id=record_id,
             accession=accession,
             organism=organism,
+            epath_gene_id=epath_gene_id,
+            epath_ko_id=epath_ko_id,
+            host_reference=host_reference,
         )
 
         essentiality_evidence[record_id] = (
@@ -531,6 +648,13 @@ def analyze_fasta_records(records: list[dict]):
         )
         external_status[record_id] = {
             "essentiality": external["essentiality"],
+            "epath_essentiality": external.get(
+                "epath_essentiality",
+                {
+                    "status": "unknown",
+                    "message": "ePath essentiality lookup status unavailable.",
+                },
+            ),
             "host_similarity": external["host_similarity"],
         }
 
@@ -588,6 +712,7 @@ def create_analysis(
     accession: str | None = None,
     epath_gene_id: str | None = None,
     epath_ko_id: str | None = None,
+    host_reference: str | None = None
 ):
     """Validate input and create an analysis model."""
     cleaned_sequence = validate_protein_sequence(sequence)
@@ -600,6 +725,7 @@ def create_analysis(
         sequence=cleaned_sequence,
         epath_gene_id=epath_gene_id,
         epath_ko_id=epath_ko_id,
+        host_reference=host_reference,
     )
 
 
@@ -613,6 +739,7 @@ def run_analysis(
     msa_sequences: list[str] | None = None,
     epath_gene_id: str | None = None,
     epath_ko_id: str | None = None,
+    host_reference: str | None = None
 ):
     """Create, persist, and execute an analysis."""
     analysis = create_analysis(
@@ -623,6 +750,7 @@ def run_analysis(
         accession=accession,
         epath_gene_id=epath_gene_id,
         epath_ko_id=epath_ko_id,
+        host_reference=host_reference,
     )
 
     persist_analysis(analysis, repository)
@@ -636,4 +764,5 @@ def run_analysis(
         msa_sequences=msa_sequences,
         epath_gene_id=analysis.epath_gene_id,
         epath_ko_id=analysis.epath_ko_id,
+        host_reference=analysis.host_reference,
     )

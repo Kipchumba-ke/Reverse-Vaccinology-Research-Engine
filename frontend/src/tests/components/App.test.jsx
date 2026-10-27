@@ -152,7 +152,13 @@ describe('App', () => {
 
     expect(submitAnalysis).toHaveBeenCalledWith(
       'MKTIIALSYIFCLVFADYKDDDDK',
-      'test_token'
+      'test_token',
+      {
+        organism: '',
+        epath_gene_id: '',
+        epath_ko_id: '',
+        host_reference: 'none',
+      },
     )
   })
 
@@ -179,6 +185,12 @@ describe('App', () => {
     expect(submitAnalysis).toHaveBeenCalledWith(
       'MKTIIALSYIFCLVFADYKDDDDK',
       'test_token',
+      {
+        organism: '',
+        epath_gene_id: '',
+        epath_ko_id: '',
+        host_reference: 'none',
+      },
     )
   })
 
@@ -524,6 +536,12 @@ it('submits selected FASTA file contents through the analysis service', async ()
     expect(submitFastaAnalysis).toHaveBeenCalledWith(
       fastaContent,
       'test_token',
+      {
+        organism: '',
+        epath_gene_id: '',
+        epath_ko_id: '',
+        host_reference: 'none',
+      },
     )
   })
 })
@@ -611,7 +629,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     renderApp()
 
     fireEvent.change(
-      screen.getByRole('textbox'),
+      screen.getByRole('textbox', { name: /protein sequence/i }),
       { target: { value: 'MKTLLILAV' } },
     )
 
@@ -1151,6 +1169,47 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     ).toBeInTheDocument()
   })
 
+  it('displays ePath essentiality lookup status from the analysis report', async () => {
+    getAnalysisStatus.mockResolvedValueOnce({
+      analysis_id: '123',
+      status: 'completed',
+      report: {
+        evidence: {},
+        evidence_status: {
+          epath_essentiality: {
+            status: 'unclassified',
+            message:
+              'The matching record does not establish essentiality.',
+          },
+        },
+      },
+    });
+
+    renderApp();
+
+    fireEvent.change(screen.getByLabelText(/protein sequence/i), {
+      target: { value: 'MKTLLILAV' },
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /analyze protein/i }),
+    );
+
+    expect(
+      await screen.findByRole('heading', {
+        name: /epath essentiality lookup/i,
+      }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByText('unclassified')).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        'The matching record does not establish essentiality.',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('displays host similarity evidence from the analysis report', async () => {
     submitAnalysis.mockResolvedValueOnce({
       analysis_id: '123',
@@ -1476,7 +1535,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     renderApp()
 
     fireEvent.change(
-      screen.getByRole('textbox'),
+      screen.getByRole('textbox', { name: /protein sequence/i }),
       { target: { value: 'MKTLLILAV' } },
     )
 
@@ -1577,7 +1636,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     renderApp()
 
     fireEvent.change(
-      screen.getByRole('textbox'),
+      screen.getByRole('textbox', { name: /protein sequence/i }),
       { target: { value: 'MKTLLILAV' } },
     )
 
@@ -1684,7 +1743,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     renderApp()
 
     fireEvent.change(
-      screen.getByRole('textbox'),
+      screen.getByRole('textbox', { name: /protein sequence/i }),
       { target: { value: 'MKTLLILAV' } },
     )
 
@@ -1743,7 +1802,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     renderApp()
 
     fireEvent.change(
-      screen.getByRole('textbox'),
+      screen.getByRole('textbox', { name: /protein sequence/i }),
       { target: { value: 'MKTLLILAV' } },
     )
 

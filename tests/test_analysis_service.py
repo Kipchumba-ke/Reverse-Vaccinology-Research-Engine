@@ -366,6 +366,102 @@ def test_analyze_fasta_records_attaches_localization_to_correct_protein(
     assert second[0]["location"] == "Cytoplasm"
     assert "ECO:0000256" in second[0]["description"]
 
+def test_analyze_fasta_records_preserves_epath_status_per_protein(
+    monkeypatch,
+):
+    records = [
+        {
+            "id": "protein_1",
+            "description": "Protein one",
+            "accession": "P12345",
+            "sequence": "MKTAYIAKQRQISFVKSHFSRQ",
+        },
+        {
+            "id": "protein_2",
+            "description": "Protein two",
+            "accession": "P67890",
+            "sequence": "MKTAYIAKQRQISFVKSHFSRQ",
+        },
+    ]
+
+    statuses = {
+        "protein_1": {
+            "status": "available",
+            "message": "Experimental essentiality evidence is available.",
+        },
+        "protein_2": {
+            "status": "unclassified",
+            "message": "The matching record does not establish essentiality.",
+        },
+    }
+
+    def mock_fetch_external_evidence(
+        sequence,
+        protein_id=None,
+        accession=None,
+        organism=None,
+        epath_gene_id=None,
+        epath_ko_id=None,
+        host_reference=None,
+    ):
+        # Return the expected ePath status for this specific protein.
+        status = statuses[protein_id]
+
+        return {
+            "essentiality": {
+                "status": "not_requested",
+                "message": "Essentiality lookup was not requested.",
+            },
+            "essentiality_evidence": [],
+            "epath_essentiality": status,
+            "epath_essentiality_evidence": [],
+            "host_similarity": {
+                "status": "not_requested",
+                "message": "Host similarity lookup was not requested.",
+            },
+            "host_similarity_evidence": [],
+        }
+
+
+    monkeypatch.setattr(
+        "app.services.analysis_service._fetch_external_evidence",
+        mock_fetch_external_evidence,
+    )
+
+    monkeypatch.setattr(
+        "app.services.analysis_service.fetch_protein_annotation",
+        lambda accession: {
+            "accession": accession,
+            "protein_name": accession,
+            "localization_annotations": [],
+        },
+    )
+
+    result = analyze_fasta_records(records)
+
+    protein_reports = {
+        report["protein"]["id"]: report
+        for report in result["protein_analyses"]
+    }
+
+    first_status = protein_reports["protein_1"]["evidence_status"][
+        "epath_essentiality"
+    ]
+    second_status = protein_reports["protein_2"]["evidence_status"][
+        "epath_essentiality"
+    ]
+
+    assert first_status["status"] == "available"
+    assert (
+        first_status["message"]
+        == "Experimental essentiality evidence is available."
+    )
+
+    assert second_status["status"] == "unclassified"
+    assert (
+        second_status["message"]
+        == "The matching record does not establish essentiality."
+    )
 
 def test_analyze_sequence_enriches_missing_protein_name(monkeypatch):
     annotation = {

@@ -1,4 +1,4 @@
-export async function submitAnalysis(sequence, token) {
+export async function submitAnalysis(sequence, token, metadata = {}) {
   const response = await fetch('/api/analyses', {
     method: 'POST',
     headers: {
@@ -7,13 +7,17 @@ export async function submitAnalysis(sequence, token) {
     },
     body: JSON.stringify({
       sequence,
+      organism: metadata.organism || null,
+      epath_gene_id: metadata.epath_gene_id || null,
+      epath_ko_id: metadata.epath_ko_id || null,
+      host_reference: metadata.host_reference ?? 'none',
     }),
   })
 
   return response.json()
 }
 
-export async function submitFastaAnalysis(fastaContent, token) {
+export async function submitFastaAnalysis(fastaContent, token, metadata = {}) {
   const response = await fetch('/api/analyses', {
     method: 'POST',
     headers: {
@@ -22,6 +26,10 @@ export async function submitFastaAnalysis(fastaContent, token) {
     },
     body: JSON.stringify({
       fasta_content: fastaContent,
+      organism: metadata.organism || null,
+      epath_gene_id: metadata.epath_gene_id || null,
+      epath_ko_id: metadata.epath_ko_id || null,
+      host_reference: metadata.host_reference ?? 'none',
     }),
   })
 

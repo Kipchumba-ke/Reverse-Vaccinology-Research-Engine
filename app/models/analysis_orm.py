@@ -38,6 +38,10 @@ class AnalysisModel(Base):
     )
     epath_gene_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     epath_ko_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    host_reference: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+    )
     def __init__(self, **kwargs):
         kwargs.setdefault("id", uuid.uuid4())
         kwargs.setdefault("status", "pending")

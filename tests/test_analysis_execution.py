@@ -624,8 +624,9 @@ def test_execution_routes_fasta_to_fasta_workflow(monkeypatch):
     )
     captured = {}
 
-    def fake_fasta_workflow(records):
+    def fake_fasta_workflow(records, **kwargs):
         captured["records"] = records
+        captured["kwargs"] = kwargs
         return {"workflow": "fasta"}
 
     def unexpected_sequence_analysis(*args, **kwargs):
@@ -666,8 +667,9 @@ def test_execution_processes_persisted_fasta_content(
 
     captured = {}
 
-    def fake_fasta_workflow(records):
+    def fake_fasta_workflow(records, **kwargs):
         captured["records"] = records
+        captured["kwargs"] = kwargs
         return {"workflow": "fasta", "protein_count": len(records)}
 
     monkeypatch.setattr(
@@ -738,3 +740,42 @@ def test_execution_passes_persisted_epath_identifiers_to_analysis(
     assert saved_result.report == expected_report
     assert saved_result.epath_gene_id == "b3945"
     assert saved_result.epath_ko_id == "K00005"
+
+def test_execution_passes_epath_identifiers_for_single_record_fasta(
+    monkeypatch,
+):
+    analysis = Analysis(
+        sequence=">protein_1 Example protein\nMKT\n",
+        organism="Escherichia coli K-12 MG1655",
+        epath_gene_id="b3945",
+        epath_ko_id="K00005",
+    )
+
+    captured = {}
+
+    def fake_fasta_workflow(
+        records,
+        epath_gene_id=None,
+        epath_ko_id=None,
+        organism=None,
+        host_reference=None,
+    ):
+        captured["records"] = records
+        captured["epath_gene_id"] = epath_gene_id
+        captured["epath_ko_id"] = epath_ko_id
+        captured["organism"] = organism
+        captured["host_reference"] = host_reference
+        return {"workflow": "fasta"}
+
+    monkeypatch.setattr(
+        "app.services.analysis_execution.analyze_fasta_records",
+        fake_fasta_workflow,
+    )
+
+    result = execute_analysis(analysis)
+
+    assert result == {"workflow": "fasta"}
+    assert captured["epath_gene_id"] == "b3945"
+    assert captured["epath_ko_id"] == "K00005"
+    assert captured["organism"] == "Escherichia coli K-12 MG1655"
+    assert analysis.status == "completed"

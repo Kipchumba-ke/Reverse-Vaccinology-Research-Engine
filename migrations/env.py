@@ -16,9 +16,30 @@ from alembic import context
 # access to the values within the .ini file in use.
 config = context.config
 database_url = os.environ.get("DATABASE_URL")
+test_database_url = os.environ.get("TEST_DATABASE_URL")
 
-if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+use_test_database = os.environ.get("ALEMBIC_USE_TEST_DATABASE") == "1"
+
+selected_database_url = (
+    test_database_url
+    if use_test_database
+    else database_url
+)
+
+if not selected_database_url:
+    database_name = (
+        "TEST_DATABASE_URL"
+        if use_test_database
+        else "DATABASE_URL"
+    )
+    raise RuntimeError(
+        f"{database_name} must be configured in .env or the environment."
+    )
+
+config.set_main_option(
+    "sqlalchemy.url",
+    selected_database_url.replace("%", "%%"),
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

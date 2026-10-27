@@ -33,6 +33,10 @@ describe('submitAnalysis', () => {
         }),
         body: JSON.stringify({
           sequence: 'MKTIIALSYIFCLVFADYKDDDDK',
+          "organism": null,
+          "epath_gene_id": null,
+          "epath_ko_id": null,
+          "host_reference": 'none',
         }),
       }),
     )
@@ -70,6 +74,10 @@ describe('submitAnalysis', () => {
         }),
         body: JSON.stringify({
           fasta_content: fastaContent,
+          "organism": null,
+          "epath_gene_id": null,
+          "epath_ko_id": null,
+          "host_reference": 'none',
         }),
       }),
     )

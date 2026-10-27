@@ -623,6 +623,20 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
 
       <section className="analysis-report-section">
         <h3>Evidence</h3>
+        {report.evidence_status?.epath_essentiality && (
+          <div className="evidence-epath-status evidence-card">
+            <h4>ePath Essentiality Lookup</h4>
+            <p>
+              Status:{' '}
+              <strong>
+                {report.evidence_status.epath_essentiality.status}
+              </strong>
+            </p>
+            <p>
+              {report.evidence_status.epath_essentiality.message}
+            </p>
+          </div>
+        )}
 
         {report.evidence?.localization?.length > 0 && (
           <div className="evidence-localization evidence-card">
