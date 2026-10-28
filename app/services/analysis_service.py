@@ -36,9 +36,7 @@ def _resolve_host_reference(
     """
     if host_reference is None:
         # Preserve compatibility with existing callers.
-        database = blast_database or os.environ.get(
-            "HOST_BLAST_DATABASE"
-        )
+        database = blast_database or os.environ.get("HOST_BLAST_DATABASE")
         return database, True
 
     reference = host_reference.strip().lower()
@@ -47,9 +45,7 @@ def _resolve_host_reference(
         return None, False
 
     if reference not in {"human", "mouse", "pig"}:
-        raise ValueError(
-            "host_reference must be human, mouse, pig, or none."
-        )
+        raise ValueError("host_reference must be human, mouse, pig, or none.")
 
     environment_variable = {
         "human": "HOST_BLAST_DATABASE_HUMAN",
@@ -57,25 +53,29 @@ def _resolve_host_reference(
         "pig": "HOST_BLAST_DATABASE_PIG",
     }[reference]
 
+    # Explicit configuration takes precedence over local defaults.
     database = os.environ.get(environment_variable)
 
     if database:
         return database, True
 
-    if reference == "mouse":
-        project_root = Path(__file__).resolve().parents[2]
-        mouse_database = (
-            project_root
-            / "data"
-            / "reference"
-            / "mouse"
-            / "mouse_proteome_db"
-        )
+    # Fall back to the corresponding local reference database.
+    project_root = Path(__file__).resolve().parents[2]
+    local_databases = {
+        "human": (project_root / "data" / "reference" / "human" / "human_proteome_db"),
+        "mouse": (project_root / "data" / "reference" / "mouse" / "mouse_proteome_db"),
+        "pig": (project_root / "data" / "reference" / "pig" / "pig_proteome_db"),
+    }
 
-        if Path(f"{mouse_database}.pin").is_file():
-            return str(mouse_database), True
+    local_database = local_databases[reference]
 
+    if Path(f"{local_database}.pin").is_file():
+        return str(local_database), True
+
+    # Keep the selected host reference, but allow the calling
+    # workflow to handle the absence of a configured database.
     return None, True
+
 
 def _is_ncbi_accession(accession: str) -> bool:
     """Recognize common NCBI/RefSeq protein accession formats."""
@@ -102,9 +102,7 @@ def fetch_localization_result(accession: str | None) -> dict:
             "annotation": None,
             "status": "not_attempted",
             "source": None,
-            "message": (
-                "No accession supplied; localization was not queried."
-            ),
+            "message": ("No accession supplied; localization was not queried."),
         }
 
     accession = accession.strip()
@@ -134,9 +132,7 @@ def fetch_localization_result(accession: str | None) -> dict:
             "annotation": annotation,
             "status": "no_annotations",
             "source": source,
-            "message": (
-                f"{source} returned no usable localization annotations."
-            ),
+            "message": (f"{source} returned no usable localization annotations."),
         }
 
     return {
@@ -145,8 +141,7 @@ def fetch_localization_result(accession: str | None) -> dict:
         "status": "available",
         "source": source,
         "message": (
-            f"Retrieved {len(evidence)} localization annotation(s) "
-            f"from {source}."
+            f"Retrieved {len(evidence)} localization annotation(s) " f"from {source}."
         ),
     }
 
@@ -170,9 +165,7 @@ def _fetch_epath_evidence(
         return {
             "evidence": [],
             "status": "not_requested",
-            "message": (
-                "No explicit ePath gene or KO identifier was supplied."
-            ),
+            "message": ("No explicit ePath gene or KO identifier was supplied."),
         }
 
     try:
@@ -202,9 +195,8 @@ def _fetch_external_evidence(
     host_reference: str | None = None,
 ) -> dict:
     """Retrieve external evidence without running protein analysis."""
-    essentiality_data_path = (
-        essentiality_data_path
-        or os.environ.get("ESSENTIALITY_DATA_PATH")
+    essentiality_data_path = essentiality_data_path or os.environ.get(
+        "ESSENTIALITY_DATA_PATH"
     )
 
     try:
@@ -311,9 +303,7 @@ def _fetch_external_evidence(
                 "Essentiality lookup status unavailable.",
             ),
         },
-        "epath_essentiality_evidence": epath_essentiality.get(
-            "evidence", []
-        ),
+        "epath_essentiality_evidence": epath_essentiality.get("evidence", []),
         "epath_essentiality": {
             "status": epath_essentiality.get("status", "unknown"),
             "message": epath_essentiality.get(
@@ -339,9 +329,8 @@ def _attach_external_evidence(
     host_reference: str | None = None,
 ) -> dict:
     """Attach available essentiality and host-similarity evidence."""
-    essentiality_data_path = (
-        essentiality_data_path
-        or os.environ.get("ESSENTIALITY_DATA_PATH")
+    essentiality_data_path = essentiality_data_path or os.environ.get(
+        "ESSENTIALITY_DATA_PATH"
     )
 
     try:
@@ -364,12 +353,8 @@ def _attach_external_evidence(
         epath_ko_id=epath_ko_id,
     )
 
-    result.essentiality_evidence.extend(
-        essentiality.get("evidence", [])
-    )
-    result.essentiality_evidence.extend(
-        epath_essentiality.get("evidence", [])
-    )
+    result.essentiality_evidence.extend(essentiality.get("evidence", []))
+    result.essentiality_evidence.extend(epath_essentiality.get("evidence", []))
 
     host_database, should_run_host_search = _resolve_host_reference(
         host_reference=host_reference,
@@ -470,8 +455,7 @@ def _status_summary(localization: dict, external: dict) -> dict:
     """Build the report's evidence-status section."""
     return {
         "localization": {
-            key: localization.get(key)
-            for key in ("status", "source", "message")
+            key: localization.get(key) for key in ("status", "source", "message")
         },
         **external,
     }
@@ -504,9 +488,7 @@ def analyze_sequence(
 
     annotation = localization.get("annotation")
     if accession and not result.protein_name and annotation:
-        result.protein_name = (
-            annotation.get("protein_name") or result.protein_name
-        )
+        result.protein_name = annotation.get("protein_name") or result.protein_name
 
     # When run_integrations is enabled, reuse its BLAST output rather
     # than performing a second host-similarity search.
@@ -520,10 +502,7 @@ def analyze_sequence(
     host_search_disabled = not should_run_host_search
 
     run_combined_integrations = bool(
-        not host_search_disabled
-        and host_database
-        and accession
-        and msa_sequences
+        not host_search_disabled and host_database and accession and msa_sequences
     )
 
     if run_combined_integrations:
@@ -534,7 +513,6 @@ def analyze_sequence(
                 blast_database=host_database,
                 msa_sequences=msa_sequences,
             )
-
 
             blast_evidence = integrations.get("blast", [])
 
@@ -626,8 +604,7 @@ def analyze_fasta_records(
         localization = fetch_localization_result(accession)
         localization_evidence[record_id] = localization["evidence"]
         localization_status[record_id] = {
-            key: localization.get(key)
-            for key in ("status", "source", "message")
+            key: localization.get(key) for key in ("status", "source", "message")
         }
 
         external = _fetch_external_evidence(
@@ -640,12 +617,8 @@ def analyze_fasta_records(
             host_reference=host_reference,
         )
 
-        essentiality_evidence[record_id] = (
-            external["essentiality_evidence"]
-        )
-        host_similarity_evidence[record_id] = (
-            external["host_similarity_evidence"]
-        )
+        essentiality_evidence[record_id] = external["essentiality_evidence"]
+        host_similarity_evidence[record_id] = external["host_similarity_evidence"]
         external_status[record_id] = {
             "essentiality": external["essentiality"],
             "epath_essentiality": external.get(
@@ -657,7 +630,6 @@ def analyze_fasta_records(
             ),
             "host_similarity": external["host_similarity"],
         }
-
 
     workflow_result = run_fasta_workflow(
         records,
@@ -673,9 +645,7 @@ def analyze_fasta_records(
         protein_report = generate_protein_report(
             analysis,
             conservation_summary=workflow_result.conservation,
-            conserved_regions=find_conserved_regions(
-                analysis.conservation_columns
-            ),
+            conserved_regions=find_conserved_regions(analysis.conservation_columns),
         )
 
         protein_id = analysis.protein_id
@@ -691,9 +661,7 @@ def analyze_fasta_records(
             **external_status.get(protein_id, {}),
         }
 
-        protein_analyses.append(
-            {**analysis.to_dict(), **protein_report}
-        )
+        protein_analyses.append({**analysis.to_dict(), **protein_report})
 
     workflow_data["protein_analyses"] = protein_analyses
     return workflow_data
@@ -712,7 +680,7 @@ def create_analysis(
     accession: str | None = None,
     epath_gene_id: str | None = None,
     epath_ko_id: str | None = None,
-    host_reference: str | None = None
+    host_reference: str | None = None,
 ):
     """Validate input and create an analysis model."""
     cleaned_sequence = validate_protein_sequence(sequence)
@@ -739,7 +707,7 @@ def run_analysis(
     msa_sequences: list[str] | None = None,
     epath_gene_id: str | None = None,
     epath_ko_id: str | None = None,
-    host_reference: str | None = None
+    host_reference: str | None = None,
 ):
     """Create, persist, and execute an analysis."""
     analysis = create_analysis(

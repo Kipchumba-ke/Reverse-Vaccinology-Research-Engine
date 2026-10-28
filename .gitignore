@@ -37,3 +37,11 @@ data/reference/essentiality/a_Gene_sort.txt
 data/reference/essentiality/a_Gene_sort.rar
 data/reference/essentiality/epath.sqlite3
 data/reference/essentiality/epath.sqlite3-*
+
+# Generated BLAST protein database indexes
+data/reference/human/human_proteome_db.*
+data/reference/mouse/mouse_proteome_db.*
+data/reference/pig/pig_proteome_db.*
+
+# Candidate mouse BLAST database indexes
+data/reference/mouse/mouse_proteome_candidate_db.*
