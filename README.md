@@ -499,7 +499,7 @@ Start the configured services.
 
 
 ```bash
-docker compose up -d
+docker compose up --build
 ```
 
 To stop the services:
@@ -623,7 +623,7 @@ Illustrative status response:
 {
   "analysis_id": "<analysis-id>",
   "status": "completed",
-  "report": "<report-content-or-reference>"
+  "report": ""
 }
 ```
 
@@ -1237,7 +1237,6 @@ The current host-reference documentation records these UniProt proteome identifi
 
 Reference-data provenance and database construction are documented in [`data/reference/host-proteomes.md`](data/reference/host-proteomes.md).
 
-<!-- TODO: Add verified links to the exact UniProt proteome pages, NCBI BLAST+ documentation, Biopython documentation, and other methodological references used by the implementation. -->
 
 ### Scientific references
 
@@ -1253,13 +1252,8 @@ The project depends on the work of open-source maintainers and the scientific co
 
 ## 19. License
 
-**License status: Not yet confirmed.**
+**License status: MIT License**
 
-<!-- TODO: Decide whether to release ReverseVax under the MIT License or another licence. If MIT is selected, add the complete MIT licence text in a root-level LICENSE file and update this section. -->
-
-Until a licence is selected and added to the repository, do not assume that the project is distributed under the MIT License.
-
-Users should also verify the applicable terms for third-party software, reference datasets, and any other material included with or obtained by the project.
 
 ---
 
@@ -1268,7 +1262,7 @@ Users should also verify the applicable terms for third-party software, referenc
 **Kelvin Kipchumba**  
 Nursing and Public Health graduate, Kenyatta University  
 Software engineering training, Moringa School  
-Based in Kapsabet, Kenya
+Based in Narok, Kenya
 
 The project reflects an interest in applying software engineering and computational biology to research workflows in public health and vaccine research.
 
