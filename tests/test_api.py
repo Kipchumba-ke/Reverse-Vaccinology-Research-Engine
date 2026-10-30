@@ -2135,3 +2135,10 @@ def test_delete_analysis_removes_own_failed_analysis(
 
     assert response.status_code == 200
     assert repository.find_by_id(analysis.id) is None
+
+
+def test_health_endpoint_needs_no_authentication(api_client):
+    response = api_client.get("/api/health")
+
+    assert response.status_code == 200
+    assert response.get_json() == {"status": "ok"}

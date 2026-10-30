@@ -10,6 +10,7 @@ from app.analysis.interpretation import (
 )
 from app.analysis.candidate_assessment import assess_candidate
 from app.analysis.conservation import find_conserved_regions
+from app.analysis.host_thresholds import load_host_similarity_thresholds
 
 
 def generate_protein_report(
@@ -103,6 +104,7 @@ def generate_protein_report(
             "transmembrane_candidates": (
                 result.transmembrane_candidates
             ),
+            "sequence_predictions": result.sequence_predictions,
         },
         "peptide_candidates": result.peptide_candidates,
         "conservation": {
@@ -118,6 +120,7 @@ def generate_protein_report(
             ),
             "columns": result.conservation_columns,
             "regions": conserved_regions,
+            "similarity": result.conservation_similarity,
         },
         "evidence": {
             "localization": [
@@ -139,6 +142,7 @@ def generate_protein_report(
         ],
         "candidate_assessment": candidate_assessment.to_dict(),
         "limitations": [
+            *_prediction_limitations(result),
             (
                 "Hydrophobic regions and transmembrane candidates "
                 "are sequence-based heuristics."
@@ -163,3 +167,30 @@ def generate_protein_report(
         ],
         
     }
+
+
+def _prediction_limitations(result: ProteinAnalysisResult) -> list[str]:
+    """Limitations that apply to the built-in sequence predictions."""
+    notes = [
+        (
+            "Signal peptide, antigenic-region and topology results are "
+            "rule-based screens written for this project. They are not "
+            "SignalP, TMHMM, DeepTMHMM, PSORTb or BepiPred and should not "
+            "be reported as their output."
+        ),
+        (
+            "Peptide windows are scored with a linear antigenic-propensity "
+            "scale. This is not B-cell or T-cell epitope prediction and "
+            "says nothing about MHC binding."
+        ),
+        load_host_similarity_thresholds().describe(),
+    ]
+
+    if result.conservation_similarity is not None:
+        notes.append(
+            "Similarity-aware conservation uses residue similarity groups "
+            "over the supplied alignment, which comes from a star "
+            "alignment when Clustal Omega is unavailable."
+        )
+
+    return notes

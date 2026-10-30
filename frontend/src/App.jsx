@@ -14,6 +14,7 @@ import {
   getAnalysisStatus,
   downloadAnalysisReport,
 } from './services/analysisService'
+import { SESSION_EXPIRED_EVENT } from './services/session'
 
 import AnalysisReport from './components/AnalysisReport'
 import AnalysisHistory from './components/AnalysisHistory'
@@ -35,6 +36,20 @@ function App() {
   const [authenticated, setAuthenticated] = useState(
     Boolean(localStorage.getItem('token')),
   )
+
+  useEffect(() => {
+    function handleSessionExpired() {
+      localStorage.removeItem(ACTIVE_ANALYSIS_KEY)
+      setAuthenticated(false)
+      navigate('/login', { replace: true })
+    }
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+    }
+  }, [navigate])
 
   return (
     <Routes>

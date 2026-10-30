@@ -17,6 +17,7 @@ from app.services.analysis_service import (
 )
 from app.input.fasta import parse_fasta_records
 from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.middleware.proxy_fix import ProxyFix
 from app.services.analysis_submission import AnalysisSubmissionService
 from app.services.celery_queue import CeleryQueue
 from app.services.authentication import get_authenticated_user_id
@@ -25,6 +26,12 @@ from app.services.auth_service import AuthService
 from app.repositories.user_repository import UserRepository
 from app.models.user_orm import UserModel
 from app.reporting.pdf_export import generate_report_pdf
+from app.services.rate_limit import (
+    build_default_rules,
+    build_rate_limiter_from_environment,
+    install_rate_limiting,
+)
+from app.utils.limits import get_max_request_bytes
 
 
 DEFAULT_CORS_ORIGIN = "http://localhost:5173"
@@ -90,8 +97,28 @@ class _RequestScopedRepository:
     def __getattr__(self, name):
         return getattr(self._resolve(), name)
 
-def create_app(repository=None, queue=None):
+def _get_trusted_proxy_count() -> int:
+    raw_value = os.environ.get("TRUSTED_PROXY_COUNT", "0").strip() or "0"
+
+    try:
+        return max(0, int(raw_value))
+    except ValueError as error:
+        raise RuntimeError(
+            "TRUSTED_PROXY_COUNT must be a whole number."
+        ) from error
+
+
+def create_app(repository=None, queue=None, rate_limiter=None):
     app = Flask(__name__)
+
+    app.config["MAX_CONTENT_LENGTH"] = get_max_request_bytes()
+
+    proxy_count = _get_trusted_proxy_count()
+
+    if proxy_count:
+        # Trust X-Forwarded-For from exactly this many reverse proxies so
+        # rate limiting sees the real client address.
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=proxy_count)
 
     CORS(app, origins=_get_allowed_origins())
 
@@ -120,6 +147,17 @@ def create_app(repository=None, queue=None):
 
         if request_repository is not None:
             request_repository.session.close()
+
+    if rate_limiter is None:
+        rate_limiter = build_rate_limiter_from_environment()
+
+    if rate_limiter is not None:
+        install_rate_limiting(
+            app,
+            rate_limiter,
+            build_default_rules(),
+            get_user_id=get_authenticated_user_id,
+        )
 
     @app.errorhandler(RequestEntityTooLarge)
     def handle_request_entity_too_large(error):
@@ -485,6 +523,10 @@ def create_app(repository=None, queue=None):
             as_attachment=True,
             download_name=filename,
         ), 200
+
+    @app.get("/api/health")
+    def health():
+        return {"status": "ok"}, 200
 
     @app.get("/api/protected")
     def protected():

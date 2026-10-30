@@ -25,6 +25,8 @@ class ProteinAnalysisResult:
     peptide_candidates: list[dict] = field(default_factory=list)
     conservation_columns: list[dict] = field(default_factory=list)
     conservation_summary: dict | None = None
+    conservation_similarity: dict | None = None
+    sequence_predictions: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         """
@@ -69,4 +71,6 @@ class ProteinAnalysisResult:
                 if hasattr(self.conservation_summary, "to_dict")
                 else self.conservation_summary
             ),
+            "conservation_similarity": self.conservation_similarity,
+            "sequence_predictions": self.sequence_predictions,
         }

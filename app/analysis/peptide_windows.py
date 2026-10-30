@@ -1,3 +1,11 @@
+"""Sliding peptide windows with simple physicochemical annotations.
+
+This module does not predict epitopes. It cuts a protein into overlapping
+fixed-length peptides and annotates each with GRAVY, net charge and whether
+it overlaps a transmembrane or conserved region. Epitope-propensity scores
+come from app.analysis.antigenicity.
+"""
+
 from app.analysis.hydrophobicity import calculate_gravy
 from app.analysis.properties import calculate_net_charge
 

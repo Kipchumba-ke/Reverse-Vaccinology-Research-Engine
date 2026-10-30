@@ -9,7 +9,14 @@ DEFAULT_TOKEN_LIFETIME_MINUTES = 60 * 24
 
 
 def _get_secret_key() -> str:
-    return os.environ["JWT_SECRET_KEY"]
+    secret_key = os.environ.get("JWT_SECRET_KEY", "")
+
+    if not secret_key.strip():
+        raise RuntimeError(
+            "JWT_SECRET_KEY must be set to a non-empty value."
+        )
+
+    return secret_key
 
 
 def _get_token_lifetime() -> timedelta:

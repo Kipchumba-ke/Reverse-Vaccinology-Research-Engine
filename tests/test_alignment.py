@@ -193,3 +193,44 @@ def test_align_pair_handles_insertion_at_beginning():
 
     assert result["sequence_a"] == "-MKT"
     assert result["sequence_b"] == "MMKT"
+
+
+def test_blosum62_scoring_prefers_a_conservative_substitution_over_gaps():
+    result = align_pair("AIK", "AVK", scoring="blosum62")
+
+    assert result["sequence_a"] == "AIK"
+    assert result["sequence_b"] == "AVK"
+    # A/A 4 + I/V 3 + K/K 5
+    assert result["score"] == 12
+
+
+def test_blosum62_scoring_uses_a_stronger_default_gap_penalty():
+    result = align_pair("AKDW", "AKW", scoring="blosum62")
+
+    assert result["sequence_a"] == "AKDW"
+    assert result["sequence_b"] == "AK-W"
+    # A/A 4 + K/K 5 + gap -4 + W/W 11
+    assert result["score"] == 16
+
+
+def test_identity_scoring_remains_the_default():
+    assert align_pair("AIK", "AVK") == align_pair(
+        "AIK", "AVK", scoring="identity"
+    )
+    assert align_pair("AIK", "AVK")["score"] == 1
+
+
+def test_unknown_scoring_is_rejected():
+    import pytest
+
+    with pytest.raises(ValueError, match="scoring"):
+        align_pair("AIK", "AVK", scoring="pam250")
+
+
+def test_star_alignment_accepts_blosum62_scoring():
+    from app.analysis.msa import align_sequences
+
+    aligned = align_sequences(["AIKLM", "AVKLM", "AIKM"], scoring="blosum62")
+
+    assert len({len(sequence) for sequence in aligned}) == 1
+    assert aligned[0] == "AIKLM"

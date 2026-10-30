@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from app.analysis.pipeline import analyze_protein
+from app.utils.limits import get_max_fasta_records
 from app.utils.validation import validate_protein_sequence
 import re
 
@@ -98,6 +99,15 @@ def parse_fasta_records(fasta_text: str) -> list[dict]:
 
     if not lines or not lines[0].startswith(">"):
         raise ValueError("Invalid FASTA input.")
+
+    maximum_records = get_max_fasta_records()
+    record_count = sum(1 for line in lines if line.startswith(">"))
+
+    if record_count > maximum_records:
+        raise ValueError(
+            "Too many FASTA records "
+            f"(maximum {maximum_records})."
+        )
 
     records = []
     current_id = None

@@ -60,10 +60,31 @@ def interpret_hydrophobicity(
         confidence=confidence,
     )
 
+def is_transmembrane_candidate(candidate: dict) -> bool:
+    """Return True unless the region is known not to be a TM candidate.
+
+    Regions without classification information are counted, so callers that
+    pass bare start/end coordinates keep working.
+    """
+    if candidate.get("revised_classification") == "signal_peptide_h_region":
+        return False
+
+    classification = candidate.get("classification")
+
+    return classification is None or classification == "candidate_transmembrane"
+
+
 def interpret_transmembrane_candidates(
     candidates: list[dict],
 ) -> Evidence:
-    count = len(candidates)
+    count = sum(
+        1 for candidate in candidates if is_transmembrane_candidate(candidate)
+    )
+    signal_peptide_regions = sum(
+        1
+        for candidate in candidates
+        if candidate.get("revised_classification") == "signal_peptide_h_region"
+    )
 
     if count == 0:
         confidence = "medium"
@@ -81,6 +102,13 @@ def interpret_transmembrane_candidates(
         confidence = "medium"
         interpretation = (
             f"{count} regions are consistent with possible "
+            "transmembrane segments."
+        )
+
+    if signal_peptide_regions:
+        interpretation += (
+            f" {signal_peptide_regions} hydrophobic region(s) overlap a "
+            "predicted signal peptide and were not counted as "
             "transmembrane segments."
         )
 

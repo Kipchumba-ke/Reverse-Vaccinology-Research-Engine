@@ -1,3 +1,22 @@
+# Development services (Postgres and Redis) start by default:
+#   docker compose up -d
+#
+# The full stack (migrations, API, worker, web) is opt-in:
+#   docker compose --profile app up --build
+# It needs JWT_SECRET_KEY in your environment or .env file, and your host
+# BLAST databases under ./data/reference (mounted read-only).
+
+x-backend-environment: &backend-environment
+  DATABASE_URL: postgresql+psycopg://vaccinology:${POSTGRES_PASSWORD:-vaccinology_dev}@postgres:5432/reverse_vaccinology
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY:-}
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/0
+  RATE_LIMIT_STORAGE_URL: redis://redis:6379/1
+  TRUSTED_PROXY_COUNT: "1"
+  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8080}
+  HOST_PEPTIDE_SCAN: ${HOST_PEPTIDE_SCAN:-0}
+  ALIGNMENT_SCORING: ${ALIGNMENT_SCORING:-blosum62}
+
 services:
   postgres:
     image: postgres:16
@@ -5,16 +24,71 @@ services:
     environment:
       POSTGRES_DB: reverse_vaccinology
       POSTGRES_USER: vaccinology
-      POSTGRES_PASSWORD: vaccinology_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vaccinology_dev}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaccinology -d reverse_vaccinology"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   redis:
     image: redis:7
     container_name: reverse-vaccinology-redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    profiles: ["app"]
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    environment: *backend-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    profiles: ["app"]
+    build: .
+    environment: *backend-environment
+    volumes:
+      - ./data/reference:/srv/app/data/reference:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+
+  worker:
+    profiles: ["app"]
+    build: .
+    command: ["celery", "-A", "app.services.celery_queue.celery_app", "worker", "--loglevel=info"]
+    environment: *backend-environment
+    volumes:
+      - ./data/reference:/srv/app/data/reference:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  web:
+    profiles: ["app"]
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
 
 volumes:
   postgres_data:

@@ -1,3 +1,5 @@
+import { handleUnauthorized } from './session'
+
 export async function submitAnalysis(sequence, token, metadata = {}) {
   const response = await fetch('/api/analyses', {
     method: 'POST',
@@ -13,6 +15,8 @@ export async function submitAnalysis(sequence, token, metadata = {}) {
       host_reference: metadata.host_reference ?? 'none',
     }),
   })
+
+  handleUnauthorized(response)
 
   return response.json()
 }
@@ -33,6 +37,8 @@ export async function submitFastaAnalysis(fastaContent, token, metadata = {}) {
     }),
   })
 
+  handleUnauthorized(response)
+
   return response.json()
 }
 
@@ -42,6 +48,8 @@ export async function getAnalysisStatus(analysisId, token) {
       'Authorization': `Bearer ${token}`,
     },
   })
+
+  handleUnauthorized(response)
 
   return response.json()
 }
@@ -56,6 +64,8 @@ export async function downloadAnalysisReport(analysisId, token) {
       },
     },
   )
+
+  handleUnauthorized(response)
 
   if (!response.ok) {
     let message = 'Unable to download the analysis report.'

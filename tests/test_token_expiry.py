@@ -112,3 +112,18 @@ def test_overlong_password_is_rejected():
 def test_non_string_password_is_rejected():
     with pytest.raises(ValueError):
         _validate_registration("person@example.com", None)
+
+
+@pytest.mark.parametrize("value", ["", "   "])
+def test_empty_secret_key_is_rejected(monkeypatch, value):
+    monkeypatch.setenv("JWT_SECRET_KEY", value)
+
+    with pytest.raises(RuntimeError, match="JWT_SECRET_KEY"):
+        create_token(User(email="a@example.com"))
+
+
+def test_missing_secret_key_is_rejected(monkeypatch):
+    monkeypatch.delenv("JWT_SECRET_KEY", raising=False)
+
+    with pytest.raises(RuntimeError, match="JWT_SECRET_KEY"):
+        create_token(User(email="a@example.com"))
