@@ -72,7 +72,7 @@ describe('StructureViewer', () => {
         headers: { Authorization: 'Bearer test-token' },
       }),
     )
-    expect(screen.getByText(/mean pLDDT 69.6/)).toBeInTheDocument()
+    expect(screen.getByText(/mean pLDDT 69\.60/)).toBeInTheDocument()
   })
 
   it('warns when the model is for a different sequence', async () => {

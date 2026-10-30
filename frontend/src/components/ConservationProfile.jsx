@@ -1,3 +1,4 @@
+import ZoomFigure from './ZoomFigure'
 
  // Scientific note: this profile measures the frequency of the majority
  // residue at each alignment column. It is not Shannon entropy or an
@@ -151,6 +152,7 @@ function ConservationProfile({ alignment }) {
       </div>
 
       <div className="conservation-profile-chart-scroll">
+        <ZoomFigure label="Conservation profile">
         <svg
           className="conservation-profile"
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
@@ -287,6 +289,7 @@ function ConservationProfile({ alignment }) {
             Majority-residue frequency (%)
           </text>
         </svg>
+        </ZoomFigure>
       </div>
 
       <p className="conservation-profile-note">

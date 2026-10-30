@@ -23,6 +23,8 @@ import Login from './components/Login'
 import MultiSequenceReport from './components/MultiSequenceReport'
 import LandingPage from './components/LandingPage'
 import Dashboard from './components/Dashboard'
+import ThemeToggle from './components/ThemeToggle'
+import './components/Shell.css'
 import './App.css'
 
 const ACTIVE_ANALYSIS_KEY = 'activeAnalysisId'
@@ -140,24 +142,38 @@ function AuthenticatedLayout({ children, onLogout }) {
   }
 
   return (
-    <>
-      <nav className="app-navigation" aria-label="Main navigation">
-        <Link to="/dashboard" className="nav-brand">
-          <span className="nav-brand-icon" aria-hidden="true">V</span>
-          <span>ReverseVax</span>
-        </Link>
+    <div className="shell">
+      <a className="skip-link" href="#main">Skip to main content</a>
+      <header className="site-header">
+        <div className="site-header-inner">
+          <Link to="/dashboard" className="wordmark">
+            ReverseVax
+            <span>evidence ledger</span>
+          </Link>
 
-        <div className="nav-links">
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/analyses">New analysis</Link>
-          <Link to="/history">Analysis history</Link>
-          <button type="button" onClick={handleLogout}>
-            Log out
-          </button>
+          <nav className="site-nav" aria-label="Main navigation">
+            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/analyses">New analysis</Link>
+            <Link to="/history">Analysis history</Link>
+          </nav>
+
+          <div className="site-actions">
+            <ThemeToggle />
+            <button type="button" className="btn btn-quiet" onClick={handleLogout}>
+              Log out
+            </button>
+          </div>
         </div>
-      </nav>
+      </header>
       {children}
-    </>
+      <footer className="site-footer">
+        <p className="wordmark">ReverseVax</p>
+        <p>
+          Computational research support. Findings require scientific
+          evaluation and are not experimental validation.
+        </p>
+      </footer>
+    </div>
   )
 }
 
@@ -289,9 +305,9 @@ function AnalysisWorkspace() {
     }
   }
   return (
-    <main className="analysis-page">
+    <main id="main" className="analysis-page">
         <header className="workspace-header">
-          <p className="eyebrow">PROTEIN ANALYSIS</p>
+          <p className="kicker">Protein analysis</p>
           <h1>Explore a protein sequence</h1>
           <p>
             Submit a protein sequence or FASTA file to generate computational

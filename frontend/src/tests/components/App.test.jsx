@@ -447,7 +447,7 @@ describe('App', () => {
     }
   })
 
-    it('displays the analysis report when the analysis is completed', async () => {
+       it('displays the analysis report when the analysis is completed', async () => {
       submitAnalysis.mockResolvedValueOnce({
         analysis_id: '123',
         status: 'pending',
@@ -495,8 +495,8 @@ describe('App', () => {
       ).toBeInTheDocument()
 
       expect(
-        screen.getByText(/length: 3/i),
-      ).toBeInTheDocument()
+        screen.getByText('Length', { selector: 'dt' }).nextElementSibling,
+      ).toHaveTextContent('3')
   })
 
 
@@ -613,7 +613,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
   ).toBeInTheDocument()
   })
 
-  it('displays report metadata from the analysis report', async () => {
+    it('displays report metadata from the analysis report', async () => {
     getAnalysisStatus.mockResolvedValue({
       analysis_id: '123',
       status: 'completed',
@@ -638,20 +638,19 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     )
 
     expect(
-      await screen.findByText(
-        /report type: reverse_vaccinology/i,
-      ),
-    ).toBeInTheDocument()
+      (await screen.findByText('Report Type', { selector: 'dt' }))
+        .nextElementSibling,
+    ).toHaveTextContent('reverse_vaccinology')
 
     expect(
-      screen.getByText(/report version: 1.0/i),
-    ).toBeInTheDocument()
+      screen.getByText('Report Version', { selector: 'dt' })
+        .nextElementSibling,
+    ).toHaveTextContent('1.0')
 
     expect(
-      screen.getByText(
-        /analysis pipeline: protein_sequence_analysis/i,
-      ),
-    ).toBeInTheDocument()
+      screen.getByText('Analysis Pipeline', { selector: 'dt' })
+        .nextElementSibling,
+    ).toHaveTextContent('protein_sequence_analysis')
   })
 
   it('displays the protein characteristics from the analysis report', async () => {
@@ -698,33 +697,16 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
       await Promise.resolve()
     })
 
-    expect(
-      screen.getByText(/molecular weight: 345.67/i),
-    ).toBeInTheDocument()
+    const statValue = (label) =>
+      screen.getByText(label, { selector: 'dt' }).nextElementSibling
 
-    expect(
-      screen.getByText(/gravy: 0.42/i),
-    ).toBeInTheDocument()
-
-    expect(
-      screen.getByText(/isoelectric point: 6.8/i),
-    ).toBeInTheDocument()
-
-    expect(
-    screen.getByText(/protein id: P12345/i),
-  ).toBeInTheDocument()
-
-  expect(
-    screen.getByText(/name: example protein/i),
-  ).toBeInTheDocument()
-
-  expect(
-    screen.getByText(/organism: example bacterium/i),
-  ).toBeInTheDocument()
-
-  expect(
-    screen.getByText(/accession: ABC123/i),
-  ).toBeInTheDocument()
+    expect(statValue('Molecular Weight')).toHaveTextContent('345.67')
+    expect(statValue('GRAVY')).toHaveTextContent(/^0\.42$/)
+    expect(statValue('Isoelectric Point')).toHaveTextContent(/^6\.80$/)
+    expect(statValue('Protein ID')).toHaveTextContent('P12345')
+    expect(statValue('Name')).toHaveTextContent('Example Protein')
+    expect(statValue('Organism')).toHaveTextContent('Example bacterium')
+    expect(statValue('Accession')).toHaveTextContent('ABC123')
   })
 
   it('displays hydrophobicity measurements from the analysis report', async () => {
@@ -798,7 +780,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     })
 
     expect(
-      screen.getByText('-1.2', {
+      screen.getByText('-1.20', {
         selector: '.measurement-net-charge p',
       }),
     ).toBeInTheDocument()
@@ -846,11 +828,11 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText('0.500', { selector: 'tbody td' }),
+      screen.getByText('0.50', { selector: 'tbody td' }),
     ).toBeInTheDocument();
 
     expect(
-      screen.getByText('1.200', { selector: 'tbody td' }),
+      screen.getByText('1.20', { selector: 'tbody td' }),
     ).toBeInTheDocument();
   })
 
@@ -1042,7 +1024,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     })
 
     expect(
-      screen.getByText(/conservation: 85%/i),
+      screen.getByText(/conservation: 85\.00%/i),
     ).toBeInTheDocument()
 
     expect(
@@ -1255,16 +1237,17 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     })
 
     expect(
-      screen.getByText(/host similarity: 12.5%/i),
+      screen.getByText(/host similarity: 12\.50%/i),
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText(/alignment length: 180/i),
-    ).toBeInTheDocument()
+      screen.getByText('Alignment length', { selector: 'dt' })
+        .nextElementSibling,
+    ).toHaveTextContent('180')
 
     expect(
-      screen.getByText(/e-value: 0.01/i),
-    ).toBeInTheDocument()
+      screen.getByText('E-value', { selector: 'dt' }).nextElementSibling,
+    ).toHaveTextContent('0.01')
 
     expect(
       screen.getByText(/source: BLAST/i),
@@ -2819,7 +2802,7 @@ it('renders composition counts and percentages in a compact table', async () => 
     })
 
     const hostSimilarity = screen.getByText(
-      /host similarity: 12.5%/i,
+      /host similarity: 12\.50%/i,
     )
 
     expect(
@@ -3133,16 +3116,16 @@ it('renders composition counts and percentages in a compact table', async () => 
       }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/Protein ID:\s*protein_1/i),
-    ).toBeInTheDocument()
+      screen.getByText('Protein ID', { selector: 'dt' }).nextElementSibling,
+    ).toHaveTextContent('protein_1')
 
     const proteinSelector = screen.getByLabelText(/select protein report/i)
 
     await user.selectOptions(proteinSelector, '1')
 
     expect(
-      screen.getByText(/Protein ID:\s*protein_2/i),
-    ).toBeInTheDocument()
+      screen.getByText('Protein ID', { selector: 'dt' }).nextElementSibling,
+    ).toHaveTextContent('protein_2')
     expect(
       screen.getByRole('heading', {
         name: 'Protein Report: protein_2',

@@ -1,0 +1,30 @@
+/* A quiet, rectangular switch that matches the other bordered controls. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: 500 var(--text-sm) / 1 var(--font-sans);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.theme-toggle svg {
+  flex: none;
+}
+
+@media (max-width: 480px) {
+  .theme-toggle-label {
+    display: none;
+  }
+}
