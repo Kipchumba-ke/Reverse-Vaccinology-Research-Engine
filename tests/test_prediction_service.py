@@ -114,3 +114,54 @@ def test_signalp_still_attaches_when_enabled(monkeypatch):
 
     assert status == {"signalp": {"status": "completed", "message": None}}
     assert result.sequence_predictions["signalp"]["detected"] is True
+
+
+def test_iedb_results_annotate_peptide_windows(monkeypatch):
+    from app.integrations import iedb
+
+    monkeypatch.setenv("IEDB_ENABLED", "1")
+    for name in ("SIGNALP_ENABLED", "DEEPTMHMM_ENABLED", "PSORTB_ENABLED"):
+        monkeypatch.delenv(name, raising=False)
+
+    prediction = {
+        "status": "completed",
+        "method": "IEDB Analysis Resource",
+        "mhc_class_i": {"binders": [{
+            "start": 3, "end": 11,
+            "alleles": [{"allele": "HLA-A*02:01"}],
+        }]},
+        "mhc_class_ii": {"binders": []},
+        "b_cell": {"regions": [{"start": 5, "end": 12}]},
+    }
+    monkeypatch.setattr(
+        iedb, "fetch_epitope_predictions", lambda sequence: prediction
+    )
+
+    result = fresh()
+    status = prediction_service.attach_predictions(result)
+
+    assert status["iedb"]["status"] == "completed"
+    first = result.peptide_candidates[0]
+    assert first["overlaps_b_cell_epitope"] is True
+    assert first["mhc_i_binder_alleles"] == 1
+    report = generate_protein_report(result)
+    assert any("IEDB" in line for line in report["limitations"])
+
+
+def test_iedb_failure_leaves_windows_unchanged(monkeypatch):
+    from app.integrations import iedb
+
+    monkeypatch.setenv("IEDB_ENABLED", "1")
+    for name in ("SIGNALP_ENABLED", "DEEPTMHMM_ENABLED", "PSORTB_ENABLED"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(
+        iedb, "fetch_epitope_predictions",
+        lambda sequence: {"status": "lookup_failed", "message": "down"},
+    )
+
+    result = fresh()
+    before = [dict(p) for p in result.peptide_candidates]
+    status = prediction_service.attach_predictions(result)
+
+    assert status["iedb"]["status"] == "lookup_failed"
+    assert result.peptide_candidates == before
