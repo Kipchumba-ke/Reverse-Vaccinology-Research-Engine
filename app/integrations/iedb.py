@@ -201,6 +201,19 @@ def collect_binders(rows: list[dict], cutoff: float) -> list[dict]:
             "end": row["end"],
             "alleles": [],
         })
+        existing = next(
+            (a for a in entry["alleles"] if a["allele"] == row["allele"]),
+            None,
+        )
+
+        # The same allele can appear twice if a response repeats rows;
+        # keep its strongest (lowest) rank.
+        if existing is not None:
+            if row["percentile_rank"] < existing["percentile_rank"]:
+                existing["percentile_rank"] = row["percentile_rank"]
+                existing["score"] = row["score"]
+            continue
+
         entry["alleles"].append({
             "allele": row["allele"],
             "percentile_rank": row["percentile_rank"],
