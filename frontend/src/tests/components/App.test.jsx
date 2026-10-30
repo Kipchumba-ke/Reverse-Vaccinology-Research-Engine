@@ -495,8 +495,8 @@ describe('App', () => {
       ).toBeInTheDocument()
 
       expect(
-        screen.getByText(/length: 3/i),
-      ).toBeInTheDocument()
+        screen.getByText('Length', { selector: 'dt' }).nextElementSibling,
+      ).toHaveTextContent('3')
   })
 
 
@@ -638,20 +638,19 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     )
 
     expect(
-      await screen.findByText(
-        /report type: reverse_vaccinology/i,
-      ),
-    ).toBeInTheDocument()
+      (await screen.findByText('Report Type', { selector: 'dt' }))
+        .nextElementSibling,
+    ).toHaveTextContent('reverse_vaccinology')
 
     expect(
-      screen.getByText(/report version: 1.0/i),
-    ).toBeInTheDocument()
+      screen.getByText('Report Version', { selector: 'dt' })
+        .nextElementSibling,
+    ).toHaveTextContent('1.0')
 
     expect(
-      screen.getByText(
-        /analysis pipeline: protein_sequence_analysis/i,
-      ),
-    ).toBeInTheDocument()
+      screen.getByText('Analysis Pipeline', { selector: 'dt' })
+        .nextElementSibling,
+    ).toHaveTextContent('protein_sequence_analysis')
   })
 
   it('displays the protein characteristics from the analysis report', async () => {
