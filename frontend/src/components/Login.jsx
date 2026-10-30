@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { login } from '../services/authService'
+import ThemeToggle from './ThemeToggle'
 import './Auth.css'
 
 function Login({ onLogin, onRegister }) {
@@ -23,14 +24,22 @@ function Login({ onLogin, onRegister }) {
   }
 
   return (
-    <main className="auth-page">
-      <section className="auth-card" aria-labelledby="login-heading">
-        <div className="auth-brand">
-          <span className="auth-brand-mark" aria-hidden="true">
-            ⬡
-          </span>
-          <span>ReverseVax</span>
-        </div>
+    <main className="auth-page" id="main">
+      <a className="skip-link" href="#auth-form-region">Skip to form</a>
+      <aside className="auth-aside">
+        <a className="wordmark" href="/">
+          ReverseVax
+          <span>evidence ledger</span>
+        </a>
+        <p className="auth-aside-claim">
+          Every claim in a report carries its source and its limits.
+        </p>
+        <p className="auth-aside-note">
+          Computational screens to decide which proteins go to the bench
+          first. Not experimental validation.
+        </p>
+      </aside>
+      <section id="auth-form-region" className="auth-card" aria-labelledby="login-heading">
 
         <h1 className="auth-heading" id="login-heading">
           Welcome back
@@ -97,6 +106,7 @@ function Login({ onLogin, onRegister }) {
           </p>
 
         </form>
+        <div className="auth-theme"><ThemeToggle /></div>
       </section>
     </main>
   )

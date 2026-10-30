@@ -1,0 +1,97 @@
+/* Zoomable figures: controls sit above the plot, never over it. */
+.zoom-figure {
+  margin: 0;
+}
+
+.zoom-figure-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.zoom-figure-tools button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 var(--text-sm) / 1 var(--font-sans);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.zoom-figure-tools button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.zoom-figure-tools button:disabled {
+  color: var(--ink-faint);
+  cursor: default;
+}
+
+.zoom-figure-hint {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--space-2);
+  color: var(--ink-soft);
+  font: 400 var(--text-xs) / 1.4 var(--font-sans);
+}
+
+.zoom-figure-level {
+  flex: none;
+  color: var(--ink-soft);
+  font: 400 var(--text-xs) / 1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.zoom-figure-viewport {
+  position: relative;
+  overflow: hidden;
+  border-block: 1px solid var(--rule);
+  touch-action: pan-y;
+}
+
+.zoom-figure-viewport.is-zoomed {
+  cursor: grab;
+  touch-action: none;
+}
+
+.zoom-figure-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+.zoom-figure-content {
+  transform-origin: 0 0;
+  transition: transform 0.18s ease-out;
+  will-change: transform;
+}
+
+.zoom-figure-viewport.is-dragging .zoom-figure-content {
+  transition: none;
+}
+
+.zoom-figure-content svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 600px) {
+  .zoom-figure-hint {
+    display: none;
+  }
+
+  .zoom-figure-level {
+    margin-left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zoom-figure-content {
+    transition: none;
+  }
+}

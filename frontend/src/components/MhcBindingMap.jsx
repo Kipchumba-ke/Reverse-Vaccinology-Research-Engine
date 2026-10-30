@@ -1,3 +1,6 @@
+import { formatNumber } from '../utils/format'
+import ZoomFigure from './ZoomFigure'
+
 const WIDTH = 1000
 const LEFT = 150
 const RIGHT = 20
@@ -53,6 +56,7 @@ function Heatmap({ title, data, length }) {
   return (
     <div className="mhc-map">
       <h4>{title}</h4>
+      <ZoomFigure label={`${title} binding map`}>
       <svg
         viewBox={`0 0 ${WIDTH} ${height}`}
         role="img"
@@ -78,12 +82,12 @@ function Heatmap({ title, data, length }) {
                   y={y + 2}
                   width={Math.max(cellWidth, 1.5)}
                   height={ROW - 4}
-                  fill="#332288"
+                  className="mhc-map-cell"
                   fillOpacity={shade(rank, cutoff)}
                 >
                   <title>
                     {allele}, residues {bin * binSize + 1}-{Math.min((bin + 1) * binSize, length)}:
-                    best percentile rank {rank}
+                    best percentile rank {formatNumber(rank)}
                   </title>
                 </rect>
               ))}
@@ -96,6 +100,7 @@ function Heatmap({ title, data, length }) {
           {length}
         </text>
       </svg>
+      </ZoomFigure>
       <p className="mhc-map-note">
         Shaded cells mark peptides at or below the percentile-rank cut-off of {cutoff}
         ; darker means stronger predicted binding. An empty cell means no predicted
@@ -138,7 +143,7 @@ function MhcBindingMap({ report }) {
                     {binder.start}-{binder.end}
                   </td>
                   <td>{binder.allele_count}</td>
-                  <td>{binder.best_percentile_rank}</td>
+                  <td>{formatNumber(binder.best_percentile_rank)}</td>
                 </tr>
               ))}
             </tbody>

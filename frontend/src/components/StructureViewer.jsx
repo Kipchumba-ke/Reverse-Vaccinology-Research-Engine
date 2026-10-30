@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { formatNumber } from '../utils/format'
 import { fetchStructure, isUniprotAccession } from '../services/structureService'
 import { centre, nearestPoint, parseCaTrace, project } from '../utils/pdb'
 import { PLDDT_BANDS, residueColor } from '../utils/structureColors'
@@ -232,7 +233,7 @@ function StructureViewer({ accession, sequence, tracks = [] }) {
 
           <p className="structure-hover" aria-live="polite">
             {hover
-              ? `Residue ${hover.position} (${hover.residue}), pLDDT ${hover.plddt.toFixed(1)}`
+              ? `Residue ${hover.position} (${hover.residue}), pLDDT ${formatNumber(hover.plddt)}`
               : 'Hover over the trace to read a residue.'}
           </p>
 
@@ -265,7 +266,7 @@ function StructureViewer({ accession, sequence, tracks = [] }) {
           )}
 
           <p className="structure-summary">
-            {model.entry_id}, model v{model.model_version}, mean pLDDT {model.mean_plddt}. Source:{' '}
+            {model.entry_id}, model v{model.model_version}, mean pLDDT {formatNumber(model.mean_plddt)}. Source:{' '}
             {model.source}.
           </p>
 

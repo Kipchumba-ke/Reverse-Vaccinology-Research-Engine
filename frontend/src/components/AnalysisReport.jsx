@@ -1,11 +1,56 @@
 import { useState } from "react";
 import SequenceInsights from "./SequenceInsights";
+import HydropathyChart from "./HydropathyChart";
+import TransmembraneMap from "./TransmembraneMap";
+import {
+  formatEvalue,
+  formatNumber,
+  formatPercent,
+  formatSigned,
+} from "../utils/format";
+
+const HOST_SIMILARITY_PAGE_SIZE = 6;
+
+/** Clamp a percentage to 0-100 for bar widths. */
+function barWidth(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "0%";
+  return `${Math.min(100, Math.max(0, number))}%`;
+}
+
+/** Decorative bar; the value is always also printed as text beside it. */
+function Meter({ value }) {
+  return (
+    <span className="meter" aria-hidden="true">
+      <span className="meter-fill" style={{ width: barWidth(value) }} />
+    </span>
+  );
+}
+
+function ConfidenceBadge({ confidence }) {
+  if (!confidence) return null;
+  const level = String(confidence).toLowerCase();
+
+  return (
+    <span className={`badge badge-confidence badge-${level.replace(/[^a-z]+/g, "-")}`}>
+      Confidence: {confidence}
+    </span>
+  );
+}
 
 function AnalysisReport({ report, title = 'Analysis Report'  }) {
   const [showAllPeptides, setShowAllPeptides] = useState(false);
   const [showFullSequence, setShowFullSequence] = useState(false);
   const [visibleRegionCount, setVisibleRegionCount] = useState(10)
   const [visiblePeptideCount, setVisiblePeptideCount] = useState(10)
+  const [visibleHostCount, setVisibleHostCount] = useState(
+    HOST_SIMILARITY_PAGE_SIZE,
+  )
+
+  const maxComposition = Math.max(
+    1e-9,
+    ...Object.values(report.measurements?.composition?.percentages ?? {}).map(Number).filter(Number.isFinite),
+  );
 
   const peptideCandidates = report.peptide_candidates ?? [];
   const visiblePeptides = showAllPeptides
@@ -29,31 +74,67 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
         {report.metadata && (
           <section className="analysis-report-section">
             <h3>Report Metadata</h3>
-            <p>
-              Report Type: {report.metadata.report_type}
-            </p>
-            <p>
-              Report Version: {report.metadata.report_version}
-            </p>
-            <p>
-              Analysis Pipeline: {report.metadata.analysis_pipeline}
-            </p>
+            <dl className="stat-list stat-list-stack">
+              <div className="stat">
+                <dt>Report Type</dt>
+                <dd>{report.metadata.report_type}</dd>
+              </div>
+              <div className="stat">
+                <dt>Report Version</dt>
+                <dd>{report.metadata.report_version}</dd>
+              </div>
+              <div className="stat">
+                <dt>Analysis Pipeline</dt>
+                <dd>{report.metadata.analysis_pipeline}</dd>
+              </div>
+            </dl>
           </section>
         )}
 
         <section className="analysis-report-section">
           <h3>Protein Characteristics</h3>
 
-          <div className="protein-characteristics-grid">
-            <p>Protein ID: {report.protein?.id}</p>
-            <p>Name: {report.protein?.name}</p>
-            <p>Organism: {report.protein?.organism}</p>
-            <p>Accession: {report.protein?.accession}</p>
-            <p>Length: {report.protein?.length}</p>
-            <p>Molecular Weight: {report.protein?.molecular_weight}</p>
-            <p>GRAVY: {report.protein?.gravy}</p>
-            <p>Isoelectric Point: {report.protein?.isoelectric_point}</p>
-          </div>
+          <dl className="protein-characteristics-grid stat-list">
+            <div className="stat">
+              <dt>Protein ID</dt>
+              <dd>{report.protein?.id}</dd>
+            </div>
+            <div className="stat">
+              <dt>Name</dt>
+              <dd>{report.protein?.name}</dd>
+            </div>
+            <div className="stat">
+              <dt>Organism</dt>
+              <dd>{report.protein?.organism}</dd>
+            </div>
+            <div className="stat">
+              <dt>Accession</dt>
+              <dd>{report.protein?.accession}</dd>
+            </div>
+            <div className="stat">
+              <dt>Length</dt>
+              <dd>{report.protein?.length}</dd>
+            </div>
+            <div className="stat">
+              <dt>Molecular Weight</dt>
+              <dd>
+                {formatNumber(report.protein?.molecular_weight, { group: true, fallback: "" })}
+                {report.protein?.molecular_weight != null && (
+                  <span className="stat-unit"> Da</span>
+                )}
+              </dd>
+            </div>
+            <div className="stat">
+              <dt>GRAVY</dt>
+              <dd>{formatNumber(report.protein?.gravy, { fallback: "" })}</dd>
+            </div>
+            <div className="stat">
+              <dt>Isoelectric Point</dt>
+              <dd>
+                {formatNumber(report.protein?.isoelectric_point, { fallback: "" })}
+              </dd>
+            </div>
+          </dl>
           <div className="protein-sequence" data-testid="protein-sequence">
             <strong>Sequence ({proteinSequence.length} amino acids)</strong>
             <p>{displayedSequence}</p>
@@ -76,8 +157,41 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
         <div className="measurement-net-charge measurement-card">
           <h4>Net Charge</h4>
           <p>
-            {report.measurements?.charge_and_hydrophobicity?.net_charge}
+            {formatSigned(
+              report.measurements?.charge_and_hydrophobicity?.net_charge ??
+                report.measurements?.charge_and_hydrophobicity
+                  ?.approximate_net_charge,
+              { fallback: "" },
+            )}
           </p>
+          {report.measurements?.charge_and_hydrophobicity && (
+            <dl className="stat-list stat-list-compact">
+              {[
+                ["Positively charged", "positively_charged", "residues"],
+                ["Negatively charged", "negatively_charged", "residues"],
+                ["Hydrophobic residues", "hydrophobic_residues", "residues"],
+              ].map(([label, key]) =>
+                report.measurements.charge_and_hydrophobicity[key] != null ? (
+                  <div className="stat" key={key}>
+                    <dt>{label}</dt>
+                    <dd>{report.measurements.charge_and_hydrophobicity[key]}</dd>
+                  </div>
+                ) : null,
+              )}
+              {report.measurements.charge_and_hydrophobicity
+                .hydrophobicity_percentage != null && (
+                <div className="stat">
+                  <dt>Hydrophobicity</dt>
+                  <dd>
+                    {formatPercent(
+                      report.measurements.charge_and_hydrophobicity
+                        .hydrophobicity_percentage,
+                    )}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          )}
         </div>
 
         {report.measurements?.composition && (
@@ -89,7 +203,12 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
               {report.measurements.composition.length}
             </p>
 
-            <div className="composition-table-container">
+            <div
+              className="composition-table-container"
+              tabIndex={0}
+              role="region"
+              aria-label="Amino acid composition, scrollable"
+            >
               <table aria-label="Amino Acid Composition">
                 <thead>
                   <tr>
@@ -116,8 +235,13 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
                       </td>
                       <td>
                         {report.measurements.composition.percentages?.[aminoAcid] != null
-                          ? `${report.measurements.composition.percentages[aminoAcid]}%`
+                          ? formatPercent(report.measurements.composition.percentages[aminoAcid])
                           : 'Unavailable'}
+                        {report.measurements.composition.percentages?.[aminoAcid] != null && (
+                          <Meter
+                            value={(Number(report.measurements.composition.percentages[aminoAcid]) / maxComposition) * 100}
+                          />
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -137,188 +261,28 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
               return <p>No hydropathy profile is available.</p>;
             }
 
-            const width = 1000;
-            const height = 280;
-            const padding = { top: 24, right: 30, bottom: 48, left: 60 };
-            const minHydropathy = -4.5;
-            const maxHydropathy = 4.5;
-            const plotWidth = width - padding.left - padding.right;
-            const plotHeight = height - padding.top - padding.bottom;
-
-            
-            const points = profile
-              .map((point) => {
-                const value = Number(point.hydropathy);
-                const start = Number(point.start);
-                const end = Number(point.end);
-
-                if (
-                  !Number.isFinite(value) ||
-                  !Number.isFinite(start) ||
-                  !Number.isFinite(end) ||
-                  start < 1 ||
-                  end < start
-                ) {
-                  return null;
-                }
-
-                const position = (start + end) / 2;
-                const x =
-                  padding.left +
-                  (profile.length === 1
-                    ? plotWidth / 2
-                    : ((position - 1) /
-                        Math.max(1, Number(report.protein?.length || proteinSequence.length) - 1)) *
-                      plotWidth);
-
-                const normalized =
-                  (value - minHydropathy) /
-                  (maxHydropathy - minHydropathy);
-
-                const y =
-                  padding.top +
-                  (1 - normalized) * plotHeight;
-
-                return {
-                  x,
-                  y: Math.max(
-                    padding.top,
-                    Math.min(height - padding.bottom, y),
-                  ),
-                  position,
-                };
-              })
-              .filter(Boolean);
-
-          const yForValue = (value) =>
-            padding.top +
-            (1 - (value - minHydropathy) /
-              (maxHydropathy - minHydropathy)) *
-              plotHeight;
-
-          const zeroY = yForValue(0);
-
+            const sequenceLength = Number(
+              report.protein?.length || proteinSequence.length,
+            );
 
             return (
               <>
                 <p>{profile.length} sliding windows</p>
 
-                <div className="hydropathy-chart-container">
-                  
-                <svg
-                  className="hydropathy-chart"
-                  viewBox={`0 0 ${width} ${height}`}
-                  role="img"
-                  aria-label="Hydropathy profile chart"
-                >
-                  {(() => {
-                    const sequenceLength = Number(
-                      report.protein?.length || proteinSequence.length,
-                    );
-
-                    if (!Number.isFinite(sequenceLength) || sequenceLength <= 0) {
-                      return null;
-                    }
-
-                    return [0, 0.25, 0.5, 0.75, 1].map((fraction) => {
-                      const position =
-                        Math.round(fraction * (sequenceLength - 1)) + 1;
-                      const x = padding.left + fraction * plotWidth;
-
-                      return (
-                        <g key={fraction}>
-                          <line
-                            x1={x}
-                            y1={height - padding.bottom}
-                            x2={x}
-                            y2={height - padding.bottom + 5}
-                            className="hydropathy-grid-line"
-                          />
-                          <text
-                            x={x}
-                            y={height - padding.bottom + 19}
-                            textAnchor="middle"
-                            className="hydropathy-axis-label"
-                          >
-                            {position}
-                          </text>
-                        </g>
-                      );
-                    });
-                  })()}
-
-                  <text
-                    x={width / 2}
-                    y={height - 8}
-                    textAnchor="middle"
-                    className="hydropathy-axis-label"
-                  >
-                    Residue position (window midpoint)
-                  </text>
-
-
-                    {[-4, -2, 0, 2, 4].map((value) => {
-                      const y = yForValue(value);
-
-                      return (
-                        <g key={value}>
-                          <line
-                            x1={padding.left}
-                            y1={y}
-                            x2={width - padding.right}
-                            y2={y}
-                            className="hydropathy-grid-line"
-                          />
-                          <text
-                            x={padding.left - 10}
-                            y={y + 4}
-                            textAnchor="end"
-                            className="hydropathy-axis-label"
-                          >
-                            {value}
-                          </text>
-                        </g>
-                      );
-                    })}
-
-                    <text
-                      x={padding.left}
-                      y={padding.top - 8}
-                      className="hydropathy-axis-label"
-                    >
-                      Hydropathy score
-                    </text>
-
-                    <line
-                      x1={padding.left}
-                      y1={zeroY}
-                      x2={width - padding.right}
-                      y2={zeroY}
-                      className="hydropathy-zero-line"
-                    />
-
-                    {points.length > 1 && (
-                      <polyline
-                        points={points.map((point) => `${point.x},${point.y}`).join(' ')}
-                        className="hydropathy-line"
-                      />
-                    )}
-
-                    {points.length === 1 && (
-                      <circle
-                        cx={points[0].x}
-                        cy={points[0].y}
-                        r="5"
-                        className="hydropathy-point"
-                      />
-                    )}
-                  </svg>
-                </div>
+                <HydropathyChart
+                  profile={profile}
+                  sequenceLength={sequenceLength}
+                />
 
                 <details className="hydropathy-raw-data">
                   <summary>Raw hydropathy values</summary>
 
-                  <div className="hydropathy-table-container">
+                  <div
+                    className="hydropathy-table-container"
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Raw hydropathy values, scrollable"
+                  >
                     <table>
                       <thead>
                         <tr>
@@ -333,9 +297,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
                             <td>{point.start}</td>
                             <td>{point.end}</td>
                             <td>
-                              {Number.isFinite(Number(point.hydropathy))
-                                ? Number(point.hydropathy).toFixed(3)
-                                : 'Unavailable'}
+                              {formatNumber(point.hydropathy)}
                             </td>
                           </tr>
                         ))}
@@ -369,7 +331,6 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             <h4>Transmembrane Candidates</h4>
 
             {(() => {
-              const candidates = report.measurements.transmembrane_candidates;
               const sequenceLength = Number(
                 report.protein?.length || proteinSequence.length,
               );
@@ -382,108 +343,11 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
                 );
               }
 
-              const width = 800;
-              const height = 120;
-              const leftPadding = 40;
-              const rightPadding = 20;
-              const plotWidth = width - leftPadding - rightPadding;
-
               return (
-                <div className="transmembrane-map-container">
-                  <svg
-                    className="transmembrane-region-map"
-                    viewBox={`0 0 ${width} ${height}`}
-                    role="img"
-                    aria-label="Transmembrane region map"
-                  >
-                    <line
-                      x1={leftPadding}
-                      y1="55"
-                      x2={width - rightPadding}
-                      y2="55"
-                      className="transmembrane-sequence-line"
-                    />
-
-                    {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
-                      const x = leftPadding + fraction * plotWidth;
-                      const position = Math.round(fraction * sequenceLength);
-
-                      return (
-                        <g key={fraction}>
-                          <line
-                            x1={x}
-                            y1="45"
-                            x2={x}
-                            y2="70"
-                            className="transmembrane-axis-tick"
-                          />
-                          <text
-                            x={x}
-                            y="88"
-                            textAnchor="middle"
-                            className="transmembrane-axis-label"
-                          >
-                            {position}
-                          </text>
-                        </g>
-                      );
-                    })}
-
-                    {candidates.map((candidate, index) => {
-                      const start = Number(candidate.start);
-                      const end = Number(candidate.end);
-
-                      if (
-                        !Number.isFinite(start) ||
-                        !Number.isFinite(end) ||
-                        start < 1 ||
-                        end < start ||
-                        start > sequenceLength
-                      ) {
-                        return null;
-                      }
-
-                      const boundedEnd = Math.min(end, sequenceLength);
-                      const x =
-                        leftPadding +
-                        ((start - 1) / sequenceLength) * plotWidth;
-                      const regionWidth = Math.max(
-                        2,
-                        ((boundedEnd - start + 1) / sequenceLength) *
-                          plotWidth,
-                      );
-
-                      return (
-                        <rect
-                          key={`${start}-${end}-${index}`}
-                          x={x}
-                          y="43"
-                          width={Math.min(
-                            regionWidth,
-                            width - rightPadding - x,
-                          )}
-                          height="24"
-                          rx="4"
-                          className="transmembrane-region"
-                          aria-label={`Candidate region from residue ${start} to ${end}`}
-                        >
-                          <title>
-                            Candidate region: residues {start} to {end}
-                          </title>
-                        </rect>
-                      );
-                    })}
-
-                    <text
-                      x={width / 2}
-                      y="112"
-                      textAnchor="middle"
-                      className="transmembrane-axis-label"
-                    >
-                      Amino acid position
-                    </text>
-                  </svg>
-                </div>
+                <TransmembraneMap
+                  candidates={report.measurements.transmembrane_candidates}
+                  sequenceLength={sequenceLength}
+                />
               );
             })()}
 
@@ -522,7 +386,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             <div className="measurement-values">
               <p>
                 Conservation:{' '}
-                {report.conservation.summary.conservation_percentage}%
+                {formatPercent(report.conservation.summary.conservation_percentage, { fallback: "Unavailable" })}
               </p>
 
               <p>
@@ -542,7 +406,12 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
           <div className="conserved-regions measurement-card">
             <h4>Conserved Regions</h4>
 
-            <div className="report-table-wrapper conserved-regions-table-wrapper">
+            <div
+              className="report-table-wrapper conserved-regions-table-wrapper"
+              tabIndex={0}
+              role="region"
+              aria-label="Conserved regions, scrollable"
+            >
               <table className="report-table">
                 <thead>
                   <tr>
@@ -648,10 +517,12 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             <div className="evidence-values">
               {report.evidence.localization.map(
                 (evidence, index) => (
-                  <div key={index}>
-                    <p>Localization: {evidence.location}</p>
-                    <p>Source: {evidence.source}</p>
-                    <p>Confidence: {evidence.confidence}</p>
+                  <div key={index} className="evidence-item">
+                    <p className="evidence-item-title">Localization: {evidence.location}</p>
+                    <p className="evidence-item-meta">
+                      <span>Source: {evidence.source}</span>
+                      <ConfidenceBadge confidence={evidence.confidence} />
+                    </p>
                   </div>
                 ),
               )}
@@ -666,39 +537,11 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             <div className="evidence-values">
               {report.evidence.essentiality.map(
                 (evidence, index) => (
-                  <div key={index}>
-                    <p>Essentiality: {evidence.evidence}</p>
-                    <p>Source: {evidence.source}</p>
-                    <p>Confidence: {evidence.confidence}</p>
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
-        )}
-
-        {report.evidence?.host_similarity?.length > 0 && (
-          <div className="evidence-host-similarity evidence-card">
-            <h4>Host Similarity Evidence</h4>
-
-            <div className="evidence-values">
-              {report.evidence.host_similarity.map(
-                (evidence, index) => (
-                  <div key={index}>
-                    <p>
-                      Host Similarity: {evidence.identity_percentage}%
-                    </p>
-                    <p>
-                      Alignment Length: {evidence.alignment_length}
-                    </p>
-                    <p>
-                      E-value: {evidence.e_value}
-                    </p>
-                    <p>
-                      Source: {evidence.source}
-                    </p>
-                    <p>
-                      Confidence: {evidence.confidence}
+                  <div key={index} className="evidence-item">
+                    <p className="evidence-item-title">Essentiality: {evidence.evidence}</p>
+                    <p className="evidence-item-meta">
+                      <span>Source: {evidence.source}</span>
+                      <ConfidenceBadge confidence={evidence.confidence} />
                     </p>
                   </div>
                 ),
@@ -706,6 +549,108 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             </div>
           </div>
         )}
+
+        {report.evidence?.host_similarity?.length > 0 && (() => {
+          const hits = report.evidence.host_similarity;
+          const shown = Math.min(visibleHostCount, hits.length);
+
+          return (
+            <div className="evidence-host-similarity evidence-card">
+              <h4>Host Similarity Evidence</h4>
+
+              <div className="evidence-values host-similarity-grid">
+                {hits.slice(0, visibleHostCount).map((evidence, index) => (
+                  <div key={index} className="evidence-item host-hit">
+                    <p className="host-hit-id">
+                      <span className="host-hit-label">Host ID</span>
+                      <span className="host-hit-value num">
+                        {evidence.host_id ?? "Not reported"}
+                      </span>
+                    </p>
+                    <p className="evidence-item-title">
+                      Host Similarity: {formatPercent(evidence.identity_percentage)}
+                    </p>
+                    <Meter value={evidence.identity_percentage} />
+                    <dl className="host-hit-metrics">
+                      {evidence.query_coverage_percentage != null && (
+                        <div className="host-hit-coverage">
+                          <dt>Query coverage</dt>
+                          <dd>
+                            <span className="num">
+                              {formatPercent(evidence.query_coverage_percentage)}
+                            </span>
+                            <Meter value={evidence.query_coverage_percentage} />
+                          </dd>
+                        </div>
+                      )}
+                      {evidence.subject_coverage_percentage != null && (
+                        <div className="host-hit-coverage">
+                          <dt>Subject coverage</dt>
+                          <dd>
+                            <span className="num">
+                              {formatPercent(evidence.subject_coverage_percentage)}
+                            </span>
+                            <Meter value={evidence.subject_coverage_percentage} />
+                          </dd>
+                        </div>
+                      )}
+                      <div>
+                        <dt>Alignment length</dt>
+                        <dd className="num">{evidence.alignment_length}</dd>
+                      </div>
+                      <div>
+                        <dt>E-value</dt>
+                        <dd className="num">{formatEvalue(evidence.e_value)}</dd>
+                      </div>
+                    </dl>
+                    <p className="evidence-item-meta">
+                      <span>Source: {evidence.source}</span>
+                      <ConfidenceBadge confidence={evidence.confidence} />
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {hits.length > HOST_SIMILARITY_PAGE_SIZE && (
+                <div className="evidence-controls host-similarity-controls">
+                  <span className="evidence-count host-similarity-count">
+                    Showing {shown} of {hits.length} matches
+                  </span>
+
+                  <div className="evidence-control-buttons">
+                    {visibleHostCount < hits.length && (
+                      <button
+                        type="button"
+                        className="load-more-button host-similarity-load-more"
+                        onClick={() =>
+                          setVisibleHostCount((current) =>
+                            Math.min(
+                              current + HOST_SIMILARITY_PAGE_SIZE,
+                              hits.length,
+                            ),
+                          )
+                        }
+                      >
+                        Load more
+                      </button>
+                    )}
+                    {visibleHostCount > HOST_SIMILARITY_PAGE_SIZE && (
+                      <button
+                        type="button"
+                        className="load-more-button load-more-secondary host-similarity-show-fewer"
+                        onClick={() =>
+                          setVisibleHostCount(HOST_SIMILARITY_PAGE_SIZE)
+                        }
+                      >
+                        Show fewer
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
 
         {!report.evidence?.localization?.length &&
@@ -732,8 +677,14 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
                   <p className="interpretation-text">
                     {interpretation.interpretation}
                   </p>
-                  <p>Category: {interpretation.category}</p>
-                  <p>Confidence: {interpretation.confidence}</p>
+                  <p className="interpretation-meta">
+                    {interpretation.category && (
+                      <span className="badge badge-neutral">
+                        Category: {String(interpretation.category).replaceAll("_", " ")}
+                      </span>
+                    )}
+                    <ConfidenceBadge confidence={interpretation.confidence} />
+                  </p>
                 </div>
               ),
             )}
@@ -844,6 +795,9 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             <div
               className="report-table-wrapper peptide-candidates-table-wrapper"
               data-testid="peptide-candidates-list"
+              tabIndex={0}
+              role="region"
+              aria-label="Peptide candidates, scrollable"
             >
               <table className="report-table">
                 <thead>
@@ -871,8 +825,8 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
                         <td className="sequence-cell">
                           {candidate.sequence}
                         </td>
-                        <td>{candidate.gravy ?? "Not available"}</td>
-                        <td>{candidate.net_charge ?? "Not available"}</td>
+                        <td>{formatNumber(candidate.gravy, { fallback: "Not available" })}</td>
+                        <td>{formatSigned(candidate.net_charge, { fallback: "Not available" })}</td>
                         <td>
                           {candidate.overlaps_transmembrane == null
                             ? "Not available"
