@@ -256,3 +256,16 @@ def test_annotation_is_a_no_op_after_failure():
     assert iedb.annotate_peptides_with_epitopes(
         windows, {"status": "lookup_failed"}
     ) == windows
+
+
+def test_repeated_rows_for_one_allele_are_counted_once():
+    text = (
+        "allele\tstart\tend\tpeptide\tpercentile_rank\n"
+        "HLA-A*02:01\t3\t11\tLLLALLLAL\t0.9\n"
+        "HLA-A*02:01\t3\t11\tLLLALLLAL\t0.3\n"
+    )
+
+    binders = iedb.collect_binders(iedb.parse_binding_table(text), 1.0)
+
+    assert binders[0]["allele_count"] == 1
+    assert binders[0]["alleles"][0]["percentile_rank"] == 0.3
