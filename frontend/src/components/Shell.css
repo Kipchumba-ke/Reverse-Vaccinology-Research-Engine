@@ -113,52 +113,55 @@
 }
 
 /*
- * Ledger rows: a narrow margin column for the heading, a wide column for the
- * evidence. This is the page's recurring structure.
+ * Sections stack vertically: kicker, heading, sub-heading, then content.
+ * Content sits in a readable left-aligned column. Sections are numbered with
+ * a CSS counter, so any page can reuse them.
  */
-.band {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
-  gap: var(--space-5) var(--space-6);
-  max-width: var(--page-max);
-  margin: 0 auto;
-  padding: var(--space-6) var(--gutter);
-  border-top: 1px solid var(--rule);
+.sections {
+  counter-reset: section;
 }
 
-.band-head {
+.section {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--gutter);
+  border-top: 1px solid var(--rule);
+  counter-increment: section;
+}
+
+.section-head,
+.section-body {
+  max-width: 54rem;
+}
+
+.section-head {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  align-self: start;
+  margin-bottom: var(--space-6);
 }
 
-.band-head > p:not(.kicker) {
+.section-head .kicker::before {
+  content: counter(section, decimal-leading-zero) '  ·  ';
+  color: var(--accent);
+}
+
+.section-head h2 {
+  font-size: var(--text-2xl);
+  line-height: 1.1;
+}
+
+.section-sub {
+  max-width: var(--measure);
   color: var(--ink-soft);
-  font: 400 var(--text-sm) / 1.55 var(--font-sans);
+  font: 400 var(--text-md) / 1.5 var(--font-serif);
 }
 
-.band-head h2 {
-  font-size: var(--text-lg);
-  line-height: 1.12;
-}
-
-.band-body {
+.section-body {
   min-width: 0;
 }
 
-@media (min-width: 900px) {
-  .band-head {
-    position: sticky;
-    top: var(--space-5);
-  }
-}
-
 @media (max-width: 899px) {
-  .band {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .site-footer {
     grid-template-columns: minmax(0, 1fr);
   }

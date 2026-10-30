@@ -303,22 +303,19 @@
   display: block;
 }
 
+.report-overview .analysis-report-section:first-child {
+  border-top: 0;
+}
+
 .analysis-report-section {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
-  grid-auto-flow: row;
-  gap: var(--space-4) var(--space-6);
-  padding: var(--space-6) 0;
+  padding: var(--space-8) 0 var(--space-6);
   border-top: 1px solid var(--rule-strong);
   counter-increment: report-section;
 }
 
 .analysis-report-section > h3 {
-  grid-column: 1;
-  grid-row: 1;
-  align-self: start;
-  font-size: var(--text-md);
-  line-height: 1.2;
+  font-size: var(--text-xl);
+  line-height: 1.15;
 }
 
 .analysis-report-section > h3::before {
@@ -330,9 +327,22 @@
   letter-spacing: 0.06em;
 }
 
-.analysis-report-section > :not(h3) {
-  grid-column: 2;
+.section-sub {
+  max-width: var(--measure);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-6);
+  color: var(--ink-soft);
+  font: 400 var(--text-md) / 1.5 var(--font-serif);
+}
+
+/* Everything inside a section is a single readable column */
+.analysis-report-section > :not(h3):not(.section-sub) {
+  max-width: 56rem;
   min-width: 0;
+}
+
+.analysis-report-section > :not(h3):not(.section-sub) + :not(.section-sub) {
+  margin-top: var(--space-6);
 }
 
 .analysis-report-section p {
@@ -349,13 +359,13 @@
 .candidate-assessment-card,
 .conservation-profile-container {
   display: block;
-  padding-top: var(--space-3);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--rule);
 }
 
 .measurement-card + .measurement-card,
 .evidence-card + .evidence-card {
-  margin-top: var(--space-5);
+  margin-top: var(--space-7);
 }
 
 .measurement-card > h4,
@@ -372,25 +382,28 @@
   margin-top: var(--space-2);
 }
 
-/* label / value rows */
+/* label / value rows: one under the other */
 .stat-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-6);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
   margin: 0;
   padding: 0;
+  border-top: 1px solid var(--ink);
 }
 
 .stat {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-5);
   min-width: 0;
-  padding-bottom: var(--space-2);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--rule);
 }
 
 .stat dt {
+  flex: none;
   color: var(--ink-soft);
   font: 500 var(--text-xs) / 1.3 var(--font-mono);
   letter-spacing: 0.04em;
@@ -400,6 +413,7 @@
 .stat dd {
   margin: 0;
   overflow-wrap: anywhere;
+  text-align: right;
   font: 400 var(--text-base) / 1.35 var(--font-sans);
   font-variant-numeric: tabular-nums;
 }
@@ -408,21 +422,9 @@
   color: var(--ink-soft);
 }
 
-.stat-list-stack {
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-2);
-}
-
-.stat-list-stack .stat {
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
 .stat-list-compact {
   margin-top: var(--space-4);
-  gap: var(--space-2) var(--space-6);
+  border-top-color: var(--rule);
 }
 
 .measurement-net-charge > p {
@@ -647,16 +649,17 @@
 
 .conservation-profile-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: var(--space-3) var(--space-5);
-  margin-bottom: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: var(--space-5);
+  border-top: 1px solid var(--ink);
 }
 
 .conservation-profile-stat {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-bottom: var(--space-2);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -852,8 +855,8 @@
 
 /* Host similarity: one ruled entry per hit, with a bar for each percentage */
 .host-similarity-grid {
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: var(--space-5) var(--space-5);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
 }
 
 .host-hit {
@@ -983,15 +986,16 @@
 
 .candidate-assessment-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: var(--space-3) var(--space-5);
+  grid-template-columns: minmax(0, 1fr);
+  border-top: 1px solid var(--ink);
 }
 
 .candidate-assessment-summary > div {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-bottom: var(--space-2);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -1029,29 +1033,9 @@
 
 /* ---------- responsive ---------- */
 
-@media (max-width: 899px) {
-  .analysis-report-section {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-3);
-  }
-
-  .analysis-report-section > h3 {
-    grid-row: auto;
-    grid-column: 1;
-  }
-
-  .analysis-report-section > :not(h3) {
-    grid-column: 1;
-  }
-}
-
 @media (max-width: 600px) {
   .analysis-page {
     padding-top: var(--space-6);
-  }
-
-  .stat-list {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .history-item {
