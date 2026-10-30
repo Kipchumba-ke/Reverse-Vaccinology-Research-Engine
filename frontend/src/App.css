@@ -1,1002 +1,165 @@
+/*
+ * Application screens: analysis form, status panel, history, and the report.
+ * Everything uses tokens from theme.css; see frontend/DESIGN.md.
+ *
+ * The report is laid out like a journal article: each section has its number
+ * and title in a narrow left margin and its evidence in the wide column,
+ * separated by hairline rules. There are no boxes, shadows or gradients.
+ */
+
+/* ---------- workspace shell ---------- */
+
 .analysis-page {
-  min-height: 100vh;
-  padding: 0 24px 64px;
-  box-sizing: border-box;
-  background: var(--page-bg);
-  color: var(--text-primary);
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--space-7) var(--gutter) 0;
 }
 
+.workspace-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 46rem;
+  margin-bottom: var(--space-6);
+}
+
+.workspace-header h1,
 .analysis-page > h1 {
-  width: min(100%, 1100px);
-  margin: 0 auto;
-  padding: 48px 0 32px;
-  text-align: center;
-  font-size: 2.75rem;
-  line-height: 1.1;
-  font-weight: 700;
-  color: var(--heading);
+  font-size: var(--text-2xl);
 }
 
-.analysis-form {
-  width: min(100%, 1100px);
-  margin: 0 auto;
-  padding: 32px;
-  box-sizing: border-box;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--card-bg);
-  box-shadow: var(--shadow);
-}
-
-.analysis-form label {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.analysis-form textarea {
-  width: 100%;
-  min-height: 240px;
-  padding: 16px;
-  box-sizing: border-box;
-  resize: vertical;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-1);
-  color: var(--text-primary);
-  font: inherit;
-  line-height: 1.6;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.analysis-form textarea::placeholder {
-  color: var(--text-secondary);
-}
-
-.analysis-form textarea:focus {
-  outline: none;
-  border-color: var(--accent-green);
-  box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.15);
-}
-
-.analysis-submit {
-  display: block;
-  margin: 18px 0 0 auto;
-  padding: 13px 24px;
-  border: none;
-  border-radius: 8px;
-  background: var(--primary-green);
-  color: var(--on-primary);
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.analysis-submit:hover {
-  background: var(--primary-green-dark);
-  box-shadow: 0 6px 14px rgba(0, 107, 63, 0.2);
-  transform: translateY(-1px);
-}
-
-.analysis-submit:active {
-  transform: translateY(0);
-}
-
-/* Reverse Vaccinology */
-
-.analysis-report {
-  width: min(100%, 1100px);
-  margin: 32px auto 0;
-}
-
-.analysis-report-section {
-  padding: 28px;
-  margin-bottom: 20px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--card-bg);
-  box-shadow: 0 4px 16px rgba(23, 53, 42, 0.05);
-}
-
-.analysis-report-section h3 {
-  margin: 0 0 20px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid var(--border);
-  color: var(--heading);
-  font-size: 1.2rem;
-}
-
-.analysis-report-section p {
-  color: var(--text-primary);
-  line-height: 1.6;
-}
-
-.analysis-report-section strong {
-  color: var(--heading);
-}
-
-.report-overview {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.report-overview .analysis-report-section {
-  margin-bottom: 0;
-}
-
-.protein-characteristics-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 24px;
-}
-
-.protein-characteristics-grid p {
-  margin: 0;
-}
-
-.protein-sequence {
-  margin-top: 24px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-1);
-}
-
-.protein-sequence strong {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--heading);
-}
-
-.protein-sequence p {
-  margin: 0;
-  font-family: "Courier New", monospace;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
-}
-
-.measurement-card {
-  padding: 20px;
-  margin-top: 20px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-1);
-}
-
-.measurement-card h4 {
-  margin: 0 0 14px;
-  color: var(--heading);
-  font-size: 1rem;
-}
-
-.measurement-card p {
-  margin: 8px 0;
-}
-
-
-.composition-table-container {
-  max-width: 100%;
-  overflow-x: auto;
-  margin-top: 12px;
-}
-
-.composition-table-container table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-
-.composition-table-container th,
-.composition-table-container td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-.composition-table-container th {
-  background: var(--surface-3);
-  color: var(--heading);
-  font-weight: 600;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.composition-table-container th:nth-child(2),
-.composition-table-container th:nth-child(3),
-.composition-table-container td:nth-child(2),
-.composition-table-container td:nth-child(3) {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.composition-table-container tbody tr:last-child td {
-  border-bottom: none;
-}
-
-
-/* Multiple-sequence alignment */
-
-.alignment-table-container {
-  max-width: 100%;
-  overflow-x: auto;
-  margin-top: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.alignment-table-container table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-
-.alignment-table-container th,
-.alignment-table-container td {
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
-  text-align: left;
-  vertical-align: top;
-}
-
-.alignment-table-container thead th {
-  background: var(--surface-3);
-  color: var(--heading);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.alignment-table-container tbody th {
-  color: var(--text-primary);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.alignment-table-container tbody tr:last-child th,
-.alignment-table-container tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.alignment-table-container td code {
-  display: block;
-  min-width: max-content;
-  font-family: "Courier New", monospace;
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
-  white-space: pre;
-}
-
-.alignment-table {
-  table-layout: auto;
-}
-
-.alignment-table tbody td code {
-  min-width: max-content;
-  white-space: pre;
-  line-height: 1.8;
-  letter-spacing: 0.12em;
-  font-variant-ligatures: none;
-}
-
-.alignment-table tbody th {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  background: var(--card-bg);
-}
-
-.alignment-table thead th:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-}
-
-.protein-report-selector {
-  display: grid;
-  gap: 10px;
-  max-width: 420px;
-  margin-bottom: 24px;
-}
-
-.protein-report-selector label {
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.protein-report-selector select {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-1);
-  color: var(--text-primary);
-  font: inherit;
-  cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.protein-report-selector select:focus {
-  outline: none;
-  border-color: var(--accent-green);
-  box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.15);
-}
-
-
-.individual-protein-report {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
-}
-
-.individual-protein-report > .analysis-report {
-  width: 100%;
-  margin: 0;
-}
-
-.individual-protein-report > .analysis-report > h2 {
-  margin-top: 0;
-  color: var(--heading);
-  font-size: 1.35rem;
-  line-height: 1.4;
-}
-
-.input-help {
-  margin: -4px 0 14px;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
+.workspace-header > p:last-child {
+  color: var(--ink-soft);
+  font-size: var(--text-md);
   line-height: 1.5;
 }
 
-.measurement-values {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 20px;
+.input-help {
+  max-width: var(--measure);
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.5 var(--font-sans);
 }
 
-.measurement-values p {
-  margin: 0;
-}
-
-.measurement-net-charge p {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--heading);
-}
-
-.evidence-card {
-  padding: 20px;
-  margin-top: 20px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-1);
-}
-
-.evidence-card h4 {
-  margin: 0 0 14px;
-  color: var(--heading);
-  font-size: 1rem;
-}
-
-.evidence-values {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.evidence-values > div {
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card-bg);
-}
-
-.evidence-values p {
-  margin: 6px 0;
-}
-
-
-.interpretations-list {
-  display: grid;
-  gap: 16px;
-}
-
-.interpretation-card {
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-1);
-}
-
-.interpretation-card p {
-  margin: 8px 0;
-}
-
-.interpretation-card .interpretation-text {
-  margin-top: 0;
-  color: var(--text-primary);
-  font-weight: 500;
-  line-height: 1.7;
-}
-
-.candidate-assessment-card {
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-1);
-}
-
-.candidate-assessment-summary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.candidate-assessment-summary > div {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card-bg);
-}
-
-.candidate-assessment-label {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.candidate-assessment-card p {
-  margin: 0;
-  color: var(--text-primary);
-  line-height: 1.6;
-}
-
-.candidate-assessment-rationale {
-  margin-top: 16px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card-bg);
-}
-
-.candidate-assessment-rationale p {
-  margin-top: 8px;
-}
-
-.limitations-list {
-  display: grid;
-  gap: 12px;
-}
-
-.limitation-card {
-  padding: 16px 20px;
-  border-left: 4px solid var(--accent-green);
-  border-radius: 8px;
-  background: var(--surface-1);
-}
-
-.limitation-card p {
-  margin: 0;
-  color: var(--text-primary);
-  line-height: 1.6;
-}
-
-.peptide-candidates-list {
-  display: grid;
-  gap: 16px;
-}
-
-.peptide-candidate-card {
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-1);
-}
-
-.peptide-candidate-label {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.peptide-sequence {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card-bg);
-}
-
-.peptide-sequence p {
-  margin: 0;
-  font-family: "Courier New", monospace;
-  font-weight: 700;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
-}
-
-.peptide-candidate-details {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.peptide-candidate-details > div {
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card-bg);
-}
-
-.peptide-candidate-details p {
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.report-table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  margin-top: 0.75rem;
-}
-
-.report-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-}
-
-.report-table th,
-.report-table td {
-  padding: 0.65rem;
-  border: 1px solid var(--border);
-  text-align: left;
-  vertical-align: top;
-}
-
-.report-table th {
-  background: var(--info-bg);
-  font-weight: 600;
-}
-
-.report-table tbody tr:nth-child(even) {
-  background: var(--info-bg);
-}
-
-.report-table .sequence-cell {
-  min-width: 180px;
-  overflow-wrap: anywhere;
-  font-family: monospace;
-}
-
-.peptide-candidates-table-wrapper {
-  max-height: 650px;
-  overflow: auto;
-}
-
-.peptide-candidates-table-wrapper thead {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-
-.peptide-candidates-table-wrapper {
-  max-height: 420px;
-  overflow: auto;
-  overscroll-behavior: contain;
-  border-radius: 6px;
-}
-
-.peptide-candidates-table-wrapper thead {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-.peptide-candidates-table-wrapper .sequence-cell {
-  min-width: 180px;
-  overflow-wrap: anywhere;
-}
-
-.peptide-candidates-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.peptide-candidates-visible-count {
-  color: var(--info);
-  font-size: 0.875rem;
-}
-
-.peptide-candidates-toggle {
-  padding: 0.55rem 0.9rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: var(--card-bg);
-  color: var(--info);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.peptide-candidates-toggle:hover {
-  background: var(--info-bg);
-}
-
-.peptide-candidates-toggle:focus-visible {
-  outline: 2px solid var(--info);
-  outline-offset: 2px;
-}
-
-
-.hydropathy-chart-container {
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.hydropathy-chart {
-  display: block;
-  width: 100%;
-  height: auto;
-  min-width: 0;
-}
-
-.hydropathy-zero-line {
-  stroke: currentColor;
-  stroke-opacity: 0.3;
-  stroke-dasharray: 5 5;
-}
-
-.hydropathy-line {
-  fill: none;
-  stroke: var(--info);
-  stroke-width: 3;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-}
-
-.hydropathy-point {
-  fill: var(--info);
-}
-
-.hydropathy-raw-data {
-  margin-top: 1rem;
-}
-
-.hydropathy-raw-data summary {
-  cursor: pointer;
-  font-weight: 600;
-  padding: 0.5rem 0;
-}
-
-.hydropathy-table-container {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.hydropathy-table-container table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.hydropathy-table-container th,
-.hydropathy-table-container td {
-  padding: 0.5rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border-strong);
-}
-
-.hydropathy-axis-label {
-  fill: var(--text-secondary);
-  font-size: 12px;
-}
-
-.hydropathy-grid-line {
-  stroke: var(--border);
-  stroke-width: 1;
-}
-
-.transmembrane-map-container {
-  width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-  margin: 16px 0;
-}
-
-.transmembrane-region-map {
-  display: block;
-  width: 100%;
-  min-width: 480px;
-  height: auto;
-}
-
-.transmembrane-sequence-line {
-  stroke: var(--border);
-  stroke-width: 6;
-  stroke-linecap: round;
-}
-
-.transmembrane-axis-tick {
-  stroke: var(--border);
-  stroke-width: 1;
-}
-
-.transmembrane-axis-label {
-  fill: var(--text-secondary);
-  font-size: 12px;
-}
-
-.transmembrane-region {
-  fill: var(--accent-green);
-  stroke: var(--primary-green);
-  stroke-width: 1;
-}
-
-/* Per-position conservation profile */
-
-.conservation-profile-container {
-  width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-  margin: 16px 0;
-}
-
-.conservation-profile {
-  display: block;
-  width: 100%;
-  min-width: 600px;
-  height: auto;
-}
-
-.conservation-grid-line {
-  stroke: var(--border);
-  stroke-width: 1;
-}
-
-.conservation-axis-label {
-  fill: var(--text-secondary);
-  font-size: 11px;
-}
-
-.conservation-profile-line {
-  fill: none;
-  stroke: var(--accent-green);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-.conservation-profile-point {
-  fill: var(--primary-green);
-}
-
-.conservation-profile-note {
-  color: var(--text-secondary) !important;
-  font-size: 0.85rem;
-}
-
-
-.conservation-profile-container {
-  width: 100%;
-  min-width: 0;
-  margin-top: 1rem;
-}
-
-.conservation-profile-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
-}
+/* ---------- analysis form ---------- */
 
-.conservation-profile-stat {
+.analysis-form {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  min-width: 0;
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface, var(--surface-1));
+  gap: var(--space-2);
+  max-width: 52rem;
+  padding-top: var(--space-4);
+  border-top: 2px solid var(--ink);
 }
 
-.conservation-profile-stat-label {
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  line-height: 1.4;
+.analysis-form > label,
+.analysis-metadata-fields > label {
+  margin-top: var(--space-3);
+  color: var(--ink);
 }
 
-.conservation-profile-stat strong {
-  color: var(--text-primary);
-  font-size: 1.15rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
+.analysis-form textarea {
+  min-height: 11rem;
+  resize: vertical;
 }
 
-.conservation-profile-chart-scroll {
-  width: 100%;
-  min-width: 0;
+.analysis-metadata-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
 }
 
-.conservation-profile {
-  display: block;
-  width: 100%;
-  height: auto;
-  min-width: 0;
-  overflow: visible;
+.analysis-metadata-fields h2 {
+  font-size: var(--text-md);
 }
 
-.conservation-grid-line {
-  stroke: var(--border);
-  stroke-width: 1;
+.analysis-submit {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: var(--space-5);
+  padding: 0 var(--space-5);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 600 var(--text-sm) / 1 var(--font-sans);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.conservation-reference-line {
-  stroke-dasharray: 5 4;
-  opacity: 0.8;
+.analysis-submit:hover {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
 }
 
-.conservation-axis-label {
-  fill: var(--text-secondary);
-  font-size: 12px;
-}
-
-.conservation-axis-title {
-  fill: var(--text-primary);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.conservation-profile-line {
-  fill: none;
-  stroke: var(--accent, #23845b);
-  stroke-width: 1.8;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-}
-
-.conservation-profile-point {
-  fill: var(--accent, #23845b);
-  stroke: var(--card-bg);
-  stroke-width: 1;
-}
-
-.conservation-gap-marker {
-  stroke: var(--text-secondary);
-  stroke-width: 1.5;
-  opacity: 0.65;
-}
-
-.conservation-profile-note {
-  margin-top: 0.85rem;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-
-/* Analysis status panel */
+/* ---------- status panel ---------- */
 
 .analysis-status-panel {
-  width: min(100%, 1100px);
-  box-sizing: border-box;
-  margin: 28px auto 0;
-  padding: 22px 24px;
-  border: 1px solid var(--border);
-  border-left: 5px solid var(--accent-green);
-  border-radius: 12px;
-  background: var(--card-bg);
-  box-shadow: 0 4px 16px rgba(23, 53, 42, 0.05);
-  text-align: left;
+  max-width: 52rem;
+  margin: var(--space-6) 0;
+  padding: var(--space-3) 0 var(--space-3) var(--space-4);
+  border-left: 3px solid var(--info);
+}
+
+.analysis-status-panel.status-completed {
+  border-left-color: var(--ok);
+}
+
+.analysis-status-panel.status-failed {
+  border-left-color: var(--bad);
+}
+
+.analysis-status-panel.status-in-progress {
+  border-left-color: var(--warn);
 }
 
 .status-heading {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: var(--space-3);
 }
 
 .status-indicator {
-  display: flex;
-  flex: 0 0 34px;
-  width: 34px;
-  height: 34px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--surface-3);
-  color: var(--accent-text);
-  font-size: 1.1rem;
-  font-weight: 800;
+  flex: none;
+  min-width: 1.25rem;
+  font: 600 var(--text-md) / 1.2 var(--font-mono);
+}
+
+.status-completed .status-indicator {
+  color: var(--ok);
+}
+
+.status-failed .status-indicator {
+  color: var(--bad);
 }
 
 .status-copy {
   flex: 1;
-  min-width: 0;
 }
 
 .status-copy h3 {
-  margin: 2px 0 5px;
-  color: var(--text-primary);
-  font-size: 1.05rem;
-  line-height: 1.4;
+  font-size: var(--text-md);
 }
 
 .status-copy p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 0.92rem;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-
-.status-in-progress {
-  border-left-color: #b7791f;
-}
-
-.status-in-progress .status-indicator {
-  background: var(--warn-bg);
-  color: var(--warn);
-}
-
-.status-completed {
-  border-color: var(--border-strong);
-  border-left-color: var(--accent-text);
-  background: var(--surface-1);
-}
-
-.status-completed .status-indicator {
-  background: var(--surface-3);
-  color: var(--accent-text);
-}
-
-.status-failed {
-  border-color: var(--danger-border);
-  border-left-color: var(--danger);
-  background: var(--danger-bg);
-}
-
-.status-failed .status-indicator {
-  background: var(--danger-bg);
-  color: var(--danger);
+  margin-top: var(--space-1);
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.5 var(--font-sans);
 }
 
 .status-spinner {
-  flex: 0 0 20px;
-  width: 20px;
-  height: 20px;
-  margin: 5px 2px 0 8px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent-text);
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--rule-strong);
+  border-top-color: var(--accent);
   border-radius: 50%;
-  animation: analysis-status-spin 0.8s linear infinite;
+  animation: analysis-status-spin 0.9s linear infinite;
 }
 
 @keyframes analysis-status-spin {
@@ -1009,748 +172,889 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px 12px;
-  margin: 18px 0 0 48px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-}
-
-.status-id > span {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  font-weight: 600;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-3);
+  color: var(--ink-soft);
+  font: 400 var(--text-xs) / 1.4 var(--font-mono);
 }
 
 .status-id code {
-  max-width: 100%;
   overflow-wrap: anywhere;
-  color: var(--text-primary);
-  background: var(--surface-2);
-  font-size: 0.8rem;
+  color: var(--ink);
 }
 
 .copy-analysis-id {
-  padding: 5px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--card-bg);
-  color: var(--heading);
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: 500 var(--text-sm) / 1 var(--font-sans);
   cursor: pointer;
 }
 
 .copy-analysis-id:hover {
-  border-color: var(--accent-green);
-  background: var(--surface-2);
+  background: var(--ink);
+  color: var(--bg);
 }
 
-@media (max-width: 600px) {
-  .analysis-status-panel {
-    margin-top: 20px;
-    padding: 18px 16px;
-  }
-
-  .status-heading {
-    gap: 10px;
-  }
-
-  .status-id {
-    margin-left: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .status-spinner {
-    animation-duration: 2s;
-  }
-}
-
-
-.conserved-regions-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.regions-count {
-  color: var(--info);
-  font-size: 0.875rem;
-}
-
-.conserved-regions-toggle {
-  padding: 0.55rem 0.9rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: var(--card-bg);
-  color: var(--info);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.conserved-regions-toggle:hover {
-  background: var(--info-bg);
-}
-
-.conserved-regions-toggle:focus-visible {
-  outline: 2px solid var(--info);
-  outline-offset: 2px;
-}
-
-
-.conserved-regions-table-wrapper {
-  max-height: 350px;
-  overflow: auto;
-  overscroll-behavior: contain;
-  border-radius: 6px;
-}
-
-.conserved-regions-table-wrapper thead {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-.conserved-regions-table-wrapper .sequence-cell {
-  min-width: 180px;
-  overflow-wrap: anywhere;
-}
-
-
-.app-navigation {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.app-navigation a {
-  color: inherit;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.app-navigation a:hover {
-  text-decoration: underline;
-}
-
-.app-navigation button {
-  padding: 0.55rem 0.9rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 0.5rem;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
+/* ---------- history ---------- */
 
 .history-list {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  max-width: 62rem;
+  border-top: 2px solid var(--ink);
 }
 
 .history-item {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  gap: var(--space-3) var(--space-5);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--rule);
 }
 
 .history-item h2 {
-  margin-top: 0;
+  font-size: var(--text-md);
 }
 
-.history-item {
-  background: var(--card-bg);
-  box-shadow: var(--shadow-soft);
+.history-item p {
+  margin-top: var(--space-1);
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.5 var(--font-sans);
 }
 
-.history-item h2 {
-  color: var(--text-primary);
-}
-
-.history-item a {
-  color: var(--accent-text);
+.history-item strong {
+  color: var(--ink);
   font-weight: 600;
-}
-
-
-
-/* Authenticated navigation */
-.app-navigation {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 14px max(24px, calc((100% - 1200px) / 2));
-  border-bottom: 1px solid var(--border);
-  background: var(--nav-bg);
-  backdrop-filter: blur(12px);
-}
-
-.nav-brand,
-.nav-links,
-.dashboard-actions,
-.section-heading {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.nav-brand {
-  gap: 10px;
-  color: var(--heading);
-  font-size: 1.15rem;
-  font-weight: 800;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.nav-brand-icon {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border-radius: 10px;
-  background: var(--primary-green-dark);
-  color: var(--on-primary);
-}
-
-.nav-links {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.nav-links a {
-  color: var(--text-secondary);
-  font-size: 0.92rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.nav-links a:hover {
-  color: var(--accent-text);
-}
-
-.nav-links button {
-  padding: 9px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card-bg);
-  color: var(--text-primary);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.workspace-header {
-  width: min(100%, 1100px);
-  margin: 0 auto;
-  padding: 40px 0 28px;
-}
-
-.workspace-header h1 {
-  margin: 0;
-  color: var(--heading);
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  line-height: 1.15;
-}
-
-.workspace-header > p:last-child {
-  max-width: 720px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
-
-
-
-.dashboard-intro {
-  max-width: 690px;
-  margin: 20px 0 28px;
-  color: var(--text-secondary);
-  font-size: 1.05rem;
-  line-height: 1.8;
-}
-
-.dashboard-actions {
-  flex-wrap: wrap;
-}
-
-.primary-action,
-.secondary-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 12px 18px;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  font: inherit;
-  font-weight: 700;
-  text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.primary-action {
-  background: var(--primary-green);
-  color: var(--on-primary);
-}
-
-.primary-action:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 107, 63, 0.18);
-}
-
-.secondary-action {
-  border-color: var(--border);
-  background: var(--card-bg);
-  color: var(--heading);
-}
-
-.dashboard-section {
-  padding: 28px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--card-bg);
-  box-shadow: 0 4px 16px rgba(23, 53, 42, 0.04);
-}
-
-.section-heading {
-  justify-content: space-between;
-  margin-bottom: 22px;
-}
-
-.section-heading h2,
-.workflow-section > h2 {
-  margin: 0;
-  color: var(--heading);
-  font-size: clamp(1.4rem, 3vw, 1.9rem);
-}
-
-.section-heading a {
-  color: var(--accent-text);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.dashboard-empty {
-  padding: 28px;
-  border: 1px dashed var(--border-strong);
-  border-radius: 12px;
-  background: var(--surface-1);
-}
-
-.dashboard-empty h3 {
-  margin-top: 0;
-  color: var(--heading);
-}
-
-.dashboard-empty p,
-.workflow-card p {
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
-
-.recent-analysis-list {
-  display: grid;
-  gap: 12px;
-}
-
-.recent-analysis-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--card-bg);
-}
-
-.recent-analysis-icon {
-  display: grid;
-  flex: 0 0 42px;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border-radius: 10px;
-  background: var(--surface-3);
-  color: var(--heading);
-  font-weight: 800;
-}
-
-.recent-analysis-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.recent-analysis-details h3 {
-  margin: 0 0 5px;
-  overflow-wrap: anywhere;
-  color: var(--text-primary);
-  font-size: 1rem;
-}
-
-.recent-analysis-details p {
-  margin: 3px 0;
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-}
-
-.recent-analysis-card > a {
-  color: var(--accent-text);
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.analysis-status-badge {
-  padding: 5px 9px;
-  border-radius: 999px;
-  background: var(--surface-3);
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 700;
   text-transform: capitalize;
-}
-
-.status-completed {
-  background: var(--surface-3);
-  color: var(--heading);
-}
-
-.status-running,
-.status-pending {
-  background: var(--warn-bg);
-  color: var(--warn);
-}
-
-.status-failed {
-  background: var(--danger-bg);
-  color: var(--danger);
-}
-
-.workflow-section > .eyebrow {
-  margin-bottom: 8px;
-}
-
-.workflow-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 24px;
-}
-
-.workflow-card {
-  padding: 22px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface-1);
-}
-
-.workflow-card > span {
-  color: var(--accent-green);
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
-.workflow-card h3 {
-  margin-bottom: 8px;
-  color: var(--heading);
-}
-
-.workflow-card p {
-  margin-bottom: 0;
-}
-
-.history-error {
-  margin: 16px 0;
-  padding: 12px 16px;
-  color: var(--danger);
-  background-color: var(--danger-bg);
-  border: 1px solid var(--danger-border);
-  border-left: 4px solid var(--danger);
-  border-radius: 6px;
-  font-size: 0.9rem;
-  line-height: 1.5;
 }
 
 .view-delete {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.history-success {
-  margin: 16px 0;
-  padding: 12px 16px;
-  color: var(--heading);
-  background-color: var(--surface-2);
-  border: 1px solid var(--border-strong);
-  border-left: 4px solid #16a34a;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  line-height: 1.5;
+.view-delete a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font: 500 var(--text-sm) / 1 var(--font-sans);
 }
 
 .delete-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 9px 16px;
-  margin-top: 12px;
-  color: var(--danger);
-  background-color: var(--card-bg);
-  border: 1px solid var(--danger);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--bad);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--bad);
+  font: 500 var(--text-sm) / 1 var(--font-sans);
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
 }
 
 .delete-button:hover:not(:disabled) {
-  color: #ffffff;
-  background-color: #dc2626;
-  border-color: var(--danger);
-}
-
-.delete-button:focus-visible {
-  outline: 2px solid var(--danger);
-  outline-offset: 3px;
+  background: var(--bad);
+  color: var(--bg);
 }
 
 .delete-button:disabled {
-  color: var(--text-secondary);
-  background-color: var(--info-bg);
-  border-color: var(--border-strong);
-  cursor: not-allowed;
-  opacity: 0.8;
+  border-color: var(--rule);
+  color: var(--ink-faint);
+  cursor: wait;
 }
 
-@media (max-width: 760px) {
-  .app-navigation {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px 18px;
-  }
-
-  .nav-links {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 12px;
-  }
-
-  .nav-links a,
-  .nav-links button {
-    font-size: 0.85rem;
-  }
-
-  .dashboard-page {
-    padding: 24px 16px 48px;
-  }
-
-  .dashboard-section {
-    padding: 20px;
-  }
-
-  .workflow-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .recent-analysis-card {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .recent-analysis-details {
-    flex-basis: calc(100% - 60px);
-  }
-
-  .recent-analysis-card > a {
-    margin-left: auto;
-  }
+.history-error,
+.history-success {
+  max-width: 62rem;
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid currentColor;
+  font: 500 var(--text-sm) / 1.5 var(--font-sans);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .primary-action,
-  .secondary-action {
-    transition: none;
-  }
+.history-error {
+  color: var(--bad);
 }
 
+.history-success {
+  color: var(--ok);
+}
 
+/* ---------- report: article layout ---------- */
 
-/* Tablet and smaller */
+.analysis-report {
+  margin-top: var(--space-6);
+  counter-reset: report-section;
+  border-top: 2px solid var(--ink);
+}
 
-@media (max-width: 768px) {
-  .analysis-page {
-    padding: 0 16px 48px;
-  }
+.analysis-report > h2 {
+  padding: var(--space-4) 0;
+  font-size: var(--text-xl);
+}
 
-  .analysis-page > h1 {
-    padding: 36px 0 24px;
-    font-size: 2.25rem;
-  }
+.report-overview {
+  display: block;
+}
 
-  .analysis-form {
-    padding: 24px;
-  }
+.analysis-report-section {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
+  grid-auto-flow: row;
+  gap: var(--space-4) var(--space-6);
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--rule-strong);
+  counter-increment: report-section;
+}
 
-  .analysis-report {
-    margin-top: 24px;
-  }
+.analysis-report-section > h3 {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  font-size: var(--text-md);
+  line-height: 1.2;
+}
 
+.analysis-report-section > h3::before {
+  content: counter(report-section, decimal-leading-zero);
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--accent);
+  font: 500 var(--text-xs) / 1 var(--font-mono);
+  letter-spacing: 0.06em;
+}
+
+.analysis-report-section > :not(h3) {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.analysis-report-section p {
+  max-width: var(--measure);
+}
+
+.analysis-report-section strong {
+  font-weight: 600;
+}
+
+/* Sub-blocks inside a section: separated by a rule, titled like a figure */
+.measurement-card,
+.evidence-card,
+.candidate-assessment-card,
+.conservation-profile-container {
+  display: block;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--rule);
+}
+
+.measurement-card + .measurement-card,
+.evidence-card + .evidence-card {
+  margin-top: var(--space-5);
+}
+
+.measurement-card > h4,
+.evidence-card > h4 {
+  margin-bottom: var(--space-3);
+  color: var(--ink-soft);
+  font: 500 var(--text-xs) / 1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.measurement-card p,
+.evidence-card p {
+  margin-top: var(--space-2);
+}
+
+/* label / value rows */
+.stat-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-6);
+  margin: 0;
+  padding: 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.stat dt {
+  color: var(--ink-soft);
+  font: 500 var(--text-xs) / 1.3 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stat dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font: 400 var(--text-base) / 1.35 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-unit {
+  color: var(--ink-soft);
+}
+
+.stat-list-stack {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.stat-list-stack .stat {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.stat-list-compact {
+  margin-top: var(--space-4);
+  gap: var(--space-2) var(--space-6);
+}
+
+.measurement-net-charge > p {
+  color: var(--ink);
+  font: 500 var(--text-xl) / 1.1 var(--font-mono);
+  letter-spacing: -0.02em;
+}
+
+/* Sequence block */
+.protein-sequence {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--rule);
+}
+
+.protein-sequence strong {
+  display: block;
+  color: var(--ink-soft);
+  font: 500 var(--text-xs) / 1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.protein-sequence p {
+  max-width: none;
+  margin-top: var(--space-2);
+  overflow-wrap: anywhere;
+  font: 400 var(--text-sm) / 1.8 var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+/* ---------- tables ---------- */
+
+.composition-table-container {
+  max-width: 34rem;
+  max-height: 22rem;
+}
+
+.composition-table-container,
+.alignment-table-container,
+.report-table-wrapper,
+.hydropathy-table-container {
+  max-height: 28rem;
+  overflow: auto;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
+}
+
+.composition-table-container table,
+.alignment-table-container table,
+.report-table,
+.hydropathy-table-container table {
+  width: 100%;
+}
+
+.composition-table-container th,
+.composition-table-container td,
+.alignment-table-container th,
+.alignment-table-container td,
+.report-table th,
+.report-table td,
+.hydropathy-table-container th,
+.hydropathy-table-container td {
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+.composition-table-container thead th,
+.alignment-table-container thead th,
+.report-table thead th,
+.hydropathy-table-container thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg);
+  border-bottom: 1px solid var(--rule-strong);
+  font: 500 var(--text-xs) / 1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.composition-table-container tbody tr:last-child td,
+.report-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.composition-table-container td:nth-child(2),
+.composition-table-container td:nth-child(3),
+.composition-table-container th:nth-child(2),
+.composition-table-container th:nth-child(3) {
+  text-align: right;
+  padding-right: var(--space-4);
+}
+
+.composition-table-container .meter {
+  display: inline-block;
+  width: 6rem;
+  margin-left: var(--space-3);
+  vertical-align: middle;
+}
+
+.report-table .sequence-cell,
+.alignment-table td code,
+.alignment-table tbody th {
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.report-table .sequence-cell {
+  max-width: 28rem;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.alignment-table td code {
+  white-space: pre;
+}
+
+.alignment-table tbody th {
+  position: sticky;
+  left: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.hydropathy-raw-data {
+  margin-top: var(--space-4);
+}
+
+.hydropathy-raw-data summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font: 500 var(--text-sm) / 1 var(--font-sans);
+  cursor: pointer;
+}
+
+/* In-bar meters: identity, coverage, composition. The value is always also
+ * printed as text, so the bar is decorative. */
+.meter {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 3rem;
+  height: 6px;
+  background: var(--bg-sunk);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+}
+
+.meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+/* Short lists of regions read as data, not prose */
+.measurement-values {
+  display: grid;
+  gap: 2px;
+}
+
+.measurement-values p {
+  margin: 0;
+  font: 400 var(--text-sm) / 1.6 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- hydropathy / transmembrane figures ---------- */
+
+.hydropathy-chart-container,
+.transmembrane-map-container {
+  margin-top: var(--space-3);
+}
+
+.hydropathy-axis-label,
+.transmembrane-axis-label {
+  fill: var(--ink-soft);
+  font: 400 12px var(--font-sans);
+}
+
+.hydropathy-grid-line,
+.transmembrane-axis-tick {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.hydropathy-zero-line {
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.hydropathy-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.hydropathy-point {
+  fill: var(--accent);
+}
+
+.transmembrane-sequence-line {
+  stroke: var(--ink-soft);
+  stroke-width: 2;
+}
+
+.transmembrane-region {
+  fill: var(--accent);
+  stroke: var(--ink);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ---------- conservation ---------- */
+
+.conservation-profile-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.conservation-profile-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.conservation-profile-stat-label {
+  color: var(--ink-soft);
+  font: 500 var(--text-xs) / 1.3 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.conservation-profile-stat strong {
+  font: 500 var(--text-lg) / 1.1 var(--font-mono);
+  letter-spacing: -0.02em;
+}
+
+.conservation-profile-chart-scroll {
+  width: 100%;
+  min-width: 0;
+}
+
+.conservation-profile {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.conservation-grid-line {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.conservation-reference-line {
+  stroke-dasharray: 5 4;
+}
+
+.conservation-axis-label {
+  fill: var(--ink-soft);
+  font: 400 12px var(--font-sans);
+}
+
+.conservation-axis-title {
+  fill: var(--ink);
+  font: 500 12px var(--font-sans);
+}
+
+.conservation-profile-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.conservation-profile-point {
+  fill: var(--accent);
+  stroke: var(--bg);
+  stroke-width: 1;
+}
+
+.conservation-gap-marker {
+  stroke: var(--ink-soft);
+  stroke-width: 1.5;
+}
+
+.conservation-profile-note {
+  margin-top: var(--space-3);
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.55 var(--font-sans);
+}
+
+.conserved-regions-controls,
+.peptide-candidates-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.regions-count,
+.peptide-candidates-visible-count,
+.peptide-candidate-count {
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.4 var(--font-sans);
+}
+
+.conserved-regions-toggle,
+.peptide-candidates-toggle,
+.load-more-button,
+.protein-sequence button {
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: 500 var(--text-sm) / 1 var(--font-sans);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.conserved-regions-toggle:hover,
+.peptide-candidates-toggle:hover,
+.load-more-button:hover,
+.protein-sequence button:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.protein-sequence button {
+  margin-top: var(--space-3);
+}
+
+.load-more-secondary {
+  border-color: var(--rule-strong);
+}
+
+.peptide-candidates-controls > div,
+.conserved-regions-controls > div {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ---------- protein-selector in multi-sequence reports ---------- */
+
+.protein-report-selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 30rem;
+}
+
+.individual-protein-report {
+  margin-top: var(--space-6);
+}
+
+.individual-protein-report > .analysis-report {
+  margin-top: 0;
+}
+
+.individual-protein-report > .analysis-report > h2 {
+  font-size: var(--text-lg);
+}
+
+/* ---------- evidence ---------- */
+
+.evidence-values {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.evidence-item {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.evidence-item p {
+  max-width: none;
+  margin-top: var(--space-1);
+}
+
+.evidence-item-title {
+  font: 600 var(--text-base) / 1.35 var(--font-serif);
+}
+
+.evidence-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.4 var(--font-sans);
+}
+
+.badge {
+  color: var(--ink-soft);
+  font: 500 var(--text-sm) / 1.4 var(--font-sans);
+}
+
+.badge-high {
+  color: var(--ok);
+}
+
+.badge-low {
+  color: var(--bad);
+}
+
+.badge-medium {
+  color: var(--warn);
+}
+
+/* Host similarity: one ruled entry per hit, with a bar for each percentage */
+.host-similarity-grid {
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--space-5) var(--space-5);
+}
+
+.host-hit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 0 var(--space-3);
+  border-top: 2px solid var(--ink);
+}
+
+.host-hit-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.host-hit-label {
+  color: var(--ink-soft);
+  font: 500 var(--text-xs) / 1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.host-hit-value {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.host-hit .evidence-item-title {
+  margin-top: var(--space-2);
+  font: 500 var(--text-sm) / 1.3 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.host-hit-metrics {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+}
+
+.host-hit-metrics > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px var(--space-3);
+}
+
+.host-hit-metrics dt {
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.3 var(--font-sans);
+}
+
+.host-hit-metrics dd {
+  display: contents;
+}
+
+.host-hit-metrics dd .num {
+  justify-self: end;
+  font-size: var(--text-sm);
+}
+
+.host-hit-coverage .meter {
+  grid-column: 1 / -1;
+}
+
+.host-hit-metrics > div:not(.host-hit-coverage) dd {
+  display: block;
+  font: 400 var(--text-sm) / 1.3 var(--font-mono);
+}
+
+.evidence-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.evidence-control-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.evidence-count {
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.4 var(--font-sans);
+}
+
+/* ---------- interpretation, assessment, limitations ---------- */
+
+.interpretations-list,
+.limitations-list {
+  display: grid;
+  gap: 0;
+}
+
+.interpretation-card,
+.limitation-card {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.limitation-card {
+  padding-left: var(--space-3);
+  border-top: 0;
+  border-bottom: 1px solid var(--rule);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.interpretation-text {
+  font-size: var(--text-base);
+}
+
+.interpretation-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin-top: var(--space-2);
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.4 var(--font-sans);
+}
+
+.candidate-assessment-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3) var(--space-5);
+}
+
+.candidate-assessment-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.candidate-assessment-label {
+  color: var(--ink-soft);
+  font: 500 var(--text-xs) / 1.3 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.candidate-assessment-rationale,
+.candidate-assessment-evidence,
+.candidate-assessment-concerns,
+.candidate-assessment-missing-evidence {
+  margin-top: var(--space-4);
+}
+
+.candidate-assessment-card h4 {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-base);
+}
+
+.candidate-assessment-card ul {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.report-unavailable-message {
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 899px) {
   .analysis-report-section {
-    padding: 22px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
   }
 
-  .report-overview {
-    grid-template-columns: 1fr;
-    gap: 16px;
+  .analysis-report-section > h3 {
+    grid-row: auto;
+    grid-column: 1;
   }
 
-  .protein-characteristics-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .analysis-submit {
-    width: 100%;
-  }
-
-  .conservation-profile-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .analysis-report-section > :not(h3) {
+    grid-column: 1;
   }
 }
 
-/* Mobile */
-
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .analysis-page {
-    padding: 0 12px 36px;
+    padding-top: var(--space-6);
   }
 
-  .analysis-page > h1 {
-    padding: 28px 0 20px;
-    font-size: 1.85rem;
+  .stat-list {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .analysis-form {
-    padding: 18px;
-    border-radius: 12px;
-  }
-
-  .analysis-form textarea {
-    min-height: 200px;
-    padding: 12px;
-  }
-
-  .analysis-report-section {
-    padding: 18px;
-    margin-bottom: 16px;
-    border-radius: 12px;
-  }
-
-  .analysis-report-section h3 {
-    margin-bottom: 16px;
-    font-size: 1.1rem;
-  }
-
-  .protein-sequence {
-    padding: 12px;
-  }
-
-  .measurement-card {
-    padding: 16px;
-  }
-
-  .measurement-values {
-    grid-template-columns: 1fr;
-  }
-
-  .measurement-net-charge p {
-    font-size: 1.3rem;
-  }
-
-  .evidence-values {
-    grid-template-columns: 1fr;
-  }
-
-  .evidence-card {
-    padding: 16px;
-  }
-
-  .interpretation-card {
-    padding: 16px;
-  }
-
-  .candidate-assessment-card {
-    padding: 16px;
-  }
-
-  .candidate-assessment-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .limitation-card {
-    padding: 14px 16px;
-  }
-
-  .peptide-candidate-card {
-    padding: 16px;
-  }
-
-  .peptide-candidate-details {
-    grid-template-columns: 1fr;
-  }
-
-  .protein-report-selector {
-    max-width: 100%;
-  }
-
-  .individual-protein-report {
-    margin-top: 20px;
-    padding-top: 20px;
-  }
-  .conservation-profile-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .conserved-regions-controls {
-    align-items: flex-start;
+  .history-item {
     flex-direction: column;
-  }
-
-  .conserved-regions-table-wrapper {
-    max-height: 300px;
-  }
-
-  .peptide-candidates-controls {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .peptide-candidates-table-wrapper {
-    max-height: 350px;
   }
 }

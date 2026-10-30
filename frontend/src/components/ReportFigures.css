@@ -1,0 +1,61 @@
+/* Shared figure behaviour: readouts under charts and hover emphasis. */
+
+.figure-readout {
+  min-height: 1.5em;
+  margin-top: var(--space-2);
+  color: var(--ink);
+  font: 400 var(--text-sm) / 1.5 var(--font-sans);
+}
+
+/* Hydropathy cursor */
+.hydropathy-cursor line {
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+
+.hydropathy-cursor circle {
+  fill: var(--bg);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+/* Transmembrane region emphasis on hover or keyboard focus */
+.transmembrane-region {
+  cursor: pointer;
+  outline: none;
+  transition: fill-opacity 0.15s ease, stroke-width 0.15s ease;
+}
+
+.transmembrane-region-map:hover .transmembrane-region:not(:hover) {
+  fill-opacity: 0.45;
+}
+
+.transmembrane-region:hover,
+.transmembrane-region:focus,
+.transmembrane-region.is-active {
+  fill-opacity: 1;
+  stroke-width: 3;
+}
+
+/* Sequence tracks and MHC heatmap emphasis */
+.sequence-tracks-segment,
+.mhc-map-cell {
+  transition: stroke-width 0.12s ease;
+  stroke: transparent;
+  stroke-width: 0;
+}
+
+.sequence-tracks-segment {
+  stroke: var(--ink);
+  stroke-width: 0.75;
+}
+
+.sequence-tracks-segment:hover,
+.mhc-map-cell:hover {
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+
+.mhc-map-cell {
+  fill: var(--accent);
+}

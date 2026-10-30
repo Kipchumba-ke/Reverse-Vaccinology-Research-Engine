@@ -88,13 +88,16 @@ function AnalysisHistory() {
   }
 
   if (loading) {
-    return <main className="analysis-page"><p>Loading analysis history...</p></main>
+    return <main id="main" className="analysis-page"><p>Loading analysis history...</p></main>
   }
 
   return (
-    <main className="analysis-page">
-      <h1>Analysis History</h1>
-      <p>Review your previously submitted protein analyses.</p>
+    <main id="main" className="analysis-page">
+      <header className="workspace-header">
+        <p className="kicker">Saved reports</p>
+        <h1>Analysis History</h1>
+        <p>Review your previously submitted protein analyses.</p>
+      </header>
 
       {error && <p role="alert" className="history-error">{error}</p>}
       {deleteError && <p role="alert" className="history-error">{deleteError}</p>}

@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { buildTracks } from '../utils/trackData'
+import ZoomFigure from './ZoomFigure'
+import './ReportFigures.css'
 
 const WIDTH = 1000
 const LEFT = 300
@@ -16,6 +19,7 @@ function ticksFor(length) {
 }
 
 function SequenceTracks({ report }) {
+  const [hovered, setHovered] = useState('')
   const { length, tracks } = buildTracks(report)
 
   if (!length || tracks.length === 0) {
@@ -32,6 +36,7 @@ function SequenceTracks({ report }) {
 
   return (
     <div className="sequence-tracks">
+      <ZoomFigure label="Sequence feature map">
       <svg
         viewBox={`0 0 ${WIDTH} ${height}`}
         role="img"
@@ -62,6 +67,9 @@ function SequenceTracks({ report }) {
                   height={14}
                   fill={track.color}
                   fillOpacity={Math.min(1, 0.35 + 0.2 * segment.weight)}
+                  className="sequence-tracks-segment"
+                  onPointerEnter={() => setHovered(`${track.label}: ${segment.label}`)}
+                  onPointerLeave={() => setHovered('')}
                 >
                   <title>{segment.label}</title>
                 </rect>
@@ -82,6 +90,11 @@ function SequenceTracks({ report }) {
           ))}
         </g>
       </svg>
+      </ZoomFigure>
+
+      <p className="figure-readout" aria-live="polite">
+        {hovered || 'Hover a bar to read the feature and its residues.'}
+      </p>
 
       <details className="sequence-tracks-text">
         <summary>Show the same features as text</summary>

@@ -1,41 +1,26 @@
-/* Matches the nav's existing "Log out" button. */
+/* A quiet, rectangular switch that matches the other bordered controls. */
 .theme-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card-bg);
-  color: var(--text-primary);
-  font: inherit;
-  font-weight: 600;
-  line-height: 1.2;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: 500 var(--text-sm) / 1 var(--font-sans);
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .theme-toggle:hover {
-  border-color: var(--accent-green);
-}
-
-.theme-toggle:focus-visible {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 2px;
+  background: var(--ink);
+  color: var(--bg);
 }
 
 .theme-toggle svg {
   flex: none;
-}
-
-.theme-toggle-floating {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 50;
-  box-shadow: var(--shadow-soft);
 }
 
 @media (max-width: 480px) {

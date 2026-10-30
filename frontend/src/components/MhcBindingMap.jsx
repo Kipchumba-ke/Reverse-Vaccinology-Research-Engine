@@ -1,4 +1,5 @@
 import { formatNumber } from '../utils/format'
+import ZoomFigure from './ZoomFigure'
 
 const WIDTH = 1000
 const LEFT = 150
@@ -55,6 +56,7 @@ function Heatmap({ title, data, length }) {
   return (
     <div className="mhc-map">
       <h4>{title}</h4>
+      <ZoomFigure label={`${title} binding map`}>
       <svg
         viewBox={`0 0 ${WIDTH} ${height}`}
         role="img"
@@ -80,7 +82,7 @@ function Heatmap({ title, data, length }) {
                   y={y + 2}
                   width={Math.max(cellWidth, 1.5)}
                   height={ROW - 4}
-                  fill="#332288"
+                  className="mhc-map-cell"
                   fillOpacity={shade(rank, cutoff)}
                 >
                   <title>
@@ -98,6 +100,7 @@ function Heatmap({ title, data, length }) {
           {length}
         </text>
       </svg>
+      </ZoomFigure>
       <p className="mhc-map-note">
         Shaded cells mark peptides at or below the percentile-rank cut-off of {cutoff}
         ; darker means stronger predicted binding. An empty cell means no predicted

@@ -1238,16 +1238,17 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
     })
 
     expect(
-      screen.getByText(/host similarity: 12.5%/i),
+      screen.getByText(/host similarity: 12\.50%/i),
     ).toBeInTheDocument()
 
     expect(
-      screen.getByText(/alignment length: 180/i),
-    ).toBeInTheDocument()
+      screen.getByText('Alignment length', { selector: 'dt' })
+        .nextElementSibling,
+    ).toHaveTextContent('180')
 
     expect(
-      screen.getByText(/e-value: 0.01/i),
-    ).toBeInTheDocument()
+      screen.getByText('E-value', { selector: 'dt' }).nextElementSibling,
+    ).toHaveTextContent('0.01')
 
     expect(
       screen.getByText(/source: BLAST/i),
