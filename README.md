@@ -22,19 +22,21 @@ Most analysis modules exist and are unit-tested. The built-in predictors are sim
 | --- | --- | --- |
 | Sequence properties | Implemented | Composition, molecular weight, isoelectric point, GRAVY, net charge |
 | Hydropathy and transmembrane candidates | Implemented (heuristic) | Kyte-Doolittle sliding window (19 residues, cutoff 1.6); regions of 18–25 residues are flagged, and regions inside a predicted signal peptide are re-labelled `signal_peptide_h_region` |
-| Signal peptide | Implemented (heuristic) | Rule-based screen: charged N-region, hydrophobic core, small residues at the cleavage site (von Heijne -3/-1 rule). Optional SignalP 6.0 adapter, off by default |
+| Signal peptide | Implemented (heuristic) + optional SignalP 6.0 | Rule-based screen: charged N-region, hydrophobic core, small residues at the cleavage site (von Heijne -3/-1 rule). The SignalP 6.0 adapter (local install) is off by default |
 | Antigenic regions | Implemented (heuristic) | Kolaskar-Tongaonkar propensity scale over a 7-residue window. A scale-based screen, not B-cell or T-cell epitope prediction |
+| Epitope and MHC prediction | Optional (IEDB), off by default | `IEDB_ENABLED=1` sends the sequence to the IEDB Analysis Resource for MHC class I and II binding over a configurable HLA allele panel and linear B-cell epitopes (Bepipred-2.0). Results are predictions, with percentile ranks |
 | Peptide windows | Implemented | 15-residue windows with GRAVY, charge, antigenic propensity and overlap flags (`app/analysis/peptide_windows.py`) |
 | Conservation | Implemented | Identity per column plus similarity groups (Clustal-style strong/weak). Uses Clustal Omega when installed, otherwise a built-in star alignment scored with BLOSUM62 |
 | Host similarity | Implemented | BLASTP against local human, mouse or pig proteome databases; interpretation thresholds are configurable |
 | Short-peptide host scan | Implemented, off by default | `HOST_PEPTIDE_SCAN=1` searches peptide windows with BLAST short-query settings and reports matches of 8+ identical residues |
-| Subcellular localization | Evidence intake only | Records locations from UniProt or NCBI annotations. A low-confidence topology hint is derived from the signal peptide and transmembrane screens and is kept apart from evidence. PSORTb is not integrated |
+| Subcellular localization | Database evidence + optional predictors | Records locations from UniProt or NCBI annotations. Optional DeepTMHMM (BioLib cloud) and PSORTb 3.0 (local or Docker install) add predicted compartments as evidence, and the assessment flags when tools agree or conflict. A low-confidence topology hint from the built-in screens is kept apart from evidence |
+| Sequence map and 3-D structure | Implemented | Frontend feature map, MHC heatmaps, and a rotatable backbone view of the AlphaFold DB model when the protein has a UniProt accession. No structure prediction is run |
 | Essentiality | Evidence intake only | Looks up a local ePath database that you must build yourself |
 | Candidate assessment | Implemented | Sorts evidence into supporting, concerns and missing; no score |
 | Report and PDF export | Implemented | Structured report per analysis, downloadable as PDF |
 | Accounts and history | Implemented | Register, login, per-user history, delete; owner-only access |
 | Background jobs | Wired, needs setup | Celery and Redis queue; requires a running worker |
-| Epitope prediction (BepiPred, IEDB), PSORTb, DeepTMHMM | Not integrated | Planned |
+| TMHMM 2.0, BepiPred-3.0, NetMHC standalone, ESMFold | Not integrated | TMHMM and BepiPred-3.0 have no public API and licensed downloads; see roadmap |
 
 ## How it works
 
@@ -47,7 +49,7 @@ A submitted sequence passes through the steps below. Steps marked optional run o
 5. **Slide 15-residue peptide windows** and flag overlaps with transmembrane and antigenic regions.
 6. **Conservation (optional).** With `msa_sequences`, the sequences are aligned and each column is scored for identity, similarity group and gaps.
 7. **Host similarity (optional).** BLASTP against the chosen host proteome (`human`, `mouse`, `pig`), or skipped with `none`. With `HOST_PEPTIDE_SCAN=1`, peptide windows are also searched with short-query settings.
-8. **External evidence (optional).** Localization from UniProt or NCBI annotations; essentiality from the local ePath database; signal peptide from SignalP 6.0 if enabled.
+8. **External evidence and predictors (optional).** Localization from UniProt or NCBI annotations; essentiality from the local ePath database; signal peptide, topology and localization from SignalP 6.0, DeepTMHMM and PSORTb if enabled; MHC and B-cell epitope predictions from IEDB if enabled.
 9. **Assess.** Evidence is sorted into supporting, concerns and missing, and a status is set.
 10. **Report.** The result is stored and can be downloaded as JSON or PDF.
 
@@ -117,6 +119,9 @@ Create a `.env` file in the repository root. It is git-ignored.
 | `ALIGNMENT_SCORING` | `blosum62` (default) or `identity` for the built-in aligner |
 | `HOST_SIMILARITY_*`, `HOST_PEPTIDE_*` | Host-similarity thresholds and the short-peptide scan |
 | `SIGNALP_ENABLED`, `SIGNALP6_EXECUTABLE`, `SIGNALP_ORGANISM` | Optional SignalP 6.0 adapter |
+| `DEEPTMHMM_ENABLED` | Optional DeepTMHMM through BioLib; needs `pip install pybiolib` and sends the sequence to BioLib |
+| `PSORTB_ENABLED`, `PSORTB_EXECUTABLE`, `PSORTB_GRAM` | Optional PSORTb 3.0 from a local or Docker install (`negative`, `positive` or `archaea`) |
+| `IEDB_ENABLED`, `IEDB_MHCI_ALLELES`, `IEDB_MHCII_ALLELES`, `IEDB_MHCI_LENGTH`, `IEDB_MHCII_LENGTH`, `IEDB_MHCI_RANK_CUTOFF`, `IEDB_MHCII_RANK_CUTOFF`, `IEDB_MAX_SEQUENCE_LENGTH`, `IEDB_API_BASE` | Optional IEDB epitope and MHC prediction; sends the sequence to IEDB |
 
 Copy `.env.example` as a starting point. `JWT_SECRET_KEY` is required: the app refuses to issue or verify tokens without it.
 
@@ -188,13 +193,33 @@ curl -X POST http://localhost:5000/api/analyses \
 
 The synchronous `/api/analyze` route also accepts `msa_sequences` for conservation analysis.
 
+`GET /api/structure/<accession>` (authenticated) returns the AlphaFold DB model for a UniProt accession: the PDB text, per-residue pLDDT, mean pLDDT and the model's reference sequence. It returns `400` for something that is not a UniProt accession, `404` when AlphaFold DB has no model, and `502` when AlphaFold DB cannot be reached.
+
+When a predictor is enabled, the report gains a `prediction_status` object with one entry per predictor attempted (`completed`, `lookup_failed` or `not_performed`). Predictor output sits under `measurements.sequence_predictions` (`signalp`, `deeptmhmm`, `psortb`, `epitopes`); predicted compartments also appear in `evidence.localization` with the tool as the source.
+
+### Optional predictors
+
+Every predictor is off by default and fails soft: a missing install or an unreachable service is reported in `prediction_status` and the rest of the analysis still runs.
+
+| Tool | How it runs | Data leaves your server? | Licence |
+| --- | --- | --- | --- |
+| SignalP 6.0 | Local `signalp6` install | No | DTU licence; free for academic use, not redistributable |
+| DeepTMHMM | BioLib cloud app `DTU/DeepTMHMM` through `pybiolib` | Yes, to BioLib | BioLib and DTU terms |
+| PSORTb 3.0 | Local `psort`, for example the `brinkmanlab/psortb_commandline` Docker image | No | Open source |
+| IEDB MHC and B-cell | IEDB Analysis Resource REST API | Yes, to IEDB | IEDB terms |
+| AlphaFold DB model | EMBL-EBI public API, fetched when you click "Load predicted 3-D structure" | Only the accession | CC BY 4.0 |
+
+The provided Docker image includes BLAST+ and Clustal Omega only. IEDB works in it as is; for SignalP, DeepTMHMM or PSORTb, extend the image (or run the API outside Docker) with the tool or `pybiolib`.
+
+Do not enable the services that send data off your server for unpublished or confidential sequences. These adapters were written against published documentation and tested on hand-written output samples; run one real protein through each before relying on it.
+
 ## Project structure
 
 ```text
 app/
   __init__.py        Flask app factory and all routes
   analysis/          sequence analysis, signal peptide, antigenic regions, topology, conservation, BLAST, assessment
-  integrations/      UniProt, NCBI, ePath essentiality, Clustal Omega, SignalP (optional)
+  integrations/      UniProt, NCBI, ePath, Clustal Omega, AlphaFold DB, and optional SignalP, DeepTMHMM, PSORTb, IEDB
   input/             FASTA parsing
   models/            domain objects and SQLAlchemy models
   repositories/      database access
@@ -231,11 +256,12 @@ Tests that touch BLAST need BLAST+ installed. GitHub Actions runs both suites an
 ReverseVax is for education and research. Its output is a structured set of observations, not a recommendation to develop a vaccine.
 
 - **Heuristics, not the established tools.** Transmembrane candidates, signal peptides and antigenic regions come from simple rules written for this project. They are not TMHMM, DeepTMHMM, SignalP or BepiPred, have not been benchmarked, and should not be reported as their output. Expect missed lipoprotein and Tat signal peptides and false positives in hydrophobic proteins.
-- **No epitope prediction.** Antigenic regions use a linear propensity scale. Nothing here models MHC binding, T-cell epitopes or conformational B-cell epitopes.
-- **Localization and essentiality are borrowed.** Localization evidence reflects UniProt or NCBI records, and is missing for proteins without them. The topology hint is a low-confidence guess from the same heuristics, kept apart from evidence. PSORTb is not integrated.
+- **Epitope and MHC results are predictions from a third party.** With IEDB enabled, MHC binding covers a fixed allele panel (not a population's HLA diversity) and a provisional percentile-rank cut-off, and B-cell results are linear epitopes only. None of it shows that a peptide is processed, presented, recognised or immunogenic. Without IEDB, the antigenic-region screen is a linear propensity scale and nothing here models MHC binding.
+- **The 3-D view is a prediction, and only for proteins with a UniProt accession.** It draws a backbone trace of the AlphaFold model, not side chains or secondary structure. Regions with pLDDT below 70 are low confidence, and the model describes the UniProt reference sequence, which may differ from the one you analysed (the viewer warns when it does).
+- **Localization and essentiality are borrowed or predicted by third parties.** Without a predictor enabled, localization evidence reflects UniProt or NCBI records and is missing for proteins without them. DeepTMHMM's compartment assumes a Gram-negative bacterium. The topology hint is a low-confidence guess from the built-in heuristics, kept apart from evidence.
 - **Conservation depends on the alignment.** Similarity groups go beyond exact identity, but the built-in fallback aligner is a star alignment against the first sequence and is weaker than Clustal Omega. Meaning also depends on which sequences you supply.
 - **Host-similarity thresholds are provisional.** The defaults (70% identity, 80% coverage, 30% moderate) are screening conventions with no benchmark behind them. They are configurable and printed in every report. The optional short-peptide scan finds identical stretches of 8 or more residues; a clean result does not show a peptide is absent from the host.
-- **SignalP is optional and unverified here.** The adapter is tested on a hand-written output sample, not a live install.
+- **External adapters are unverified against live services.** SignalP, DeepTMHMM, PSORTb and IEDB are tested on hand-written output samples. The IEDB page does not document its response columns, so the parser matches columns by name and reports what it found if one is missing.
 - **Not validated.** The pipeline has not been tested against known vaccine antigens.
 - **Reference data varies by release.** Proteome versions and isoform choices change results; the mouse reference has an unadopted candidate with 8,473 extra isoform-style identifiers.
 
@@ -254,8 +280,12 @@ Nothing here establishes immunogenicity, protection, safety or clinical suitabil
 
 - [x] Optional SignalP adapter and built-in signal peptide screen
 - [x] Rename the peptide-window module so it is not mistaken for epitope prediction
-- [ ] Integrate PSORTb or DeepTMHMM, and BepiPred or IEDB for epitopes
-- [ ] Verify the SignalP adapter against a live install
+- [x] Optional DeepTMHMM, PSORTb and IEDB (MHC-I, MHC-II, B-cell) adapters
+- [x] AlphaFold DB structure viewer coloured by confidence and predicted features
+- [ ] Verify the SignalP, DeepTMHMM, PSORTb and IEDB adapters against live services
+- [ ] Population-coverage-aware HLA panels and a benchmark of MHC cut-offs
+- [ ] Structure prediction for proteins with no accession (for example ESMFold)
+- [ ] Residue-level epitope and surface mapping on the 3-D structure
 - [ ] Benchmark on known vaccine antigens and publish the results
 - [ ] Cite and justify every threshold
 
