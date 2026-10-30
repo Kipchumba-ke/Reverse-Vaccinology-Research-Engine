@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SequenceInsights from "./SequenceInsights";
 
 function AnalysisReport({ report, title = 'Analysis Report'  }) {
   const [showAllPeptides, setShowAllPeptides] = useState(false);
@@ -508,6 +509,8 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
           </div>
         )}
       </section>
+
+      <SequenceInsights report={report} />
 
       <section className="analysis-report-section">
         <h3>Conservation</h3>

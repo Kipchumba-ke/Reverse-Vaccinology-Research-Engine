@@ -186,6 +186,16 @@ def _prediction_limitations(result: ProteinAnalysisResult) -> list[str]:
         load_host_similarity_thresholds().describe(),
     ]
 
+    epitopes = result.sequence_predictions.get("epitopes", {})
+
+    if epitopes.get("status") == "completed":
+        notes.append(
+            "MHC binding and B-cell epitope results come from the IEDB "
+            "Analysis Resource. They are predictions for a fixed allele "
+            "panel and do not show that a peptide is processed, presented "
+            "or recognised, or that it is immunogenic."
+        )
+
     if result.conservation_similarity is not None:
         notes.append(
             "Similarity-aware conservation uses residue similarity groups "
