@@ -1,0 +1,109 @@
+.sequence-tracks-chart,
+.mhc-map-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.sequence-tracks-label,
+.mhc-map-label {
+  font-size: 12px;
+  fill: currentColor;
+}
+
+.sequence-tracks-tick,
+.mhc-map-tick {
+  font-size: 11px;
+  fill: currentColor;
+  opacity: 0.8;
+}
+
+.sequence-tracks-lane,
+.mhc-map-lane {
+  fill: currentColor;
+  fill-opacity: 0.07;
+}
+
+.sequence-tracks-axis {
+  stroke: currentColor;
+  stroke-opacity: 0.5;
+}
+
+.sequence-tracks-note,
+.mhc-map-note,
+.structure-note {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.sequence-tracks-text {
+  margin: 0.5rem 0;
+}
+
+.mhc-map,
+.mhc-top,
+.sequence-insights-structure {
+  margin-top: 1.25rem;
+}
+
+.mhc-top table {
+  border-collapse: collapse;
+}
+
+.mhc-top th,
+.mhc-top td {
+  padding: 0.25rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid currentColor;
+  border-bottom-color: rgba(128, 128, 128, 0.35);
+}
+
+.structure-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.structure-canvas {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 6px;
+  touch-action: none;
+  cursor: grab;
+}
+
+.structure-canvas:focus-visible {
+  outline: 2px solid #0072b2;
+  outline-offset: 2px;
+}
+
+.structure-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+}
+
+.structure-swatch {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-right: 0.35rem;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.structure-error,
+.structure-warning {
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid #d55e00;
+  background: rgba(213, 94, 0, 0.1);
+}

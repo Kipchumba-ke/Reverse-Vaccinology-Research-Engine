@@ -1,0 +1,2510 @@
+{
+ "metadata": {
+  "report_type": "reverse_vaccinology",
+  "report_version": "1.0",
+  "analysis_pipeline": "protein_sequence_analysis"
+ },
+ "protein": {
+  "id": "demo",
+  "name": "Demo protein",
+  "organism": "E. coli",
+  "accession": "P0A911",
+  "sequence": "MKKRLLLALLLALVLAAVSAQADEKSTNQDEKSTNQKPEKLTKEQAEIVNGDQLKYPSADELWLGGLLAVLVGLILRGKSAEAFFKRLWLLLGVVAVVAGLGAVSGWFLRNSTDEKQRTNDEKSTNQ",
+  "length": 127,
+  "molecular_weight": 13892.05968,
+  "gravy": -0.11653543307086617,
+  "isoelectric_point": 9.60833740234375
+ },
+ "measurements": {
+  "composition": {
+   "length": 127,
+   "counts": {
+    "A": 14,
+    "C": 0,
+    "D": 6,
+    "E": 9,
+    "F": 3,
+    "G": 9,
+    "H": 0,
+    "I": 2,
+    "K": 12,
+    "L": 23,
+    "M": 1,
+    "N": 6,
+    "P": 2,
+    "Q": 7,
+    "R": 5,
+    "S": 8,
+    "T": 6,
+    "V": 10,
+    "W": 3,
+    "Y": 1
+   },
+   "percentages": {
+    "A": 11.023622047244094,
+    "C": 0.0,
+    "D": 4.724409448818897,
+    "E": 7.086614173228346,
+    "F": 2.3622047244094486,
+    "G": 7.086614173228346,
+    "H": 0.0,
+    "I": 1.574803149606299,
+    "K": 9.448818897637794,
+    "L": 18.11023622047244,
+    "M": 0.7874015748031495,
+    "N": 4.724409448818897,
+    "P": 1.574803149606299,
+    "Q": 5.511811023622047,
+    "R": 3.937007874015748,
+    "S": 6.299212598425196,
+    "T": 4.724409448818897,
+    "V": 7.874015748031496,
+    "W": 2.3622047244094486,
+    "Y": 0.7874015748031495
+   }
+  },
+  "charge_and_hydrophobicity": {
+   "positively_charged": 17,
+   "negatively_charged": 15,
+   "approximate_net_charge": 2,
+   "hydrophobic_residues": 57,
+   "hydrophobicity_percentage": 44.881889763779526
+  },
+  "hydropathy_profile": [
+   {
+    "start": 1,
+    "end": 19,
+    "hydropathy": 1.831578947368421
+   },
+   {
+    "start": 2,
+    "end": 20,
+    "hydropathy": 1.8263157894736843
+   },
+   {
+    "start": 3,
+    "end": 21,
+    "hydropathy": 1.8473684210526315
+   },
+   {
+    "start": 4,
+    "end": 22,
+    "hydropathy": 2.1473684210526316
+   },
+   {
+    "start": 5,
+    "end": 23,
+    "hydropathy": 2.1999999999999997
+   },
+   {
+    "start": 6,
+    "end": 24,
+    "hydropathy": 1.8157894736842106
+   },
+   {
+    "start": 7,
+    "end": 25,
+    "hydropathy": 1.4105263157894736
+   },
+   {
+    "start": 8,
+    "end": 26,
+    "hydropathy": 1.1684210526315788
+   },
+   {
+    "start": 9,
+    "end": 27,
+    "hydropathy": 1.0368421052631578
+   },
+   {
+    "start": 10,
+    "end": 28,
+    "hydropathy": 0.6526315789473685
+   },
+   {
+    "start": 11,
+    "end": 29,
+    "hydropathy": 0.26842105263157895
+   },
+   {
+    "start": 12,
+    "end": 30,
+    "hydropathy": -0.11578947368421051
+   },
+   {
+    "start": 13,
+    "end": 31,
+    "hydropathy": -0.39473684210526316
+   },
+   {
+    "start": 14,
+    "end": 32,
+    "hydropathy": -0.7999999999999999
+   },
+   {
+    "start": 15,
+    "end": 33,
+    "hydropathy": -1.063157894736842
+   },
+   {
+    "start": 16,
+    "end": 34,
+    "hydropathy": -1.3
+   },
+   {
+    "start": 17,
+    "end": 35,
+    "hydropathy": -1.5789473684210527
+   },
+   {
+    "start": 18,
+    "end": 36,
+    "hydropathy": -1.857894736842105
+   },
+   {
+    "start": 19,
+    "end": 37,
+    "hydropathy": -2.2842105263157895
+   },
+   {
+    "start": 20,
+    "end": 38,
+    "hydropathy": -2.3263157894736843
+   },
+   {
+    "start": 21,
+    "end": 39,
+    "hydropathy": -2.6052631578947367
+   },
+   {
+    "start": 22,
+    "end": 40,
+    "hydropathy": -2.626315789473684
+   },
+   {
+    "start": 23,
+    "end": 41,
+    "hydropathy": -2.5210526315789474
+   },
+   {
+    "start": 24,
+    "end": 42,
+    "hydropathy": -2.373684210526316
+   },
+   {
+    "start": 25,
+    "end": 43,
+    "hydropathy": -2.3947368421052633
+   },
+   {
+    "start": 26,
+    "end": 44,
+    "hydropathy": -2.373684210526316
+   },
+   {
+    "start": 27,
+    "end": 45,
+    "hydropathy": -2.5157894736842104
+   },
+   {
+    "start": 28,
+    "end": 46,
+    "hydropathy": -2.384210526315789
+   },
+   {
+    "start": 29,
+    "end": 47,
+    "hydropathy": -2.384210526315789
+   },
+   {
+    "start": 30,
+    "end": 48,
+    "hydropathy": -1.963157894736842
+   },
+   {
+    "start": 31,
+    "end": 49,
+    "hydropathy": -1.5578947368421054
+   },
+   {
+    "start": 32,
+    "end": 50,
+    "hydropathy": -1.5578947368421054
+   },
+   {
+    "start": 33,
+    "end": 51,
+    "hydropathy": -1.3736842105263158
+   },
+   {
+    "start": 34,
+    "end": 52,
+    "hydropathy": -1.5157894736842106
+   },
+   {
+    "start": 35,
+    "end": 53,
+    "hydropathy": -1.6631578947368422
+   },
+   {
+    "start": 36,
+    "end": 54,
+    "hydropathy": -1.2789473684210526
+   },
+   {
+    "start": 37,
+    "end": 55,
+    "hydropathy": -1.3
+   },
+   {
+    "start": 38,
+    "end": 56,
+    "hydropathy": -1.1631578947368422
+   },
+   {
+    "start": 39,
+    "end": 57,
+    "hydropathy": -1.1631578947368422
+   },
+   {
+    "start": 40,
+    "end": 58,
+    "hydropathy": -1.0210526315789472
+   },
+   {
+    "start": 41,
+    "end": 59,
+    "hydropathy": -0.7210526315789473
+   },
+   {
+    "start": 42,
+    "end": 60,
+    "hydropathy": -1.105263157894737
+   },
+   {
+    "start": 43,
+    "end": 61,
+    "hydropathy": -1.2526315789473685
+   },
+   {
+    "start": 44,
+    "end": 62,
+    "hydropathy": -0.8473684210526317
+   },
+   {
+    "start": 45,
+    "end": 63,
+    "hydropathy": -0.7105263157894737
+   },
+   {
+    "start": 46,
+    "end": 64,
+    "hydropathy": -0.3263157894736842
+   },
+   {
+    "start": 47,
+    "end": 65,
+    "hydropathy": -0.4421052631578948
+   },
+   {
+    "start": 48,
+    "end": 66,
+    "hydropathy": -0.27894736842105267
+   },
+   {
+    "start": 49,
+    "end": 67,
+    "hydropathy": -0.31578947368421056
+   },
+   {
+    "start": 50,
+    "end": 68,
+    "hydropathy": -0.33684210526315794
+   },
+   {
+    "start": 51,
+    "end": 69,
+    "hydropathy": -0.05789473684210531
+   },
+   {
+    "start": 52,
+    "end": 70,
+    "hydropathy": 0.18421052631578944
+   },
+   {
+    "start": 53,
+    "end": 71,
+    "hydropathy": 0.5684210526315789
+   },
+   {
+    "start": 54,
+    "end": 72,
+    "hydropathy": 0.9736842105263158
+   },
+   {
+    "start": 55,
+    "end": 73,
+    "hydropathy": 0.7526315789473683
+   },
+   {
+    "start": 56,
+    "end": 74,
+    "hydropathy": 1.1578947368421053
+   },
+   {
+    "start": 57,
+    "end": 75,
+    "hydropathy": 1.4631578947368422
+   },
+   {
+    "start": 58,
+    "end": 76,
+    "hydropathy": 1.7473684210526315
+   },
+   {
+    "start": 59,
+    "end": 77,
+    "hydropathy": 1.5526315789473684
+   },
+   {
+    "start": 60,
+    "end": 78,
+    "hydropathy": 1.436842105263158
+   },
+   {
+    "start": 61,
+    "end": 79,
+    "hydropathy": 1.4157894736842105
+   },
+   {
+    "start": 62,
+    "end": 80,
+    "hydropathy": 1.5578947368421052
+   },
+   {
+    "start": 63,
+    "end": 81,
+    "hydropathy": 1.4526315789473683
+   },
+   {
+    "start": 64,
+    "end": 82,
+    "hydropathy": 1.3157894736842106
+   },
+   {
+    "start": 65,
+    "end": 83,
+    "hydropathy": 1.2105263157894737
+   },
+   {
+    "start": 66,
+    "end": 84,
+    "hydropathy": 1.3789473684210527
+   },
+   {
+    "start": 67,
+    "end": 85,
+    "hydropathy": 1.5473684210526315
+   },
+   {
+    "start": 68,
+    "end": 86,
+    "hydropathy": 1.1421052631578947
+   },
+   {
+    "start": 69,
+    "end": 87,
+    "hydropathy": 0.7052631578947368
+   },
+   {
+    "start": 70,
+    "end": 88,
+    "hydropathy": 0.8105263157894737
+   },
+   {
+    "start": 71,
+    "end": 89,
+    "hydropathy": 0.5421052631578946
+   },
+   {
+    "start": 72,
+    "end": 90,
+    "hydropathy": 0.5421052631578946
+   },
+   {
+    "start": 73,
+    "end": 91,
+    "hydropathy": 0.5210526315789473
+   },
+   {
+    "start": 74,
+    "end": 92,
+    "hydropathy": 0.7421052631578946
+   },
+   {
+    "start": 75,
+    "end": 93,
+    "hydropathy": 0.5210526315789473
+   },
+   {
+    "start": 76,
+    "end": 94,
+    "hydropathy": 0.5052631578947369
+   },
+   {
+    "start": 77,
+    "end": 95,
+    "hydropathy": 0.5263157894736842
+   },
+   {
+    "start": 78,
+    "end": 96,
+    "hydropathy": 0.8578947368421053
+   },
+   {
+    "start": 79,
+    "end": 97,
+    "hydropathy": 1.0999999999999999
+   },
+   {
+    "start": 80,
+    "end": 98,
+    "hydropathy": 1.5263157894736843
+   },
+   {
+    "start": 81,
+    "end": 99,
+    "hydropathy": 1.6631578947368422
+   },
+   {
+    "start": 82,
+    "end": 100,
+    "hydropathy": 1.5473684210526315
+   },
+   {
+    "start": 83,
+    "end": 101,
+    "hydropathy": 1.9315789473684213
+   },
+   {
+    "start": 84,
+    "end": 102,
+    "hydropathy": 1.8157894736842106
+   },
+   {
+    "start": 85,
+    "end": 103,
+    "hydropathy": 1.763157894736842
+   },
+   {
+    "start": 86,
+    "end": 104,
+    "hydropathy": 1.8368421052631578
+   },
+   {
+    "start": 87,
+    "end": 105,
+    "hydropathy": 2.0
+   },
+   {
+    "start": 88,
+    "end": 106,
+    "hydropathy": 2.2157894736842105
+   },
+   {
+    "start": 89,
+    "end": 107,
+    "hydropathy": 1.9684210526315788
+   },
+   {
+    "start": 90,
+    "end": 108,
+    "hydropathy": 2.1631578947368424
+   },
+   {
+    "start": 91,
+    "end": 109,
+    "hydropathy": 2.1631578947368424
+   },
+   {
+    "start": 92,
+    "end": 110,
+    "hydropathy": 1.726315789473684
+   },
+   {
+    "start": 93,
+    "end": 111,
+    "hydropathy": 1.3421052631578947
+   },
+   {
+    "start": 94,
+    "end": 112,
+    "hydropathy": 1.3210526315789475
+   },
+   {
+    "start": 95,
+    "end": 113,
+    "hydropathy": 1.063157894736842
+   },
+   {
+    "start": 96,
+    "end": 114,
+    "hydropathy": 0.6578947368421053
+   },
+   {
+    "start": 97,
+    "end": 115,
+    "hydropathy": 0.37894736842105264
+   },
+   {
+    "start": 98,
+    "end": 116,
+    "hydropathy": -0.04736842105263159
+   },
+   {
+    "start": 99,
+    "end": 117,
+    "hydropathy": -0.4526315789473684
+   },
+   {
+    "start": 100,
+    "end": 118,
+    "hydropathy": -0.7842105263157895
+   },
+   {
+    "start": 101,
+    "end": 119,
+    "hydropathy": -0.8
+   },
+   {
+    "start": 102,
+    "end": 120,
+    "hydropathy": -1.1842105263157894
+   },
+   {
+    "start": 103,
+    "end": 121,
+    "hydropathy": -1.3473684210526315
+   },
+   {
+    "start": 104,
+    "end": 122,
+    "hydropathy": -1.6263157894736842
+   },
+   {
+    "start": 105,
+    "end": 123,
+    "hydropathy": -2.0526315789473686
+   },
+   {
+    "start": 106,
+    "end": 124,
+    "hydropathy": -2.0526315789473686
+   },
+   {
+    "start": 107,
+    "end": 125,
+    "hydropathy": -2.068421052631579
+   },
+   {
+    "start": 108,
+    "end": 126,
+    "hydropathy": -2.205263157894737
+   },
+   {
+    "start": 109,
+    "end": 127,
+    "hydropathy": -2.5368421052631582
+   }
+  ],
+  "hydrophobic_regions": [
+   {
+    "start": 1,
+    "end": 24,
+    "length": 24,
+    "sequence": "MKKRLLLALLLALVLAAVSAQADE",
+    "average_hydropathy": 1.1624999999999999
+   },
+   {
+    "start": 58,
+    "end": 76,
+    "length": 19,
+    "sequence": "SADELWLGGLLAVLVGLIL",
+    "average_hydropathy": 1.7473684210526315
+   },
+   {
+    "start": 81,
+    "end": 110,
+    "length": 30,
+    "sequence": "AEAFFKRLWLLLGVVAVVAGLGAVSGWFLR",
+    "average_hydropathy": 1.3533333333333333
+   }
+  ],
+  "transmembrane_candidates": [
+   {
+    "start": 1,
+    "end": 24,
+    "length": 24,
+    "sequence": "MKKRLLLALLLALVLAAVSAQADE",
+    "average_hydropathy": 1.1624999999999999,
+    "length_matches": true,
+    "hydropathy_matches": false,
+    "classification": "hydrophobic_region",
+    "overlaps_signal_peptide": true,
+    "revised_classification": "signal_peptide_h_region"
+   },
+   {
+    "start": 58,
+    "end": 76,
+    "length": 19,
+    "sequence": "SADELWLGGLLAVLVGLIL",
+    "average_hydropathy": 1.7473684210526315,
+    "length_matches": true,
+    "hydropathy_matches": true,
+    "classification": "candidate_transmembrane",
+    "overlaps_signal_peptide": false,
+    "revised_classification": "candidate_transmembrane"
+   },
+   {
+    "start": 81,
+    "end": 110,
+    "length": 30,
+    "sequence": "AEAFFKRLWLLLGVVAVVAGLGAVSGWFLR",
+    "average_hydropathy": 1.3533333333333333,
+    "length_matches": false,
+    "hydropathy_matches": false,
+    "classification": "hydrophobic_region",
+    "overlaps_signal_peptide": false,
+    "revised_classification": "hydrophobic_region"
+   }
+  ],
+  "sequence_predictions": {
+   "signal_peptide": {
+    "detected": true,
+    "method": "Rule-based von Heijne region screen (heuristic)",
+    "confidence": "medium",
+    "cleavage_after": 22,
+    "length": 22,
+    "cleavage_motif": "AQA",
+    "n_region": {
+     "start": 1,
+     "end": 6,
+     "net_charge": 3
+    },
+    "h_region": {
+     "start": 7,
+     "end": 18,
+     "mean_hydropathy": 3.35
+    },
+    "c_region": {
+     "start": 19,
+     "end": 22,
+     "mean_hydropathy": -0.175
+    },
+    "notes": [
+     "The cleavage position is an estimate; confirm with a trained predictor such as SignalP."
+    ]
+   },
+   "antigenic_regions": {
+    "method": "Kolaskar-Tongaonkar antigenic propensity (1990)",
+    "window": 7,
+    "min_region_length": 8,
+    "threshold": 1.0347,
+    "threshold_basis": "average propensity of this protein",
+    "regions": [
+     {
+      "start": 4,
+      "end": 21,
+      "length": 18,
+      "sequence": "RLLLALLLALVLAAVSAQ",
+      "mean_propensity": 1.1556
+     },
+     {
+      "start": 65,
+      "end": 75,
+      "length": 11,
+      "sequence": "GGLLAVLVGLI",
+      "mean_propensity": 1.155
+     },
+     {
+      "start": 87,
+      "end": 104,
+      "length": 18,
+      "sequence": "RLWLLLGVVAVVAGLGAV",
+      "mean_propensity": 1.1412
+     }
+    ],
+    "notes": [
+     "Scale-based screen; it does not model structure, surface exposure or T-cell epitopes."
+    ]
+   },
+   "localization_hint": {
+    "hint": "membrane_associated",
+    "confidence": "low",
+    "source": "ReverseVax topology heuristic",
+    "basis": [
+     "1 candidate transmembrane segment(s) outside any predicted signal peptide.",
+     "A signal peptide was also predicted."
+    ],
+    "caveats": [
+     "Derived from sequence heuristics only; not independent localization evidence."
+    ]
+   },
+   "epitopes": {
+    "status": "completed",
+    "method": "IEDB Analysis Resource",
+    "mhc_class_i": {
+     "method": "IEDB recommended",
+     "alleles": [
+      "HLA-A*02:01",
+      "HLA-A*01:01"
+     ],
+     "peptide_length": "9",
+     "rank_cutoff": 1.0,
+     "predictions_returned": 4,
+     "binders": [
+      {
+       "peptide": "QKPEKLTKE",
+       "start": 36,
+       "end": 44,
+       "alleles": [
+        {
+         "allele": "HLA-A*02:01",
+         "percentile_rank": 0.2,
+         "score": 0.9
+        },
+        {
+         "allele": "HLA-A*01:01",
+         "percentile_rank": 0.6,
+         "score": 0.8
+        }
+       ],
+       "allele_count": 2,
+       "best_percentile_rank": 0.2
+      }
+     ],
+     "alleles_failed": {}
+    },
+    "mhc_class_ii": {
+     "method": "IEDB recommended",
+     "alleles": [
+      "HLA-DRB1*01:01"
+     ],
+     "peptide_length": "15",
+     "rank_cutoff": 10.0,
+     "predictions_returned": 1,
+     "binders": [
+      {
+       "peptide": "KLTKEQAEIVNGDQL",
+       "start": 40,
+       "end": 54,
+       "alleles": [
+        {
+         "allele": "HLA-DRB1*01:01",
+         "percentile_rank": 3.0,
+         "score": 0.9
+        }
+       ],
+       "allele_count": 1,
+       "best_percentile_rank": 3.0
+      }
+     ],
+     "alleles_failed": {}
+    },
+    "b_cell": {
+     "method": "Bepipred-2.0",
+     "residues_scored": 127,
+     "regions": [
+      {
+       "start": 35,
+       "end": 50,
+       "length": 16,
+       "mean_score": 0.9
+      }
+     ],
+     "min_region_length": 5
+    },
+    "b_cell_error": null,
+    "overlaps": [
+     {
+      "start": 35,
+      "end": 50,
+      "mhc_i_binders": 1,
+      "mhc_ii_binders": 1
+     }
+    ],
+    "notes": [
+     "Predictions only. Lower percentile rank means stronger predicted binding; rank cut-offs are provisional.",
+     "Alleles are a fixed panel and do not represent any population's HLA diversity."
+    ]
+   }
+  }
+ },
+ "peptide_candidates": [
+  {
+   "start": 1,
+   "end": 15,
+   "sequence": "MKKRLLLALLLALVL",
+   "length": 15,
+   "gravy": 1.853333333333333,
+   "net_charge": 2.997390920388489,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1381,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 2,
+   "end": 16,
+   "sequence": "KKRLLLALLLALVLA",
+   "length": 15,
+   "gravy": 1.8466666666666667,
+   "net_charge": 2.997390920388489,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1539,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 3,
+   "end": 17,
+   "sequence": "KRLLLALLLALVLAA",
+   "length": 15,
+   "gravy": 2.2266666666666666,
+   "net_charge": 1.997685954240493,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1629,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 4,
+   "end": 18,
+   "sequence": "RLLLALLLALVLAAV",
+   "length": 15,
+   "gravy": 2.7666666666666666,
+   "net_charge": 0.9979809880924972,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1931,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 5,
+   "end": 19,
+   "sequence": "LLLALLLALVLAAVS",
+   "length": 15,
+   "gravy": 3.013333333333333,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.2023,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 6,
+   "end": 20,
+   "sequence": "LLALLLALVLAAVSA",
+   "length": 15,
+   "gravy": 2.8800000000000003,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1899,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 7,
+   "end": 21,
+   "sequence": "LALLLALVLAAVSAQ",
+   "length": 15,
+   "gravy": 2.393333333333333,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1742,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 8,
+   "end": 22,
+   "sequence": "ALLLALVLAAVSAQA",
+   "length": 15,
+   "gravy": 2.26,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1618,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 9,
+   "end": 23,
+   "sequence": "LLLALVLAAVSAQAD",
+   "length": 15,
+   "gravy": 1.9066666666666667,
+   "net_charge": -1.0012917890747237,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1486,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 10,
+   "end": 24,
+   "sequence": "LLALVLAAVSAQADE",
+   "length": 15,
+   "gravy": 1.4200000000000002,
+   "net_charge": -1.999516666328914,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.122,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 11,
+   "end": 25,
+   "sequence": "LALVLAAVSAQADEK",
+   "length": 15,
+   "gravy": 0.9066666666666666,
+   "net_charge": -0.999811700180918,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1007,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 12,
+   "end": 26,
+   "sequence": "ALVLAAVSAQADEKS",
+   "length": 15,
+   "gravy": 0.6,
+   "net_charge": -0.999811700180918,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0848,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 13,
+   "end": 27,
+   "sequence": "LVLAAVSAQADEKST",
+   "length": 15,
+   "gravy": 0.43333333333333335,
+   "net_charge": -0.999811700180918,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0745,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 14,
+   "end": 28,
+   "sequence": "VLAAVSAQADEKSTN",
+   "length": 15,
+   "gravy": -0.05333333333333331,
+   "net_charge": -0.999811700180918,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0429,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 15,
+   "end": 29,
+   "sequence": "LAAVSAQADEKSTNQ",
+   "length": 15,
+   "gravy": -0.5666666666666667,
+   "net_charge": -0.999811700180918,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0183,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 16,
+   "end": 30,
+   "sequence": "AAVSAQADEKSTNQD",
+   "length": 15,
+   "gravy": -1.0533333333333332,
+   "net_charge": -1.999087788648389,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9927,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 17,
+   "end": 31,
+   "sequence": "AVSAQADEKSTNQDE",
+   "length": 15,
+   "gravy": -1.4066666666666667,
+   "net_charge": -2.9973126659025793,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9785,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 18,
+   "end": 32,
+   "sequence": "VSAQADEKSTNQDEK",
+   "length": 15,
+   "gravy": -1.7866666666666666,
+   "net_charge": -1.9976076997545833,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9696,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 19,
+   "end": 33,
+   "sequence": "SAQADEKSTNQDEKS",
+   "length": 15,
+   "gravy": -2.12,
+   "net_charge": -1.9976076997545833,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9449,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 20,
+   "end": 34,
+   "sequence": "AQADEKSTNQDEKST",
+   "length": 15,
+   "gravy": -2.1133333333333333,
+   "net_charge": -1.9976076997545833,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.938,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 21,
+   "end": 35,
+   "sequence": "QADEKSTNQDEKSTN",
+   "length": 15,
+   "gravy": -2.466666666666667,
+   "net_charge": -1.9976076997545833,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9188,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 22,
+   "end": 36,
+   "sequence": "ADEKSTNQDEKSTNQ",
+   "length": 15,
+   "gravy": -2.466666666666667,
+   "net_charge": -1.9976076997545833,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9188,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 23,
+   "end": 37,
+   "sequence": "DEKSTNQDEKSTNQK",
+   "length": 15,
+   "gravy": -2.8466666666666667,
+   "net_charge": -0.9979027336065873,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9099,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 24,
+   "end": 38,
+   "sequence": "EKSTNQDEKSTNQKP",
+   "length": 15,
+   "gravy": -2.7199999999999998,
+   "net_charge": 0.0013733548608834134,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9231,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 25,
+   "end": 39,
+   "sequence": "KSTNQDEKSTNQKPE",
+   "length": 15,
+   "gravy": -2.7199999999999998,
+   "net_charge": 0.0013733548608834134,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9231,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 26,
+   "end": 40,
+   "sequence": "STNQDEKSTNQKPEK",
+   "length": 15,
+   "gravy": -2.7199999999999998,
+   "net_charge": 0.0013733548608834134,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9231,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 27,
+   "end": 41,
+   "sequence": "TNQDEKSTNQKPEKL",
+   "length": 15,
+   "gravy": -2.4133333333333336,
+   "net_charge": 0.0013733548608834134,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9389,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 28,
+   "end": 42,
+   "sequence": "NQDEKSTNQKPEKLT",
+   "length": 15,
+   "gravy": -2.4133333333333336,
+   "net_charge": 0.0013733548608834134,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9389,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 29,
+   "end": 43,
+   "sequence": "QDEKSTNQKPEKLTK",
+   "length": 15,
+   "gravy": -2.44,
+   "net_charge": 1.0010783210088792,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9492,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 30,
+   "end": 44,
+   "sequence": "DEKSTNQKPEKLTKE",
+   "length": 15,
+   "gravy": -2.44,
+   "net_charge": 0.002853443754689433,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9383,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 31,
+   "end": 45,
+   "sequence": "EKSTNQKPEKLTKEQ",
+   "length": 15,
+   "gravy": -2.44,
+   "net_charge": 1.0021295322221602,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9482,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 32,
+   "end": 46,
+   "sequence": "KSTNQKPEKLTKEQA",
+   "length": 15,
+   "gravy": -2.086666666666667,
+   "net_charge": 2.0003544094763503,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9624,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 33,
+   "end": 47,
+   "sequence": "STNQKPEKLTKEQAE",
+   "length": 15,
+   "gravy": -2.06,
+   "net_charge": 0.0024245660741644137,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9571,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 34,
+   "end": 48,
+   "sequence": "TNQKPEKLTKEQAEI",
+   "length": 15,
+   "gravy": -1.7066666666666668,
+   "net_charge": 0.0024245660741644137,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9665,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 35,
+   "end": 49,
+   "sequence": "NQKPEKLTKEQAEIV",
+   "length": 15,
+   "gravy": -1.38,
+   "net_charge": 0.0024245660741644137,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9981,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 36,
+   "end": 50,
+   "sequence": "QKPEKLTKEQAEIVN",
+   "length": 15,
+   "gravy": -1.38,
+   "net_charge": 0.0024245660741644137,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9981,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 37,
+   "end": 51,
+   "sequence": "KPEKLTKEQAEIVNG",
+   "length": 15,
+   "gravy": -1.1733333333333333,
+   "net_charge": 0.0024245660741644137,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9887,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 38,
+   "end": 52,
+   "sequence": "PEKLTKEQAEIVNGD",
+   "length": 15,
+   "gravy": -1.1466666666666667,
+   "net_charge": -1.9965564885413023,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9844,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 39,
+   "end": 53,
+   "sequence": "EKLTKEQAEIVNGDQ",
+   "length": 15,
+   "gravy": -1.2733333333333334,
+   "net_charge": -1.9965564885413023,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.9811,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 40,
+   "end": 54,
+   "sequence": "KLTKEQAEIVNGDQL",
+   "length": 15,
+   "gravy": -0.7866666666666667,
+   "net_charge": -0.9983316112871126,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 1.0077,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 41,
+   "end": 55,
+   "sequence": "LTKEQAEIVNGDQLK",
+   "length": 15,
+   "gravy": -0.7866666666666667,
+   "net_charge": -0.9983316112871126,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 1.0077,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 42,
+   "end": 56,
+   "sequence": "TKEQAEIVNGDQLKY",
+   "length": 15,
+   "gravy": -1.1266666666666665,
+   "net_charge": -0.9991820255054253,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 1.0018,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 43,
+   "end": 57,
+   "sequence": "KEQAEIVNGDQLKYP",
+   "length": 15,
+   "gravy": -1.1866666666666668,
+   "net_charge": -0.9991820255054253,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 1.0121,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 44,
+   "end": 58,
+   "sequence": "EQAEIVNGDQLKYPS",
+   "length": 15,
+   "gravy": -0.98,
+   "net_charge": -1.9988869916534213,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0176,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 2,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 45,
+   "end": 59,
+   "sequence": "QAEIVNGDQLKYPSA",
+   "length": 15,
+   "gravy": -0.6266666666666667,
+   "net_charge": -1.0006621143992311,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0318,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 46,
+   "end": 60,
+   "sequence": "AEIVNGDQLKYPSAD",
+   "length": 15,
+   "gravy": -0.6266666666666667,
+   "net_charge": -1.9999382028667019,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0219,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 47,
+   "end": 61,
+   "sequence": "EIVNGDQLKYPSADE",
+   "length": 15,
+   "gravy": -0.98,
+   "net_charge": -2.998163080120892,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0077,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 48,
+   "end": 62,
+   "sequence": "IVNGDQLKYPSADEL",
+   "length": 15,
+   "gravy": -0.49333333333333335,
+   "net_charge": -1.9999382028667019,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0343,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 49,
+   "end": 63,
+   "sequence": "VNGDQLKYPSADELW",
+   "length": 15,
+   "gravy": -0.8533333333333334,
+   "net_charge": -1.9999382028667019,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.017,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 50,
+   "end": 64,
+   "sequence": "NGDQLKYPSADELWL",
+   "length": 15,
+   "gravy": -0.8800000000000001,
+   "net_charge": -1.9999382028667019,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0081,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": true,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 51,
+   "end": 65,
+   "sequence": "GDQLKYPSADELWLG",
+   "length": 15,
+   "gravy": -0.6733333333333335,
+   "net_charge": -1.9999382028667019,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0147,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 52,
+   "end": 66,
+   "sequence": "DQLKYPSADELWLGG",
+   "length": 15,
+   "gravy": -0.6733333333333335,
+   "net_charge": -1.9999382028667019,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0147,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 53,
+   "end": 67,
+   "sequence": "QLKYPSADELWLGGL",
+   "length": 15,
+   "gravy": -0.1866666666666667,
+   "net_charge": -1.0006621143992311,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0403,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 54,
+   "end": 68,
+   "sequence": "LKYPSADELWLGGLL",
+   "length": 15,
+   "gravy": 0.29999999999999993,
+   "net_charge": -1.0006621143992311,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0559,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 1
+  },
+  {
+   "start": 55,
+   "end": 69,
+   "sequence": "KYPSADELWLGGLLA",
+   "length": 15,
+   "gravy": 0.1666666666666666,
+   "net_charge": -1.0006621143992311,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0435,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 56,
+   "end": 70,
+   "sequence": "YPSADELWLGGLLAV",
+   "length": 15,
+   "gravy": 0.7066666666666667,
+   "net_charge": -2.000367080547227,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0737,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 57,
+   "end": 71,
+   "sequence": "PSADELWLGGLLAVL",
+   "length": 15,
+   "gravy": 1.0466666666666666,
+   "net_charge": -1.999516666328914,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0797,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 58,
+   "end": 72,
+   "sequence": "SADELWLGGLLAVLV",
+   "length": 15,
+   "gravy": 1.4333333333333333,
+   "net_charge": -1.999516666328914,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1009,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 59,
+   "end": 73,
+   "sequence": "ADELWLGGLLAVLVG",
+   "length": 15,
+   "gravy": 1.46,
+   "net_charge": -1.999516666328914,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0917,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 60,
+   "end": 74,
+   "sequence": "DELWLGGLLAVLVGL",
+   "length": 15,
+   "gravy": 1.5933333333333333,
+   "net_charge": -1.999516666328914,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1041,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 61,
+   "end": 75,
+   "sequence": "ELWLGGLLAVLVGLI",
+   "length": 15,
+   "gravy": 2.1266666666666665,
+   "net_charge": -1.000240577861443,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1232,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 62,
+   "end": 76,
+   "sequence": "LWLGGLLAVLVGLIL",
+   "length": 15,
+   "gravy": 2.613333333333333,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1498,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 63,
+   "end": 77,
+   "sequence": "WLGGLLAVLVGLILR",
+   "length": 15,
+   "gravy": 2.06,
+   "net_charge": 0.9979809880924972,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1247,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 64,
+   "end": 78,
+   "sequence": "LGGLLAVLVGLILRG",
+   "length": 15,
+   "gravy": 2.0933333333333333,
+   "net_charge": 0.9979809880924972,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1235,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 65,
+   "end": 79,
+   "sequence": "GGLLAVLVGLILRGK",
+   "length": 15,
+   "gravy": 1.5799999999999998,
+   "net_charge": 1.997685954240493,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1021,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 66,
+   "end": 80,
+   "sequence": "GLLAVLVGLILRGKS",
+   "length": 15,
+   "gravy": 1.5533333333333335,
+   "net_charge": 1.997685954240493,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1113,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 67,
+   "end": 81,
+   "sequence": "LLAVLVGLILRGKSA",
+   "length": 15,
+   "gravy": 1.7,
+   "net_charge": 1.997685954240493,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.124,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 68,
+   "end": 82,
+   "sequence": "LAVLVGLILRGKSAE",
+   "length": 15,
+   "gravy": 1.2133333333333334,
+   "net_charge": 0.9994610769863029,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0974,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 69,
+   "end": 83,
+   "sequence": "AVLVGLILRGKSAEA",
+   "length": 15,
+   "gravy": 1.0799999999999998,
+   "net_charge": 0.9994610769863029,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.085,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 70,
+   "end": 84,
+   "sequence": "VLVGLILRGKSAEAF",
+   "length": 15,
+   "gravy": 1.1466666666666667,
+   "net_charge": 0.9994610769863029,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0868,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 71,
+   "end": 85,
+   "sequence": "LVGLILRGKSAEAFF",
+   "length": 15,
+   "gravy": 1.0533333333333332,
+   "net_charge": 0.9994610769863029,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0673,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 72,
+   "end": 86,
+   "sequence": "VGLILRGKSAEAFFK",
+   "length": 15,
+   "gravy": 0.5399999999999999,
+   "net_charge": 1.9991660431342988,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.046,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 73,
+   "end": 87,
+   "sequence": "GLILRGKSAEAFFKR",
+   "length": 15,
+   "gravy": -0.040000000000000036,
+   "net_charge": 2.9991627318340486,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0121,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 74,
+   "end": 88,
+   "sequence": "LILRGKSAEAFFKRL",
+   "length": 15,
+   "gravy": 0.23999999999999994,
+   "net_charge": 2.9991627318340486,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0371,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 75,
+   "end": 89,
+   "sequence": "ILRGKSAEAFFKRLW",
+   "length": 15,
+   "gravy": -0.07333333333333338,
+   "net_charge": 2.9991627318340486,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0133,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 76,
+   "end": 90,
+   "sequence": "LRGKSAEAFFKRLWL",
+   "length": 15,
+   "gravy": -0.12000000000000005,
+   "net_charge": 2.9991627318340486,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0199,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 77,
+   "end": 91,
+   "sequence": "RGKSAEAFFKRLWLL",
+   "length": 15,
+   "gravy": -0.12000000000000005,
+   "net_charge": 2.9991627318340486,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0199,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 78,
+   "end": 92,
+   "sequence": "GKSAEAFFKRLWLLL",
+   "length": 15,
+   "gravy": 0.4333333333333333,
+   "net_charge": 1.9991660431342988,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0449,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 79,
+   "end": 93,
+   "sequence": "KSAEAFFKRLWLLLG",
+   "length": 15,
+   "gravy": 0.4333333333333333,
+   "net_charge": 1.9991660431342988,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0449,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 80,
+   "end": 94,
+   "sequence": "SAEAFFKRLWLLLGV",
+   "length": 15,
+   "gravy": 0.9733333333333333,
+   "net_charge": 0.9994610769863029,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0751,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 81,
+   "end": 95,
+   "sequence": "AEAFFKRLWLLLGVV",
+   "length": 15,
+   "gravy": 1.3066666666666664,
+   "net_charge": 0.9994610769863029,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0999,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 82,
+   "end": 96,
+   "sequence": "EAFFKRLWLLLGVVA",
+   "length": 15,
+   "gravy": 1.3066666666666664,
+   "net_charge": 0.9994610769863029,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0999,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 83,
+   "end": 97,
+   "sequence": "AFFKRLWLLLGVVAV",
+   "length": 15,
+   "gravy": 1.82,
+   "net_charge": 1.997685954240493,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1353,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 84,
+   "end": 98,
+   "sequence": "FFKRLWLLLGVVAVV",
+   "length": 15,
+   "gravy": 1.98,
+   "net_charge": 1.997685954240493,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1566,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 85,
+   "end": 99,
+   "sequence": "FKRLWLLLGVVAVVA",
+   "length": 15,
+   "gravy": 1.9133333333333333,
+   "net_charge": 1.997685954240493,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1548,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 86,
+   "end": 100,
+   "sequence": "KRLWLLLGVVAVVAG",
+   "length": 15,
+   "gravy": 1.7,
+   "net_charge": 1.997685954240493,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1403,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 87,
+   "end": 101,
+   "sequence": "RLWLLLGVVAVVAGL",
+   "length": 15,
+   "gravy": 2.2133333333333334,
+   "net_charge": 0.9979809880924972,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1617,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 88,
+   "end": 102,
+   "sequence": "LWLLLGVVAVVAGLG",
+   "length": 15,
+   "gravy": 2.4866666666666664,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1617,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 89,
+   "end": 103,
+   "sequence": "WLLLGVVAVVAGLGA",
+   "length": 15,
+   "gravy": 2.353333333333333,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1493,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 90,
+   "end": 104,
+   "sequence": "LLLGVVAVVAGLGAV",
+   "length": 15,
+   "gravy": 2.6933333333333334,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1819,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 91,
+   "end": 105,
+   "sequence": "LLGVVAVVAGLGAVS",
+   "length": 15,
+   "gravy": 2.3866666666666663,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1661,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 92,
+   "end": 106,
+   "sequence": "LGVVAVVAGLGAVSG",
+   "length": 15,
+   "gravy": 2.106666666666667,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.141,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 93,
+   "end": 107,
+   "sequence": "GVVAVVAGLGAVSGW",
+   "length": 15,
+   "gravy": 1.7933333333333334,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1172,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 94,
+   "end": 108,
+   "sequence": "VVAVVAGLGAVSGWF",
+   "length": 15,
+   "gravy": 2.006666666666667,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1317,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 95,
+   "end": 109,
+   "sequence": "VAVVAGLGAVSGWFL",
+   "length": 15,
+   "gravy": 1.98,
+   "net_charge": -0.0020157006072527572,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.1228,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 96,
+   "end": 110,
+   "sequence": "AVVAGLGAVSGWFLR",
+   "length": 15,
+   "gravy": 1.4,
+   "net_charge": 0.9979809880924972,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0889,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 97,
+   "end": 111,
+   "sequence": "VVAGLGAVSGWFLRN",
+   "length": 15,
+   "gravy": 1.0466666666666666,
+   "net_charge": 0.9979809880924972,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0697,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 98,
+   "end": 112,
+   "sequence": "VAGLGAVSGWFLRNS",
+   "length": 15,
+   "gravy": 0.7133333333333333,
+   "net_charge": 0.9979809880924972,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0449,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 99,
+   "end": 113,
+   "sequence": "AGLGAVSGWFLRNST",
+   "length": 15,
+   "gravy": 0.38666666666666666,
+   "net_charge": 0.9979809880924972,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0133,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 100,
+   "end": 114,
+   "sequence": "GLGAVSGWFLRNSTD",
+   "length": 15,
+   "gravy": 0.033333333333333305,
+   "net_charge": -0.0012951003749737122,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 1.0001,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 101,
+   "end": 115,
+   "sequence": "LGAVSGWFLRNSTDE",
+   "length": 15,
+   "gravy": -0.17333333333333337,
+   "net_charge": -0.9995199776291639,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9986,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 102,
+   "end": 116,
+   "sequence": "GAVSGWFLRNSTDEK",
+   "length": 15,
+   "gravy": -0.6866666666666668,
+   "net_charge": 0.00018498851883197442,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9773,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 103,
+   "end": 117,
+   "sequence": "AVSGWFLRNSTDEKQ",
+   "length": 15,
+   "gravy": -0.8933333333333333,
+   "net_charge": 0.00018498851883197442,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9867,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 104,
+   "end": 118,
+   "sequence": "VSGWFLRNSTDEKQR",
+   "length": 15,
+   "gravy": -1.3133333333333332,
+   "net_charge": 1.000181677218582,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.974,
+   "overlaps_antigenic_region": true,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 105,
+   "end": 119,
+   "sequence": "SGWFLRNSTDEKQRT",
+   "length": 15,
+   "gravy": -1.6400000000000001,
+   "net_charge": 1.000181677218582,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9424,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 106,
+   "end": 120,
+   "sequence": "GWFLRNSTDEKQRTN",
+   "length": 15,
+   "gravy": -1.82,
+   "net_charge": 1.000181677218582,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9267,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 107,
+   "end": 121,
+   "sequence": "WFLRNSTDEKQRTND",
+   "length": 15,
+   "gravy": -2.0266666666666664,
+   "net_charge": 0.0009055887511109084,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9261,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 108,
+   "end": 122,
+   "sequence": "FLRNSTDEKQRTNDE",
+   "length": 15,
+   "gravy": -2.2,
+   "net_charge": -0.9973192885030793,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9233,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 109,
+   "end": 123,
+   "sequence": "LRNSTDEKQRTNDEK",
+   "length": 15,
+   "gravy": -2.646666666666667,
+   "net_charge": 0.002385677644916706,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.9126,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 110,
+   "end": 124,
+   "sequence": "RNSTDEKQRTNDEKS",
+   "length": 15,
+   "gravy": -2.953333333333333,
+   "net_charge": 0.002385677644916706,
+   "overlaps_transmembrane": true,
+   "mean_antigenic_propensity": 0.8967,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 111,
+   "end": 125,
+   "sequence": "NSTDEKQRTNDEKST",
+   "length": 15,
+   "gravy": -2.7,
+   "net_charge": -0.9976110110548333,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.8991,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 112,
+   "end": 126,
+   "sequence": "STDEKQRTNDEKSTN",
+   "length": 15,
+   "gravy": -2.7,
+   "net_charge": -0.9976110110548333,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.8991,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  },
+  {
+   "start": 113,
+   "end": 127,
+   "sequence": "TDEKQRTNDEKSTNQ",
+   "length": 15,
+   "gravy": -2.8800000000000003,
+   "net_charge": -0.9976110110548333,
+   "overlaps_transmembrane": false,
+   "mean_antigenic_propensity": 0.8993,
+   "overlaps_antigenic_region": false,
+   "overlaps_b_cell_epitope": false,
+   "mhc_i_binder_alleles": 0,
+   "mhc_ii_binder_alleles": 0
+  }
+ ],
+ "conservation": {
+  "status": "not_performed",
+  "summary": null,
+  "columns": [],
+  "regions": [],
+  "similarity": null
+ },
+ "evidence": {
+  "localization": [],
+  "essentiality": [],
+  "host_similarity": []
+ },
+ "interpretations": [
+  {
+   "category": "hydrophobicity",
+   "finding": "GRAVY score: -0.12",
+   "interpretation": "The sequence has relatively hydrophilic overall character.",
+   "confidence": "medium"
+  },
+  {
+   "category": "membrane_topology",
+   "finding": "Transmembrane candidates: 1",
+   "interpretation": "One region is consistent with a possible transmembrane segment. 1 hydrophobic region(s) overlap a predicted signal peptide and were not counted as transmembrane segments.",
+   "confidence": "medium"
+  },
+  {
+   "category": "conserved_regions",
+   "finding": "Conserved regions identified: 0",
+   "interpretation": "No conserved regions meeting the selected minimum length were identified.",
+   "confidence": "low"
+  },
+  {
+   "category": "localization",
+   "finding": "No localization evidence supplied.",
+   "interpretation": "Localization assessment is unavailable for the current candidate.",
+   "confidence": "low"
+  },
+  {
+   "category": "essentiality",
+   "finding": "No essentiality evidence supplied.",
+   "interpretation": "Essentiality assessment is unavailable for the current candidate.",
+   "confidence": "low"
+  },
+  {
+   "category": "host_similarity",
+   "finding": "No host-similarity evidence supplied.",
+   "interpretation": "Host-similarity assessment is unavailable for the current candidate.",
+   "confidence": "low"
+  }
+ ],
+ "candidate_assessment": {
+  "status": "requires_further_review",
+  "rationale": "The assessment requires further review because identified concerns and missing evidence remain.",
+  "supporting_evidence": [],
+  "concerns": [
+   "No conserved regions were supplied or detected.",
+   "Possible transmembrane segments were detected using sequence-based heuristics."
+  ],
+  "missing_evidence": [
+   "Localization evidence from a prediction tool, database, or experiment.",
+   "Essentiality evidence from an appropriate external source.",
+   "Host-protein similarity analysis.",
+   "Multiple-sequence alignment and conservation analysis."
+  ]
+ },
+ "limitations": [
+  "Signal peptide, antigenic-region and topology results are rule-based screens written for this project. They are not SignalP, TMHMM, DeepTMHMM, PSORTb or BepiPred and should not be reported as their output.",
+  "Peptide windows are scored with a linear antigenic-propensity scale. This is not B-cell or T-cell epitope prediction and says nothing about MHC binding.",
+  "Host-similarity interpretation uses provisional thresholds: broad or partial similarity at 70% identity, 80% coverage as \"most of the protein\", moderate similarity from 30% identity, and identical peptide matches of 8 or more residues flagged. They are screening conventions, not validated cutoffs.",
+  "MHC binding and B-cell epitope results come from the IEDB Analysis Resource. They are predictions for a fixed allele panel and do not show that a peptide is processed, presented or recognised, or that it is immunogenic.",
+  "Hydrophobic regions and transmembrane candidates are sequence-based heuristics.",
+  "Localization evidence must come from an external prediction tool, database, or experiment.",
+  "Essentiality evidence is recorded from supplied sources and is not independently predicted.",
+  "Conservation depends on the supplied alignment and conservation definition.",
+  "Host-similarity evidence is based on supplied search results and does not independently establish absence of host similarity or vaccine safety."
+ ],
+ "evidence_status": {
+  "localization": {
+   "status": "not_attempted",
+   "source": null,
+   "message": "x"
+  }
+ }
+}
