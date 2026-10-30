@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getAnalysisHistory } from '../services/historyService'
 import ThemeToggle from './ThemeToggle'
+import { EvidenceStory, ExampleFigure, Section, SourcesList } from './EvidenceStory'
 import './Shell.css'
 import './Dashboard.css'
 
@@ -112,97 +113,86 @@ function Dashboard({ onLogout }) {
         </div>
       </header>
 
-      <main id="main" className="dashboard-page">
-        <section className="dash-intro" aria-labelledby="dash-title">
+      <main id="main" className="dashboard-page sections">
+        <section className="hero dash-intro" aria-labelledby="dash-title">
           <p className="kicker">Workbench</p>
           <h1 id="dash-title">From protein sequences to evidence you can audit.</h1>
           <p className="lede">
             Submit a sequence, wait for the pipeline, then read each result
-            beside its source and its limits. Findings are computational
-            screens that need laboratory follow-up.
+            beside its source and its limits.
           </p>
-          <div className="dash-actions">
+          <p className="lede-note">
+            Findings are computational screens that need laboratory follow-up.
+          </p>
+          <div className="hero-actions">
             <Link className="btn btn-primary" to="/analyses">New analysis</Link>
             <Link className="link-arrow" to="/history">All saved analyses →</Link>
           </div>
         </section>
 
-        <section className="band" aria-labelledby="recent-title" id="recent-analyses">
-          <header className="band-head">
-            <p className="kicker">Recent</p>
-            <h2 id="recent-title">Recent analyses</h2>
-            <p>The last eight reports, newest first.</p>
-          </header>
-
-          <div className="band-body">
-            {loading ? (
-              <p className="dash-feedback" role="status">
-                Loading your recent analyses…
+        <Section
+          id="recent-analyses"
+          kicker="Your work"
+          title="Recent analyses"
+          sub="Your last eight reports, newest first."
+        >
+          {loading ? (
+            <p className="dash-feedback" role="status">
+              Loading your recent analyses…
+            </p>
+          ) : historyError ? (
+            <div className="dash-feedback dash-feedback-error" role="alert">
+              <p>{historyError}</p>
+              <Link to="/history">Open analysis history</Link>
+            </div>
+          ) : analyses.length === 0 ? (
+            <div className="dash-empty">
+              <h3>No analyses yet.</h3>
+              <p>
+                Paste a protein sequence or upload a FASTA file to create
+                your first report.
               </p>
-            ) : historyError ? (
-              <div className="dash-feedback dash-feedback-error" role="alert">
-                <p>{historyError}</p>
-                <Link to="/history">Open analysis history</Link>
-              </div>
-            ) : analyses.length === 0 ? (
-              <div className="dash-empty">
-                <h3>No analyses yet.</h3>
-                <p>
-                  Paste a protein sequence or upload a FASTA file to create
-                  your first report.
-                </p>
-                <Link className="btn btn-primary" to="/analyses">
-                  Start your first analysis
-                </Link>
-              </div>
-            ) : (
-              <table className="ledger recent-table">
-                <caption className="visually-hidden">Recent analyses</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Protein</th>
-                    <th scope="col">Organism</th>
-                    <th scope="col">Accession</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {analyses.map((analysis) => (
-                    <tr key={analysis.analysis_id}>
-                      <th scope="row">
-                        <Link to={`/analyses/${analysis.analysis_id}`}>
-                          {analysis.protein_name || analysis.accession || 'Protein analysis'}
-                        </Link>
-                      </th>
-                      <td data-label="Organism">{analysis.organism || '—'}</td>
-                      <td data-label="Accession" className="num">{analysis.accession || '—'}</td>
-                      <td data-label="Date" className="num">{formatDate(analysis.created_at)}</td>
-                      <td data-label="Status">
-                        <span
-                          className={`status-tag status-${String(
-                            analysis.status || 'unknown',
-                          ).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                        >
-                          <span aria-hidden="true">{statusMark(analysis.status)}</span>{' '}
-                          {formatStatus(analysis.status)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </section>
+              <Link className="btn btn-primary" to="/analyses">
+                Start your first analysis
+              </Link>
+            </div>
+          ) : (
+            <ul className="recent-list">
+              {analyses.map((analysis) => (
+                <li key={analysis.analysis_id}>
+                  <h3>
+                    <Link to={`/analyses/${analysis.analysis_id}`}>
+                      {analysis.protein_name || analysis.accession || 'Protein analysis'}
+                    </Link>
+                  </h3>
+                  <p className="recent-meta">
+                    {[analysis.organism, analysis.accession, formatDate(analysis.created_at)]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                  <p>
+                    <span
+                      className={`status-tag status-${String(
+                        analysis.status || 'unknown',
+                      ).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                    >
+                      <span aria-hidden="true">{statusMark(analysis.status)}</span>{' '}
+                      {formatStatus(analysis.status)}
+                    </span>
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
 
-        <section className="band" aria-labelledby="flow-title">
-          <header className="band-head">
-            <p className="kicker">Method</p>
-            <h2 id="flow-title">How a run works</h2>
-          </header>
-
-          <ol className="band-body flow">
+        <Section
+          id="run"
+          kicker="Workflow"
+          title="How a run works"
+          sub="From input to an auditable report in three steps."
+        >
+          <ol className="flow">
             <li>
               <strong>Submit.</strong> One sequence, or a multi-record FASTA
               file for conservation across strains. Pick a host proteome to
@@ -218,7 +208,31 @@ function Dashboard({ onLogout }) {
               source and its limits. Download the PDF when you are done.
             </li>
           </ol>
-        </section>
+        </Section>
+
+        <Section
+          id="example"
+          kicker="Example"
+          title="What a report map looks like"
+          sub="The sources every report is built on."
+        >
+          <figure className="hero-figure">
+            <ExampleFigure />
+            <figcaption>
+              Sequence map, in the format ReverseVax produces. Example data
+              for illustration, not a real result.
+            </figcaption>
+          </figure>
+          <SourcesList />
+        </Section>
+
+        <EvidenceStory
+          primaryAction={
+            <Link className="btn btn-primary" to="/analyses">
+              New analysis
+            </Link>
+          }
+        />
       </main>
 
       <footer className="site-footer">

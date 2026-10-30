@@ -52,13 +52,15 @@ then delete the `<link>` tags.
 
 ## Layout rules
 
-- A 12-column grid, content left-aligned. Headings live in a narrow left
-  margin column (section number, title, one line saying which question the
-  section answers); evidence sits in the wide column.
-- Density is intentional: tables and figures are compact, prose has a
-  readable measure, and space is used to separate *questions*, not to fill.
-- Spacing comes from the 4px scale in `theme.css`; related items sit 8–16px
-  apart, sections 48–96px apart.
+- Content is stacked vertically, left-aligned, in a readable column. Every
+  section follows the same order: numbered kicker, heading, sub-heading, then
+  the content. Nothing is arranged in side-by-side columns of prose; lists of
+  facts are rows with the label above or beside the value.
+- The landing page and the signed-in dashboard share one set of sections
+  (`EvidenceStory`), so a signed-in user sees the same evidence story plus
+  their recent analyses.
+- Related items sit 8-16px apart; sections are separated by 64-96px and a
+  hairline rule.
 
 ## One accent, tokens only
 

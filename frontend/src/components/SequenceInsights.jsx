@@ -14,6 +14,7 @@ function SequenceInsights({ report }) {
   return (
     <section className="analysis-report-section sequence-insights">
       <h3>Sequence Map and Structure</h3>
+      <p className="section-sub">Where predicted features fall along the sequence, and its predicted 3-D shape.</p>
 
       <SequenceTracks report={report} />
       <MhcBindingMap report={report} />
