@@ -2,7 +2,17 @@ from app.analysis.alignment import align_pair
 from app.utils.validation import validate_protein_sequence
 
 
-def align_sequences(sequences: list[str]) -> list[str]:
+def align_sequences(
+    sequences: list[str],
+    scoring: str = "identity",
+) -> list[str]:
+    """Align sequences against the first one (a "star" alignment).
+
+    Every sequence is aligned pairwise to the first sequence and the pairwise
+    alignments are merged. This is a simple heuristic: results depend on the
+    choice of the first sequence and it does not refine the alignment the way
+    Clustal Omega does. Use scoring="blosum62" for similarity-aware scoring.
+    """
     if not sequences:
         raise ValueError("At least one sequence is required.")
 
@@ -14,7 +24,7 @@ def align_sequences(sequences: list[str]) -> list[str]:
     reference = validated_sequences[0]
 
     pairwise_alignments = [
-        align_pair(reference, sequence)
+        align_pair(reference, sequence, scoring=scoring)
         for sequence in validated_sequences
     ]
 

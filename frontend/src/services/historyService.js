@@ -1,3 +1,5 @@
+import { SESSION_EXPIRED_MESSAGE, handleUnauthorized } from './session'
+
 
 export async function getAnalysisHistory(token) {
   const response = await fetch('/api/analyses', {
@@ -8,9 +10,8 @@ export async function getAnalysisHistory(token) {
 
   const data = await response.json()
 
-  if (response.status === 401) {
-    localStorage.removeItem('token')
-    throw new Error('Your session has expired. Please log in again.')
+  if (handleUnauthorized(response)) {
+    throw new Error(SESSION_EXPIRED_MESSAGE)
   }
 
   if (!response.ok) {
@@ -34,9 +35,8 @@ export async function deleteAnalysis(analysisId, token) {
 
   const data = await response.json()
 
-  if (response.status === 401) {
-    localStorage.removeItem('token')
-    throw new Error('Your session has expired. Please log in again.')
+  if (handleUnauthorized(response)) {
+    throw new Error(SESSION_EXPIRED_MESSAGE)
   }
 
   if (!response.ok) {

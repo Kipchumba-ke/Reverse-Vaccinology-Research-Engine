@@ -426,3 +426,78 @@ def test_conserved_regions_include_consensus_sequence():
             "consensus": "MKT",
         }
     ]
+
+from app.analysis.conservation import (
+    calculate_similarity_summary,
+    classify_column_similarity,
+)
+
+
+def test_identical_column_is_classified_as_identical():
+    assert classify_column_similarity(["L", "L", "L"]) == "identical"
+
+
+def test_conservative_substitution_is_strongly_similar():
+    assert classify_column_similarity(["I", "L", "V"]) == "strongly_similar"
+    assert classify_column_similarity(["D", "E"]) == "strongly_similar"
+    assert classify_column_similarity(["F", "Y", "W"]) == "strongly_similar"
+
+
+def test_looser_chemical_similarity_is_weakly_similar():
+    assert classify_column_similarity(["C", "S", "A"]) == "weakly_similar"
+    assert classify_column_similarity(["S", "G", "D"]) == "weakly_similar"
+
+
+def test_unrelated_residues_are_variable():
+    assert classify_column_similarity(["L", "D"]) == "variable"
+    assert classify_column_similarity(["W", "G", "K"]) == "variable"
+
+
+def test_any_gap_marks_the_column_as_gapped():
+    assert classify_column_similarity(["A", "-", "A"]) == "gapped"
+
+
+def test_empty_column_is_rejected():
+    import pytest
+
+    with pytest.raises(ValueError):
+        classify_column_similarity([])
+
+
+def test_similarity_summary_counts_each_column_type():
+    alignment = [
+        "AIDLWA-",
+        "AVELGA-",
+    ]
+    # A/A identical, I/V strong, D/E strong, L/L identical,
+    # W/G variable, A/A identical, -/- gapped.
+
+    summary = calculate_similarity_summary(alignment)
+
+    assert summary["alignment_length"] == 7
+    assert summary["identical_columns"] == 3
+    assert summary["strongly_similar_columns"] == 2
+    assert summary["weakly_similar_columns"] == 0
+    assert summary["variable_columns"] == 1
+    assert summary["gapped_columns"] == 1
+    assert summary["identical_percentage"] == 3 / 7 * 100
+    assert (
+        summary["identical_or_strongly_similar_percentage"] == 5 / 7 * 100
+    )
+
+
+def test_similarity_summary_reports_more_than_identity_alone():
+    alignment = ["ILK", "VLR"]
+
+    summary = calculate_similarity_summary(alignment)
+
+    assert summary["identical_percentage"] < (
+        summary["identical_or_strongly_similar_percentage"]
+    )
+
+
+def test_similarity_summary_requires_equal_lengths():
+    import pytest
+
+    with pytest.raises(ValueError):
+        calculate_similarity_summary(["AAA", "AA"])

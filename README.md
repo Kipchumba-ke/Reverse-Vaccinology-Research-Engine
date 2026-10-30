@@ -16,22 +16,25 @@ Intended users: students learning bioinformatics, and researchers who want a str
 
 ## Current status
 
-Most analysis modules exist and are unit-tested, but several only organise evidence from outside sources and do not predict anything themselves.
+Most analysis modules exist and are unit-tested. The built-in predictors are simple rule-based screens written for this project; they are not the established tools of the same name.
 
 | Capability | Status | What it actually does |
 | --- | --- | --- |
 | Sequence properties | Implemented | Composition, molecular weight, isoelectric point, GRAVY, net charge |
-| Hydropathy and transmembrane candidates | Implemented (heuristic) | Kyte-Doolittle sliding window (19 residues, cutoff 1.6); regions of 18–25 residues are flagged as candidates |
-| Peptide windows | Implemented | 15-residue windows with GRAVY, charge and overlap flags. This is not epitope prediction |
-| Conservation | Implemented | Exact-identity and consensus per alignment column; needs 2+ sequences and an aligner |
-| Host similarity | Implemented | BLASTP against local human, mouse or pig proteome databases |
-| Subcellular localization | Evidence intake only | Records locations taken from UniProt or NCBI annotations; no predictor |
+| Hydropathy and transmembrane candidates | Implemented (heuristic) | Kyte-Doolittle sliding window (19 residues, cutoff 1.6); regions of 18–25 residues are flagged, and regions inside a predicted signal peptide are re-labelled `signal_peptide_h_region` |
+| Signal peptide | Implemented (heuristic) | Rule-based screen: charged N-region, hydrophobic core, small residues at the cleavage site (von Heijne -3/-1 rule). Optional SignalP 6.0 adapter, off by default |
+| Antigenic regions | Implemented (heuristic) | Kolaskar-Tongaonkar propensity scale over a 7-residue window. A scale-based screen, not B-cell or T-cell epitope prediction |
+| Peptide windows | Implemented | 15-residue windows with GRAVY, charge, antigenic propensity and overlap flags (`app/analysis/peptide_windows.py`) |
+| Conservation | Implemented | Identity per column plus similarity groups (Clustal-style strong/weak). Uses Clustal Omega when installed, otherwise a built-in star alignment scored with BLOSUM62 |
+| Host similarity | Implemented | BLASTP against local human, mouse or pig proteome databases; interpretation thresholds are configurable |
+| Short-peptide host scan | Implemented, off by default | `HOST_PEPTIDE_SCAN=1` searches peptide windows with BLAST short-query settings and reports matches of 8+ identical residues |
+| Subcellular localization | Evidence intake only | Records locations from UniProt or NCBI annotations. A low-confidence topology hint is derived from the signal peptide and transmembrane screens and is kept apart from evidence. PSORTb is not integrated |
 | Essentiality | Evidence intake only | Looks up a local ePath database that you must build yourself |
 | Candidate assessment | Implemented | Sorts evidence into supporting, concerns and missing; no score |
 | Report and PDF export | Implemented | Structured report per analysis, downloadable as PDF |
 | Accounts and history | Implemented | Register, login, per-user history, delete; owner-only access |
 | Background jobs | Wired, needs setup | Celery and Redis queue; requires a running worker |
-| Epitope, signal peptide and antigenicity prediction | Not built | Planned |
+| Epitope prediction (BepiPred, IEDB), PSORTb, DeepTMHMM | Not integrated | Planned |
 
 ## How it works
 
@@ -40,12 +43,13 @@ A submitted sequence passes through the steps below. Steps marked optional run o
 1. **Validate.** Whitespace is stripped, letters are upper-cased, and anything outside the 20 standard amino acids is rejected.
 2. **Compute properties.** Composition, molecular weight, isoelectric point, GRAVY and charge.
 3. **Find hydrophobic and transmembrane candidates** with the Kyte-Doolittle window.
-4. **Slide 15-residue peptide windows** and flag overlaps with transmembrane regions.
-5. **Conservation (optional).** With `msa_sequences`, the sequences are aligned and each column is scored for identity and gaps.
-6. **Host similarity (optional).** BLASTP against the chosen host proteome (`human`, `mouse`, `pig`), or skipped with `none`.
-7. **External evidence (optional).** Localization from UniProt or NCBI annotations; essentiality from the local ePath database.
-8. **Assess.** Evidence is sorted into supporting, concerns and missing, and a status is set.
-9. **Report.** The result is stored and can be downloaded as JSON or PDF.
+4. **Screen for a signal peptide and antigenic regions**, re-label hydrophobic regions that are really signal-peptide cores, and derive a low-confidence localization hint.
+5. **Slide 15-residue peptide windows** and flag overlaps with transmembrane and antigenic regions.
+6. **Conservation (optional).** With `msa_sequences`, the sequences are aligned and each column is scored for identity, similarity group and gaps.
+7. **Host similarity (optional).** BLASTP against the chosen host proteome (`human`, `mouse`, `pig`), or skipped with `none`. With `HOST_PEPTIDE_SCAN=1`, peptide windows are also searched with short-query settings.
+8. **External evidence (optional).** Localization from UniProt or NCBI annotations; essentiality from the local ePath database; signal peptide from SignalP 6.0 if enabled.
+9. **Assess.** Evidence is sorted into supporting, concerns and missing, and a status is set.
+10. **Report.** The result is stored and can be downloaded as JSON or PDF.
 
 External lookups fail soft: if UniProt, NCBI or BLAST is unavailable, that evidence is reported as missing rather than the whole analysis failing.
 
@@ -54,13 +58,14 @@ External lookups fail soft: if UniProt, NCBI or BLAST is unavailable, that evide
 | Layer | Technology |
 | --- | --- |
 | Backend | Python 3.12, Flask 3, flask-cors |
-| Bioinformatics | Biopython, NCBI BLAST+ (`blastp`, `makeblastdb`), Clustal Omega (`clustalo`) |
+| Bioinformatics | NCBI BLAST+ (`blastp`, `makeblastdb`), Clustal Omega (`clustalo`, optional locally, installed in the Docker image) |
 | Data | PostgreSQL 16, SQLAlchemy 2, Alembic |
 | Jobs | Celery, Redis 7 |
 | Auth | PyJWT (HS256), Werkzeug password hashing |
 | Reports | ReportLab (PDF) |
 | Frontend | React 19, Vite, React Router; tests with Vitest and Testing Library |
 | Backend tests | pytest |
+| CI | GitHub Actions (backend, frontend, Docker build) |
 
 ## Getting started
 
@@ -82,7 +87,16 @@ pip install -r requirements.txt
 docker compose up -d
 ```
 
-This starts only the database and Redis. The Flask app, Celery worker and frontend run on your machine.
+This starts only the database and Redis, so you can run the Flask app, Celery worker and frontend on your machine as in step 6.
+
+To run the whole stack in containers instead (migrations, API, worker and an nginx-served frontend at `http://localhost:8080`):
+
+```bash
+export JWT_SECRET_KEY="$(openssl rand -hex 32)"
+docker compose --profile app up --build
+```
+
+The host BLAST databases under `./data/reference` are mounted read-only. Build them first (step 5).
 
 ### 3. Configure the environment
 
@@ -97,10 +111,24 @@ Create a `.env` file in the repository root. It is git-ignored.
 | `HOST_BLAST_DATABASE_HUMAN`, `_MOUSE`, `_PIG` | Override the default local BLAST database paths |
 | `ESSENTIALITY_EPATH_DB_PATH` | Location of the local ePath SQLite database |
 | `TEST_DATABASE_URL` | Database used by the test suite |
+| `JWT_EXPIRES_MINUTES` | Token lifetime (default 1440). Tokens without an expiry are rejected |
+| `RATE_LIMIT_*`, `TRUSTED_PROXY_COUNT` | Rate limits and proxy depth; see `.env.example` |
+| `MAX_SEQUENCE_LENGTH`, `MAX_FASTA_RECORDS`, `MAX_ALIGNMENT_CELLS`, `MAX_REQUEST_BYTES` | Input caps |
+| `ALIGNMENT_SCORING` | `blosum62` (default) or `identity` for the built-in aligner |
+| `HOST_SIMILARITY_*`, `HOST_PEPTIDE_*` | Host-similarity thresholds and the short-peptide scan |
+| `SIGNALP_ENABLED`, `SIGNALP6_EXECUTABLE`, `SIGNALP_ORGANISM` | Optional SignalP 6.0 adapter |
+
+Copy `.env.example` as a starting point. `JWT_SECRET_KEY` is required: the app refuses to issue or verify tokens without it.
 
 ### 4. Create the database tables
 
-Migrations are in `migrations/versions/`. `alembic.ini` is git-ignored, so create one first (for example with `alembic init` in a scratch folder, then copy it in). Then run:
+Migrations are in `migrations/versions/`. `alembic.ini` is git-ignored, so copy the template first (the Docker image does this for you):
+
+```bash
+cp alembic.ini.example alembic.ini
+```
+
+Then run:
 
 ```bash
 alembic upgrade head
@@ -128,7 +156,11 @@ celery -A app.services.celery_queue worker --loglevel=info
 cd frontend && npm install && npm run dev
 ```
 
-The frontend runs at `http://localhost:5173`, the only origin the API currently allows.
+The frontend runs at `http://localhost:5173`, the default allowed origin. Set `CORS_ALLOWED_ORIGINS` to allow others.
+
+If a token expires or is rejected, the frontend clears it and returns to the login page.
+
+**Rate limits.** Requests are limited per IP (300/minute by default), login and registration more tightly (10/minute per IP), and analysis submissions per user (30/hour). Limited requests get `429` with a `Retry-After` header. Counters are held in memory per worker unless `RATE_LIMIT_STORAGE_URL` points at Redis. Behind a reverse proxy, set `TRUSTED_PROXY_COUNT` so the real client IP is used. `GET /api/health` reports liveness.
 
 ## API reference
 
@@ -161,20 +193,21 @@ The synchronous `/api/analyze` route also accepts `msa_sequences` for conservati
 ```text
 app/
   __init__.py        Flask app factory and all routes
-  analysis/          sequence analysis, conservation, BLAST, assessment
-  integrations/      UniProt, NCBI, ePath essentiality, Clustal Omega
+  analysis/          sequence analysis, signal peptide, antigenic regions, topology, conservation, BLAST, assessment
+  integrations/      UniProt, NCBI, ePath essentiality, Clustal Omega, SignalP (optional)
   input/             FASTA parsing
   models/            domain objects and SQLAlchemy models
   repositories/      database access
   reporting/         report assembly and PDF export
   services/          analysis workflow, auth, tokens, Celery queue
-  utils/             sequence validation
+  utils/             sequence validation, input limits
 data/reference/      host proteome FASTA files and provenance notes
 frontend/            React + Vite web interface
 migrations/          Alembic migration history
 scripts/             reference download and BLAST database build
 tests/               pytest suite
-compose.yaml         Postgres and Redis for development
+compose.yaml         Postgres and Redis; full stack with --profile app
+.github/workflows/   CI: backend tests, frontend tests, Docker build
 ```
 
 Scientific code in `app/analysis/` is kept separate from HTTP and database code, which makes it easy to unit-test. Routes currently still manage the database session themselves; moving that into services is on the roadmap.
@@ -191,17 +224,18 @@ python -m pytest -q
 cd frontend && npm test
 ```
 
-Tests that touch BLAST need BLAST+ installed. No continuous integration is configured yet, so run both suites before each push.
+Tests that touch BLAST need BLAST+ installed. GitHub Actions runs both suites and builds the Docker images on every push and pull request (`.github/workflows/ci.yml`). The test counts above predate the latest changes and are recomputed by CI.
 
 ## Limitations and scientific disclaimer
 
 ReverseVax is for education and research. Its output is a structured set of observations, not a recommendation to develop a vaccine.
 
-- **Heuristics, not predictors.** Transmembrane candidates come from a single hydropathy rule and will miss signal peptides and mislabel some regions. They are not a substitute for dedicated tools.
-- **No epitope or antigenicity prediction.** Peptide windows carry only GRAVY and charge.
-- **Localization and essentiality are borrowed.** They reflect UniProt, NCBI or ePath records, and are missing for proteins without them.
-- **Conservation is exact identity.** It does not weigh similar amino acids, and its meaning depends on which sequences you supply.
-- **Host similarity thresholds are fixed** (70% identity, 80% coverage) and not yet justified against a benchmark.
+- **Heuristics, not the established tools.** Transmembrane candidates, signal peptides and antigenic regions come from simple rules written for this project. They are not TMHMM, DeepTMHMM, SignalP or BepiPred, have not been benchmarked, and should not be reported as their output. Expect missed lipoprotein and Tat signal peptides and false positives in hydrophobic proteins.
+- **No epitope prediction.** Antigenic regions use a linear propensity scale. Nothing here models MHC binding, T-cell epitopes or conformational B-cell epitopes.
+- **Localization and essentiality are borrowed.** Localization evidence reflects UniProt or NCBI records, and is missing for proteins without them. The topology hint is a low-confidence guess from the same heuristics, kept apart from evidence. PSORTb is not integrated.
+- **Conservation depends on the alignment.** Similarity groups go beyond exact identity, but the built-in fallback aligner is a star alignment against the first sequence and is weaker than Clustal Omega. Meaning also depends on which sequences you supply.
+- **Host-similarity thresholds are provisional.** The defaults (70% identity, 80% coverage, 30% moderate) are screening conventions with no benchmark behind them. They are configurable and printed in every report. The optional short-peptide scan finds identical stretches of 8 or more residues; a clean result does not show a peptide is absent from the host.
+- **SignalP is optional and unverified here.** The adapter is tested on a hand-written output sample, not a live install.
 - **Not validated.** The pipeline has not been tested against known vaccine antigens.
 - **Reference data varies by release.** Proteome versions and isoform choices change results; the mouse reference has an unadopted candidate with 8,473 extra isoform-style identifiers.
 
@@ -211,21 +245,23 @@ Nothing here establishes immunogenicity, protection, safety or clinical suitabil
 
 **Next: correctness and hygiene**
 
-- [ ] Use one database session per request instead of one shared session
-- [ ] Add an expiry to login tokens and validate email and password on registration
-- [ ] Add CI to run both test suites
+- [x] Use one database session per request instead of one shared session
+- [x] Add an expiry to login tokens, rate limiting, input caps and 401 handling
+- [x] Add CI to run both test suites
 - [ ] Remove committed `.pyc` and `.save` files; move the large mouse FASTA out of git
 
 **Then: science**
 
-- [ ] Add real localization and signal peptide prediction through an external tool
-- [ ] Replace or rename the peptide-window module, and add real epitope prediction
+- [x] Optional SignalP adapter and built-in signal peptide screen
+- [x] Rename the peptide-window module so it is not mistaken for epitope prediction
+- [ ] Integrate PSORTb or DeepTMHMM, and BepiPred or IEDB for epitopes
+- [ ] Verify the SignalP adapter against a live install
 - [ ] Benchmark on known vaccine antigens and publish the results
 - [ ] Cite and justify every threshold
 
 **Then: product**
 
-- [ ] Add app, worker and frontend services to Docker Compose
+- [x] Add app, worker and frontend services to Docker Compose
 - [ ] Add screenshots and a demo dataset
 - [ ] Publish a machine-readable API specification
 

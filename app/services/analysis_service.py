@@ -5,6 +5,10 @@ from pathlib import Path
 
 from app.analysis.blast import run_blast_analysis
 from app.analysis.conservation import find_conserved_regions
+from app.analysis.host_peptide_scan import (
+    is_peptide_scan_enabled,
+    scan_peptides_against_host,
+)
 from app.analysis.pipeline import analyze_protein
 from app.analysis.workflow import (
     analyze_fasta_records as run_fasta_workflow,
@@ -14,6 +18,10 @@ from app.integrations.epath_essentiality import (
     fetch_epath_essentiality_evidence,
 )
 from app.integrations.ncbi import fetch_protein_record
+from app.integrations.signalp import (
+    fetch_signalp_prediction,
+    is_signalp_enabled,
+)
 from app.integrations.uniprot import fetch_protein_annotation
 from app.models.analysis import Analysis
 from app.reporting.report import generate_protein_report
@@ -461,6 +469,14 @@ def _status_summary(localization: dict, external: dict) -> dict:
     }
 
 
+def _attach_signalp_prediction(result) -> None:
+    """Add SignalP output to the result when SIGNALP_ENABLED is set."""
+    if is_signalp_enabled():
+        result.sequence_predictions["signalp"] = fetch_signalp_prediction(
+            result.sequence
+        )
+
+
 def analyze_sequence(
     sequence: str,
     protein_id: str | None = None,
@@ -482,6 +498,8 @@ def analyze_sequence(
         accession=accession,
         aligned_sequences=msa_sequences,
     )
+
+    _attach_signalp_prediction(result)
 
     localization = fetch_localization_result(accession)
     result.localization_evidence.extend(localization["evidence"])
@@ -566,6 +584,14 @@ def analyze_sequence(
     if integrations is not None:
         report["integrations"] = integrations
 
+    # Optional short-peptide host scan (HOST_PEPTIDE_SCAN=1). It is
+    # additive and never changes the rest of the report.
+    if is_peptide_scan_enabled() and host_database:
+        report["host_peptide_scan"] = scan_peptides_against_host(
+            result.peptide_candidates,
+            host_database,
+        )
+
     return report
 
 
@@ -645,6 +671,8 @@ def analyze_fasta_records(
     protein_analyses = []
 
     for analysis in workflow_result.protein_analyses:
+        _attach_signalp_prediction(analysis)
+
         protein_report = generate_protein_report(
             analysis,
             conservation_summary=workflow_result.conservation,

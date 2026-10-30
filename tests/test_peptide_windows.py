@@ -1,9 +1,9 @@
-from app.analysis.epitope import generate_peptide_windows
-from app.analysis.epitope import (
+from app.analysis.peptide_windows import generate_peptide_windows
+from app.analysis.peptide_windows import (
     generate_peptide_windows,
     calculate_peptide_properties,
 )
-from app.analysis.epitope import annotate_conservation_overlap
+from app.analysis.peptide_windows import annotate_conservation_overlap
 
 def test_generate_peptide_windows_returns_overlapping_windows():
     result = generate_peptide_windows(
@@ -35,7 +35,7 @@ def test_calculate_peptide_properties():
     assert "net_charge" in result
 
 
-from app.analysis.epitope import annotate_transmembrane_overlap
+from app.analysis.peptide_windows import annotate_transmembrane_overlap
 
 
 def test_annotate_transmembrane_overlap():

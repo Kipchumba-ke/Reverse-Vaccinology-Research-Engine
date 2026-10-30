@@ -17,7 +17,7 @@ from app.analysis.properties import (
 from app.models.analysis_result import ProteinAnalysisResult
 from app.utils.validation import validate_protein_sequence
 from app.models.localization import LocalizationEvidence
-from app.analysis.epitope import (
+from app.analysis.peptide_windows import (
     calculate_peptide_properties,
     generate_peptide_windows,
     annotate_transmembrane_overlap,
@@ -25,6 +25,16 @@ from app.analysis.epitope import (
 from app.analysis.conservation import (
     calculate_conservation_summary,
     calculate_conserved_columns,
+    calculate_similarity_summary,
+)
+from app.analysis.signal_peptide import predict_signal_peptide
+from app.analysis.antigenicity import (
+    annotate_peptides_with_antigenicity,
+    predict_antigenic_regions,
+)
+from app.analysis.topology import (
+    flag_signal_peptide_overlap,
+    infer_localization_hint,
 )
 
 
@@ -116,6 +126,19 @@ def analyze_protein(
         hydrophobic_regions = []
         transmembrane_candidates = []
 
+    signal_peptide = predict_signal_peptide(cleaned_sequence)
+    antigenic_regions = predict_antigenic_regions(cleaned_sequence)
+
+    flagged_candidates = flag_signal_peptide_overlap(
+        transmembrane_candidates,
+        signal_peptide,
+    )
+
+    localization_hint = infer_localization_hint(
+        signal_peptide,
+        flagged_candidates,
+    )
+
     if len(cleaned_sequence) >= peptide_window_size:
         peptide_candidates = generate_peptide_windows(
             cleaned_sequence,
@@ -141,6 +164,11 @@ def analyze_protein(
             peptide_candidates,
             transmembrane_candidates,
         )
+
+        peptide_candidates = annotate_peptides_with_antigenicity(
+            peptide_candidates,
+            antigenic_regions["regions"],
+        )
     else:
         peptide_candidates = []
 
@@ -152,10 +180,14 @@ def analyze_protein(
         )
 
     conservation_summary = None
+    conservation_similarity = None
 
     if aligned_sequences:
         conservation_columns = calculate_conserved_columns(aligned_sequences)
         conservation_summary = calculate_conservation_summary(aligned_sequences)
+        conservation_similarity = calculate_similarity_summary(
+            aligned_sequences
+        )
 
     return ProteinAnalysisResult(
         sequence=cleaned_sequence,
@@ -170,7 +202,7 @@ def analyze_protein(
         hydropathy_profile=hydropathy_profile,
         hydrophobic_regions=hydrophobic_regions,
         transmembrane_candidates=(
-            transmembrane_candidates
+            flagged_candidates
         ),
         localization_evidence=localization_evidence,
         essentiality_evidence=essentiality_evidence,
@@ -182,4 +214,10 @@ def analyze_protein(
         peptide_candidates=peptide_candidates,
         conservation_columns=conservation_columns,
         conservation_summary=conservation_summary,
+        conservation_similarity=conservation_similarity,
+        sequence_predictions={
+            "signal_peptide": signal_peptide,
+            "antigenic_regions": antigenic_regions,
+            "localization_hint": localization_hint,
+        },
     )

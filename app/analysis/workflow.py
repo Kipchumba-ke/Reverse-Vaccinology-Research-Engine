@@ -1,5 +1,8 @@
+import os
+
 from app.analysis.conservation import (
     calculate_conservation_summary,
+    calculate_similarity_summary,
     calculate_conserved_columns,
     find_conserved_regions,
 )
@@ -7,6 +10,22 @@ from app.analysis.msa import align_sequences
 from app.models.workflow_result import AnalysisWorkflowResult
 from app.input.fasta import parse_fasta_records
 from app.analysis.pipeline import analyze_protein
+
+
+def _get_alignment_scoring() -> str:
+    """Scoring used by the built-in aligner (ALIGNMENT_SCORING).
+
+    Defaults to "blosum62". Set ALIGNMENT_SCORING=identity to score matches
+    and mismatches only.
+    """
+    scoring = os.environ.get("ALIGNMENT_SCORING", "blosum62").strip().lower()
+
+    if scoring not in {"identity", "blosum62"}:
+        raise ValueError(
+            "ALIGNMENT_SCORING must be 'identity' or 'blosum62'."
+        )
+
+    return scoring
 
 
 def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, list] | None = None, essentiality_evidence: dict[str, list] | None = None, host_similarity_evidence: dict[str, list] | None = None,) -> AnalysisWorkflowResult:
@@ -52,15 +71,17 @@ def analyze_fasta_records(records: list[dict], localization_evidence: dict[str, 
         )
         for record in records
     ]
-    alignment = align_sequences(sequences)
+    alignment = align_sequences(sequences, scoring=_get_alignment_scoring())
     conservation_columns = calculate_conserved_columns(alignment)
     conservation = calculate_conservation_summary(alignment)
+    conservation_similarity = calculate_similarity_summary(alignment)
     conserved_regions = find_conserved_regions(
         conservation_columns
     )
     for analysis in protein_analyses:
         analysis.conservation_columns = conservation_columns
         analysis.conservation_summary = conservation
+        analysis.conservation_similarity = conservation_similarity
 
     return AnalysisWorkflowResult(
         records=records,

@@ -264,3 +264,100 @@ def find_conserved_regions(
             })
 
     return regions
+
+# Residue groups used by Clustal Omega to mark similar alignment columns.
+# A column is "strongly similar" when every residue in it belongs to one
+# strong group (Clustal's ":" symbol) and "weakly similar" when every residue
+# belongs to one weak group (Clustal's "." symbol).
+STRONG_SIMILARITY_GROUPS = tuple(
+    frozenset(group)
+    for group in (
+        "STA", "NEQK", "NHQK", "NDEQ", "QHRK",
+        "MILV", "MILF", "HY", "FYW",
+    )
+)
+
+WEAK_SIMILARITY_GROUPS = tuple(
+    frozenset(group)
+    for group in (
+        "CSA", "ATV", "SAG", "STNK", "STPA", "SGND",
+        "SNDEQK", "NDEQHK", "NEQHRK", "FVLIM", "HFY",
+    )
+)
+
+
+def classify_column_similarity(residues: list[str]) -> str:
+    """Classify one alignment column by residue similarity.
+
+    Returns "gapped" when any sequence has a gap, otherwise "identical",
+    "strongly_similar", "weakly_similar" or "variable".
+    """
+
+    if not residues:
+        raise ValueError("A column needs at least one residue.")
+
+    if GAP_CHARACTER in residues:
+        return "gapped"
+
+    distinct = set(residues)
+
+    if len(distinct) == 1:
+        return "identical"
+
+    if any(distinct <= group for group in STRONG_SIMILARITY_GROUPS):
+        return "strongly_similar"
+
+    if any(distinct <= group for group in WEAK_SIMILARITY_GROUPS):
+        return "weakly_similar"
+
+    return "variable"
+
+
+def calculate_similarity_summary(sequences: list[str]) -> dict:
+    """Summarise similarity across an alignment, not only exact identity.
+
+    Identity alone treats a change from leucine to isoleucine like a change
+    from leucine to aspartate. This summary also counts columns whose
+    residues share a biochemical group.
+    """
+
+    if not sequences:
+        raise ValueError("At least one sequence is required.")
+
+    if any(not sequence for sequence in sequences):
+        raise ValueError("Sequences cannot be empty.")
+
+    alignment_length = len(sequences[0])
+
+    if any(len(sequence) != alignment_length for sequence in sequences):
+        raise ValueError("All aligned sequences must have the same length.")
+
+    counts = {
+        "identical": 0,
+        "strongly_similar": 0,
+        "weakly_similar": 0,
+        "variable": 0,
+        "gapped": 0,
+    }
+
+    for position in range(alignment_length):
+        column = [sequence[position] for sequence in sequences]
+        counts[classify_column_similarity(column)] += 1
+
+    def percentage(count: int) -> float:
+        return count / alignment_length * 100
+
+    return {
+        "alignment_length": alignment_length,
+        "sequence_count": len(sequences),
+        "identical_columns": counts["identical"],
+        "strongly_similar_columns": counts["strongly_similar"],
+        "weakly_similar_columns": counts["weakly_similar"],
+        "variable_columns": counts["variable"],
+        "gapped_columns": counts["gapped"],
+        "identical_percentage": percentage(counts["identical"]),
+        "identical_or_strongly_similar_percentage": percentage(
+            counts["identical"] + counts["strongly_similar"]
+        ),
+        "method": "Clustal Omega similarity groups",
+    }

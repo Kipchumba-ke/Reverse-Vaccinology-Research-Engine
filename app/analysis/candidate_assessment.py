@@ -1,3 +1,8 @@
+from app.analysis.host_thresholds import (
+    HostSimilarityThresholds,
+    load_host_similarity_thresholds,
+)
+from app.analysis.interpretation import is_transmembrane_candidate
 from app.models.analysis_result import ProteinAnalysisResult
 from app.models.candidate_assessment import CandidateAssessment
 from app.models.evidence_assessment import EvidenceAssessment
@@ -229,58 +234,43 @@ def _get_strongest_host_match(
 
 def _interpret_host_similarity(
     evidence,
+    thresholds: HostSimilarityThresholds | None = None,
 ) -> str:
-    if (
-        (
-            evidence.query_coverage_percentage >= 80
-            and evidence.subject_coverage_percentage < 80
-        )
-        or (
-            evidence.query_coverage_percentage < 80
-            and evidence.subject_coverage_percentage >= 80
-        )
-    ):
+    if thresholds is None:
+        thresholds = load_host_similarity_thresholds()
+
+    coverage = thresholds.coverage
+    query_covered = evidence.query_coverage_percentage >= coverage
+    subject_covered = evidence.subject_coverage_percentage >= coverage
+
+    if query_covered != subject_covered:
         return (
             "Asymmetric host-protein similarity coverage "
             "was reported."
         )
 
-    if (
-        evidence.identity_percentage >= 70
-        and evidence.query_coverage_percentage >= 80
-        and evidence.subject_coverage_percentage >= 80
-    ):
-        return (
-            "Broad host-protein similarity was reported "
-            "across most of both aligned proteins."
-        )
+    if evidence.identity_percentage >= thresholds.broad_identity:
+        if query_covered and subject_covered:
+            return (
+                "Broad host-protein similarity was reported "
+                "across most of both aligned proteins."
+            )
 
-    if (
-        evidence.identity_percentage >= 70
-        and evidence.query_coverage_percentage < 80
-        and evidence.subject_coverage_percentage < 80
-    ):
         return (
             "Partial host-protein similarity was reported "
             "within a limited aligned region."
         )
 
-    if (
-        evidence.identity_percentage >= 30
-        and evidence.identity_percentage < 70
-    ):
+    if evidence.identity_percentage >= thresholds.moderate_identity:
         return (
             "Moderate host-protein sequence similarity "
             "was reported."
         )
 
-    if evidence.identity_percentage < 30:
-        return (
-            "Relatively low sequence similarity was reported "
-            "against the supplied host protein."
-        )
-
-    return "Host-protein similarity was reported."
+    return (
+        "Relatively low sequence similarity was reported "
+        "against the supplied host protein."
+    )
 
 def _assess_host_similarity_evidence(
     result: ProteinAnalysisResult,
@@ -402,7 +392,10 @@ def _assess_transmembrane_candidates(
 ) -> EvidenceAssessment:
     concerns = []
 
-    if result.transmembrane_candidates:
+    if any(
+        is_transmembrane_candidate(candidate)
+        for candidate in result.transmembrane_candidates
+    ):
         concerns.append(
             "Possible transmembrane segments were detected using "
             "sequence-based heuristics."

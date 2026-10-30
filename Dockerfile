@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 COPY migrations ./migrations
+COPY alembic.ini.example ./alembic.ini
 COPY scripts ./scripts
 COPY data/reference/host-proteomes.md ./data/reference/host-proteomes.md
 

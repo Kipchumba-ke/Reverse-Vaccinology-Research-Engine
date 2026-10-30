@@ -1,5 +1,9 @@
 import os
 
+# Rate limiting is covered by tests/test_rate_limit.py. Keep it off for the
+# rest of the suite so repeated requests in one test never hit a limit.
+os.environ.setdefault("RATE_LIMIT_ENABLED", "0")
+
 import pytest
 from sqlalchemy import event
 
