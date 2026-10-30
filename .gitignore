@@ -17,6 +17,7 @@ htmlcov/
 # Environment variables and secrets
 .env
 .env.*
+!.env.example
 
 # IDE settings
 .vscode/
@@ -45,3 +46,7 @@ data/reference/pig/pig_proteome_db.*
 
 # Candidate mouse BLAST database indexes
 data/reference/mouse/mouse_proteome_candidate_db.*
+
+# Editor backup files
+*.save
+*.orig

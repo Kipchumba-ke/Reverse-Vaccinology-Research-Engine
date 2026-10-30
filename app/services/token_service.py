@@ -1,29 +1,67 @@
 import os
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 import jwt
 
 
+DEFAULT_TOKEN_LIFETIME_MINUTES = 60 * 24
+
+
+def _get_secret_key() -> str:
+    return os.environ["JWT_SECRET_KEY"]
+
+
+def _get_token_lifetime() -> timedelta:
+    """Return the token lifetime, configurable with JWT_EXPIRES_MINUTES."""
+    raw_value = os.environ.get("JWT_EXPIRES_MINUTES")
+
+    if raw_value is None:
+        return timedelta(minutes=DEFAULT_TOKEN_LIFETIME_MINUTES)
+
+    try:
+        minutes = int(raw_value)
+    except ValueError as error:
+        raise RuntimeError(
+            "JWT_EXPIRES_MINUTES must be a whole number of minutes."
+        ) from error
+
+    if minutes <= 0:
+        raise RuntimeError("JWT_EXPIRES_MINUTES must be greater than zero.")
+
+    return timedelta(minutes=minutes)
+
+
 def create_token(user) -> str:
-    secret_key = os.environ["JWT_SECRET_KEY"]
+    now = datetime.now(timezone.utc)
 
     payload = {
         "sub": str(user.id),
+        "iat": now,
+        "exp": now + _get_token_lifetime(),
     }
 
     return jwt.encode(
         payload,
-        secret_key,
+        _get_secret_key(),
         algorithm="HS256",
     )
 
-def decode_token(token: str) -> UUID:
-    secret_key = os.environ["JWT_SECRET_KEY"]
 
+def decode_token(token: str) -> UUID:
+    """Return the user ID from a valid, unexpired token.
+
+    Raises jwt.InvalidTokenError (including jwt.ExpiredSignatureError)
+    for any token that cannot be trusted.
+    """
     payload = jwt.decode(
         token,
-        secret_key,
+        _get_secret_key(),
         algorithms=["HS256"],
+        options={"require": ["exp", "sub"]},
     )
 
-    return UUID(payload["sub"])
+    try:
+        return UUID(payload["sub"])
+    except (ValueError, TypeError, AttributeError) as error:
+        raise jwt.InvalidTokenError("Invalid token subject.") from error
