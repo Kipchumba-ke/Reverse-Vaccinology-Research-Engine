@@ -18,13 +18,10 @@ from app.integrations.epath_essentiality import (
     fetch_epath_essentiality_evidence,
 )
 from app.integrations.ncbi import fetch_protein_record
-from app.integrations.signalp import (
-    fetch_signalp_prediction,
-    is_signalp_enabled,
-)
 from app.integrations.uniprot import fetch_protein_annotation
 from app.models.analysis import Analysis
 from app.reporting.report import generate_protein_report
+from app.services.prediction_service import attach_predictions
 from app.services.integration_service import (
     convert_uniprot_localizations,
     run_integrations,
@@ -469,14 +466,6 @@ def _status_summary(localization: dict, external: dict) -> dict:
     }
 
 
-def _attach_signalp_prediction(result) -> None:
-    """Add SignalP output to the result when SIGNALP_ENABLED is set."""
-    if is_signalp_enabled():
-        result.sequence_predictions["signalp"] = fetch_signalp_prediction(
-            result.sequence
-        )
-
-
 def analyze_sequence(
     sequence: str,
     protein_id: str | None = None,
@@ -499,7 +488,7 @@ def analyze_sequence(
         aligned_sequences=msa_sequences,
     )
 
-    _attach_signalp_prediction(result)
+    prediction_status = attach_predictions(result)
 
     localization = fetch_localization_result(accession)
     result.localization_evidence.extend(localization["evidence"])
@@ -580,6 +569,9 @@ def analyze_sequence(
         localization,
         external_status,
     )
+
+    if prediction_status:
+        report["prediction_status"] = prediction_status
 
     if integrations is not None:
         report["integrations"] = integrations
@@ -671,13 +663,16 @@ def analyze_fasta_records(
     protein_analyses = []
 
     for analysis in workflow_result.protein_analyses:
-        _attach_signalp_prediction(analysis)
+        prediction_status = attach_predictions(analysis)
 
         protein_report = generate_protein_report(
             analysis,
             conservation_summary=workflow_result.conservation,
             conserved_regions=find_conserved_regions(analysis.conservation_columns),
         )
+
+        if prediction_status:
+            protein_report["prediction_status"] = prediction_status
 
         protein_id = analysis.protein_id
         protein_report["evidence_status"] = {
