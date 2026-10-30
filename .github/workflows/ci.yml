@@ -25,7 +25,21 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      # Submitting an analysis enqueues a Celery job, which needs a broker.
+      # Without Redis, POST /api/analyses returns 500 instead of 202.
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_RESULT_BACKEND: redis://localhost:6379/0
       DATABASE_URL: postgresql+psycopg://vaccinology:vaccinology_ci@localhost:5432/reverse_vaccinology
       TEST_DATABASE_URL: postgresql+psycopg://vaccinology:vaccinology_ci@localhost:5432/reverse_vaccinology
       JWT_SECRET_KEY: ci-only-secret-for-tests
