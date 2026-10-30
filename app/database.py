@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
     pass
 
 def create_engine(database_url: str):
-    return sqlalchemy_create_engine(database_url)
+    return sqlalchemy_create_engine(database_url, pool_pre_ping=True)
 
 def create_session_factory(engine):
     return sessionmaker(

@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy.exc import IntegrityError
 
 from app.models.user import User
@@ -8,11 +10,41 @@ from app.services.password_service import (
 from app.services.token_service import create_token
 
 
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+MAX_EMAIL_LENGTH = 254
+MIN_PASSWORD_LENGTH = 8
+MAX_PASSWORD_LENGTH = 128
+
+
+def _validate_registration(email, password) -> None:
+    if (
+        not isinstance(email, str)
+        or len(email) > MAX_EMAIL_LENGTH
+        or not EMAIL_PATTERN.match(email)
+    ):
+        raise ValueError("A valid email address is required.")
+
+    if not isinstance(password, str):
+        raise ValueError("A valid password is required.")
+
+    if len(password) < MIN_PASSWORD_LENGTH:
+        raise ValueError(
+            f"Password must be at least {MIN_PASSWORD_LENGTH} characters."
+        )
+
+    if len(password) > MAX_PASSWORD_LENGTH:
+        raise ValueError(
+            f"Password must be at most {MAX_PASSWORD_LENGTH} characters."
+        )
+
+
 class AuthService:
     def __init__(self, repository):
         self.repository = repository
 
     def register(self, email: str, password: str) -> User:
+        _validate_registration(email, password)
+
         user = User(
             email=email,
             password_hash=hash_password(password),

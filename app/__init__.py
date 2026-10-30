@@ -1,4 +1,6 @@
-from flask import Flask, request, send_file, jsonify
+import os
+
+from flask import Flask, g, request, send_file, jsonify
 from flask_cors import CORS
 from uuid import UUID
 import jwt
@@ -25,21 +27,83 @@ from app.models.user_orm import UserModel
 from app.reporting.pdf_export import generate_report_pdf
 
 
+DEFAULT_CORS_ORIGIN = "http://localhost:5173"
+
+
+def _get_allowed_origins() -> list[str]:
+    """Return allowed CORS origins from CORS_ALLOWED_ORIGINS.
+
+    The variable holds a comma-separated list of origins. It defaults
+    to the local Vite development server.
+    """
+    configured = os.environ.get("CORS_ALLOWED_ORIGINS", DEFAULT_CORS_ORIGIN)
+
+    origins = [
+        origin.strip()
+        for origin in configured.split(",")
+        if origin.strip()
+    ]
+
+    return origins or [DEFAULT_CORS_ORIGIN]
+
+
+_session_factory_cache = None
+
+
+def _get_session_factory():
+    """Return a shared session factory, building the engine only once.
+
+    The cache is keyed on the factory-building functions so that
+    replacing them (for example in tests) rebuilds the factory.
+    """
+    global _session_factory_cache
+
+    key = (
+        create_database_engine_from_environment,
+        create_session_factory,
+    )
+
+    if _session_factory_cache is None or _session_factory_cache[0] != key:
+        engine = create_database_engine_from_environment()
+        _session_factory_cache = (key, create_session_factory(engine))
+
+    return _session_factory_cache[1]
+
+
 def create_repository():
-    engine = create_database_engine_from_environment()
-    session_factory = create_session_factory(engine)
-    session = session_factory()
+    """Create a repository bound to a brand-new session."""
+    session = _get_session_factory()()
     return AnalysisRepository(session)
+
+
+class _RequestScopedRepository:
+    """Resolves to a repository whose session belongs to one request.
+
+    Sharing a single SQLAlchemy session across concurrent requests is
+    unsafe, so each request lazily gets its own repository, which is
+    closed when the request's application context ends.
+    """
+
+    def __init__(self, resolve):
+        self._resolve = resolve
+
+    def __getattr__(self, name):
+        return getattr(self._resolve(), name)
 
 def create_app(repository=None, queue=None):
     app = Flask(__name__)
 
-    CORS(app, origins=["http://localhost:5173"])
+    CORS(app, origins=_get_allowed_origins())
 
     owns_repository = repository is None
 
     if owns_repository:
-        repository = create_repository()
+        def resolve_request_repository():
+            if "analysis_repository" not in g:
+                g.analysis_repository = create_repository()
+            return g.analysis_repository
+
+        repository = _RequestScopedRepository(resolve_request_repository)
 
     if queue is None:
         queue = CeleryQueue()
@@ -49,8 +113,13 @@ def create_app(repository=None, queue=None):
 
     @app.teardown_appcontext
     def close_repository(error):
-        if owns_repository:
-            repository.session.close()
+        if not owns_repository:
+            return
+
+        request_repository = g.pop("analysis_repository", None)
+
+        if request_repository is not None:
+            request_repository.session.close()
 
     @app.errorhandler(RequestEntityTooLarge)
     def handle_request_entity_too_large(error):
