@@ -502,3 +502,78 @@ def test_analyze_sequence_preserves_supplied_protein_name(monkeypatch):
     )
 
     assert report["protein"]["name"] == "User supplied name"
+
+
+def test_analyze_fasta_records_passes_user_organism_to_each_lookup(
+    monkeypatch,
+):
+    records = [
+        {
+            "id": "protein_1",
+            "description": "Protein one",
+            "accession": "P12345",
+            "sequence": "MKTAYIAKQRQISFVKSHFSRQ",
+        },
+        {
+            "id": "protein_2",
+            "description": "Protein two",
+            "accession": "P67890",
+            "sequence": "MKTAYIAKQRQISFVKSHFSRQ",
+        },
+    ]
+
+    received_organisms = {}
+
+    def mock_fetch_external_evidence(
+        sequence,
+        protein_id=None,
+        accession=None,
+        organism=None,
+        epath_gene_id=None,
+        epath_ko_id=None,
+        host_reference=None,
+    ):
+        received_organisms[protein_id] = organism
+
+        return {
+            "essentiality": {
+                "status": "not_requested",
+                "message": "Essentiality lookup not requested.",
+            },
+            "essentiality_evidence": [],
+            "epath_essentiality": {
+                "status": "organism_required" if not organism else "not_found",
+                "message": "Test result.",
+            },
+            "epath_essentiality_evidence": [],
+            "host_similarity": {
+                "status": "not_requested",
+                "message": "Host similarity lookup not requested.",
+            },
+            "host_similarity_evidence": [],
+        }
+
+    monkeypatch.setattr(
+        "app.services.analysis_service._fetch_external_evidence",
+        mock_fetch_external_evidence,
+    )
+
+    monkeypatch.setattr(
+        "app.services.analysis_service.fetch_localization_result",
+        lambda accession: {
+            "evidence": [],
+            "status": "not_found",
+            "source": "test",
+            "message": "No localization in test.",
+        },
+    )
+
+    analyze_fasta_records(
+        records,
+        organism="Escherichia coli",
+    )
+
+    assert received_organisms == {
+        "protein_1": "Escherichia coli",
+        "protein_2": "Escherichia coli",
+    }

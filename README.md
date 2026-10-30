@@ -181,7 +181,7 @@ Scientific code in `app/analysis/` is kept separate from HTTP and database code,
 
 ## Testing
 
-The backend has about 590 pytest test functions across 40 files, covering analysis modules, conservation, BLAST handling, authentication, ownership checks and the API. The frontend has Vitest suites for components and services.
+The backend has 636 pytest test functions across 40 files, covering analysis modules, conservation, BLAST handling, authentication, ownership checks and the API. The frontend has 98 Vitest suites for components and services.
 
 ```bash
 # Backend (set JWT_SECRET_KEY and, for database tests, TEST_DATABASE_URL)

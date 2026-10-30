@@ -50,3 +50,9 @@ data/reference/mouse/mouse_proteome_candidate_db.*
 # Editor backup files
 *.save
 *.orig
+
+data/reference/human/
+data/reference/pig/
+data/reference/mouse/*candidate*
+data/reference/essentiality/Combined_KOExpEG.txt
+data/reference/essentiality/Experimental_EG.txt
