@@ -1,11 +1,33 @@
 import { useState } from "react";
 import SequenceInsights from "./SequenceInsights";
+import {
+  formatEvalue,
+  formatNumber,
+  formatPercent,
+  formatSigned,
+} from "../utils/format";
+
+const HOST_SIMILARITY_PAGE_SIZE = 6;
+
+function ConfidenceBadge({ confidence }) {
+  if (!confidence) return null;
+  const level = String(confidence).toLowerCase();
+
+  return (
+    <span className={`badge badge-confidence badge-${level.replace(/[^a-z]+/g, "-")}`}>
+      Confidence: {confidence}
+    </span>
+  );
+}
 
 function AnalysisReport({ report, title = 'Analysis Report'  }) {
   const [showAllPeptides, setShowAllPeptides] = useState(false);
   const [showFullSequence, setShowFullSequence] = useState(false);
   const [visibleRegionCount, setVisibleRegionCount] = useState(10)
   const [visiblePeptideCount, setVisiblePeptideCount] = useState(10)
+  const [visibleHostCount, setVisibleHostCount] = useState(
+    HOST_SIMILARITY_PAGE_SIZE,
+  )
 
   const peptideCandidates = report.peptide_candidates ?? [];
   const visiblePeptides = showAllPeptides
@@ -29,31 +51,67 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
         {report.metadata && (
           <section className="analysis-report-section">
             <h3>Report Metadata</h3>
-            <p>
-              Report Type: {report.metadata.report_type}
-            </p>
-            <p>
-              Report Version: {report.metadata.report_version}
-            </p>
-            <p>
-              Analysis Pipeline: {report.metadata.analysis_pipeline}
-            </p>
+            <dl className="stat-list stat-list-stack">
+              <div className="stat">
+                <dt>Report Type</dt>
+                <dd>{report.metadata.report_type}</dd>
+              </div>
+              <div className="stat">
+                <dt>Report Version</dt>
+                <dd>{report.metadata.report_version}</dd>
+              </div>
+              <div className="stat">
+                <dt>Analysis Pipeline</dt>
+                <dd>{report.metadata.analysis_pipeline}</dd>
+              </div>
+            </dl>
           </section>
         )}
 
         <section className="analysis-report-section">
           <h3>Protein Characteristics</h3>
 
-          <div className="protein-characteristics-grid">
-            <p>Protein ID: {report.protein?.id}</p>
-            <p>Name: {report.protein?.name}</p>
-            <p>Organism: {report.protein?.organism}</p>
-            <p>Accession: {report.protein?.accession}</p>
-            <p>Length: {report.protein?.length}</p>
-            <p>Molecular Weight: {report.protein?.molecular_weight}</p>
-            <p>GRAVY: {report.protein?.gravy}</p>
-            <p>Isoelectric Point: {report.protein?.isoelectric_point}</p>
-          </div>
+          <dl className="protein-characteristics-grid stat-list">
+            <div className="stat">
+              <dt>Protein ID</dt>
+              <dd>{report.protein?.id}</dd>
+            </div>
+            <div className="stat">
+              <dt>Name</dt>
+              <dd>{report.protein?.name}</dd>
+            </div>
+            <div className="stat">
+              <dt>Organism</dt>
+              <dd>{report.protein?.organism}</dd>
+            </div>
+            <div className="stat">
+              <dt>Accession</dt>
+              <dd>{report.protein?.accession}</dd>
+            </div>
+            <div className="stat">
+              <dt>Length</dt>
+              <dd>{report.protein?.length}</dd>
+            </div>
+            <div className="stat">
+              <dt>Molecular Weight</dt>
+              <dd>
+                {formatNumber(report.protein?.molecular_weight, { group: true, fallback: "" })}
+                {report.protein?.molecular_weight != null && (
+                  <span className="stat-unit"> Da</span>
+                )}
+              </dd>
+            </div>
+            <div className="stat">
+              <dt>GRAVY</dt>
+              <dd>{formatNumber(report.protein?.gravy, { fallback: "" })}</dd>
+            </div>
+            <div className="stat">
+              <dt>Isoelectric Point</dt>
+              <dd>
+                {formatNumber(report.protein?.isoelectric_point, { fallback: "" })}
+              </dd>
+            </div>
+          </dl>
           <div className="protein-sequence" data-testid="protein-sequence">
             <strong>Sequence ({proteinSequence.length} amino acids)</strong>
             <p>{displayedSequence}</p>
@@ -76,8 +134,41 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
         <div className="measurement-net-charge measurement-card">
           <h4>Net Charge</h4>
           <p>
-            {report.measurements?.charge_and_hydrophobicity?.net_charge}
+            {formatSigned(
+              report.measurements?.charge_and_hydrophobicity?.net_charge ??
+                report.measurements?.charge_and_hydrophobicity
+                  ?.approximate_net_charge,
+              { fallback: "" },
+            )}
           </p>
+          {report.measurements?.charge_and_hydrophobicity && (
+            <dl className="stat-list stat-list-compact">
+              {[
+                ["Positively charged", "positively_charged", "residues"],
+                ["Negatively charged", "negatively_charged", "residues"],
+                ["Hydrophobic residues", "hydrophobic_residues", "residues"],
+              ].map(([label, key]) =>
+                report.measurements.charge_and_hydrophobicity[key] != null ? (
+                  <div className="stat" key={key}>
+                    <dt>{label}</dt>
+                    <dd>{report.measurements.charge_and_hydrophobicity[key]}</dd>
+                  </div>
+                ) : null,
+              )}
+              {report.measurements.charge_and_hydrophobicity
+                .hydrophobicity_percentage != null && (
+                <div className="stat">
+                  <dt>Hydrophobicity</dt>
+                  <dd>
+                    {formatPercent(
+                      report.measurements.charge_and_hydrophobicity
+                        .hydrophobicity_percentage,
+                    )}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          )}
         </div>
 
         {report.measurements?.composition && (
@@ -116,7 +207,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
                       </td>
                       <td>
                         {report.measurements.composition.percentages?.[aminoAcid] != null
-                          ? `${report.measurements.composition.percentages[aminoAcid]}%`
+                          ? formatPercent(report.measurements.composition.percentages[aminoAcid])
                           : 'Unavailable'}
                       </td>
                     </tr>
@@ -333,9 +424,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
                             <td>{point.start}</td>
                             <td>{point.end}</td>
                             <td>
-                              {Number.isFinite(Number(point.hydropathy))
-                                ? Number(point.hydropathy).toFixed(3)
-                                : 'Unavailable'}
+                              {formatNumber(point.hydropathy)}
                             </td>
                           </tr>
                         ))}
@@ -522,7 +611,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             <div className="measurement-values">
               <p>
                 Conservation:{' '}
-                {report.conservation.summary.conservation_percentage}%
+                {formatPercent(report.conservation.summary.conservation_percentage, { fallback: "Unavailable" })}
               </p>
 
               <p>
@@ -648,10 +737,12 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             <div className="evidence-values">
               {report.evidence.localization.map(
                 (evidence, index) => (
-                  <div key={index}>
-                    <p>Localization: {evidence.location}</p>
-                    <p>Source: {evidence.source}</p>
-                    <p>Confidence: {evidence.confidence}</p>
+                  <div key={index} className="evidence-item">
+                    <p className="evidence-item-title">Localization: {evidence.location}</p>
+                    <p className="evidence-item-meta">
+                      <span>Source: {evidence.source}</span>
+                      <ConfidenceBadge confidence={evidence.confidence} />
+                    </p>
                   </div>
                 ),
               )}
@@ -666,39 +757,11 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             <div className="evidence-values">
               {report.evidence.essentiality.map(
                 (evidence, index) => (
-                  <div key={index}>
-                    <p>Essentiality: {evidence.evidence}</p>
-                    <p>Source: {evidence.source}</p>
-                    <p>Confidence: {evidence.confidence}</p>
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
-        )}
-
-        {report.evidence?.host_similarity?.length > 0 && (
-          <div className="evidence-host-similarity evidence-card">
-            <h4>Host Similarity Evidence</h4>
-
-            <div className="evidence-values">
-              {report.evidence.host_similarity.map(
-                (evidence, index) => (
-                  <div key={index}>
-                    <p>
-                      Host Similarity: {evidence.identity_percentage}%
-                    </p>
-                    <p>
-                      Alignment Length: {evidence.alignment_length}
-                    </p>
-                    <p>
-                      E-value: {evidence.e_value}
-                    </p>
-                    <p>
-                      Source: {evidence.source}
-                    </p>
-                    <p>
-                      Confidence: {evidence.confidence}
+                  <div key={index} className="evidence-item">
+                    <p className="evidence-item-title">Essentiality: {evidence.evidence}</p>
+                    <p className="evidence-item-meta">
+                      <span>Source: {evidence.source}</span>
+                      <ConfidenceBadge confidence={evidence.confidence} />
                     </p>
                   </div>
                 ),
@@ -706,6 +769,94 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
             </div>
           </div>
         )}
+
+        {report.evidence?.host_similarity?.length > 0 && (() => {
+          const hits = report.evidence.host_similarity;
+          const shown = Math.min(visibleHostCount, hits.length);
+
+          return (
+            <div className="evidence-host-similarity evidence-card">
+              <h4>Host Similarity Evidence</h4>
+
+              <div className="evidence-values host-similarity-grid">
+                {hits.slice(0, visibleHostCount).map((evidence, index) => (
+                  <div key={index} className="evidence-item host-hit">
+                    {evidence.host_id && (
+                      <p className="host-hit-id">Host: {evidence.host_id}</p>
+                    )}
+                    <p className="evidence-item-title">
+                      Host Similarity: {formatPercent(evidence.identity_percentage)}
+                    </p>
+                    <dl className="host-hit-metrics">
+                      <div>
+                        <dt>Alignment length</dt>
+                        <dd>{evidence.alignment_length}</dd>
+                      </div>
+                      <div>
+                        <dt>E-value</dt>
+                        <dd>{formatEvalue(evidence.e_value)}</dd>
+                      </div>
+                      {evidence.query_coverage_percentage != null && (
+                        <div>
+                          <dt>Query coverage</dt>
+                          <dd>{formatPercent(evidence.query_coverage_percentage)}</dd>
+                        </div>
+                      )}
+                      {evidence.subject_coverage_percentage != null && (
+                        <div>
+                          <dt>Subject coverage</dt>
+                          <dd>{formatPercent(evidence.subject_coverage_percentage)}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    <p className="evidence-item-meta">
+                      <span>Source: {evidence.source}</span>
+                      <ConfidenceBadge confidence={evidence.confidence} />
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {hits.length > HOST_SIMILARITY_PAGE_SIZE && (
+                <div className="evidence-controls host-similarity-controls">
+                  <span className="evidence-count host-similarity-count">
+                    Showing {shown} of {hits.length} matches
+                  </span>
+
+                  <div className="evidence-control-buttons">
+                    {visibleHostCount < hits.length && (
+                      <button
+                        type="button"
+                        className="load-more-button host-similarity-load-more"
+                        onClick={() =>
+                          setVisibleHostCount((current) =>
+                            Math.min(
+                              current + HOST_SIMILARITY_PAGE_SIZE,
+                              hits.length,
+                            ),
+                          )
+                        }
+                      >
+                        Load more
+                      </button>
+                    )}
+                    {visibleHostCount > HOST_SIMILARITY_PAGE_SIZE && (
+                      <button
+                        type="button"
+                        className="load-more-button load-more-secondary host-similarity-show-fewer"
+                        onClick={() =>
+                          setVisibleHostCount(HOST_SIMILARITY_PAGE_SIZE)
+                        }
+                      >
+                        Show fewer
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
 
         {!report.evidence?.localization?.length &&
@@ -732,8 +883,14 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
                   <p className="interpretation-text">
                     {interpretation.interpretation}
                   </p>
-                  <p>Category: {interpretation.category}</p>
-                  <p>Confidence: {interpretation.confidence}</p>
+                  <p className="interpretation-meta">
+                    {interpretation.category && (
+                      <span className="badge badge-neutral">
+                        Category: {String(interpretation.category).replaceAll("_", " ")}
+                      </span>
+                    )}
+                    <ConfidenceBadge confidence={interpretation.confidence} />
+                  </p>
                 </div>
               ),
             )}
@@ -871,8 +1028,8 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
                         <td className="sequence-cell">
                           {candidate.sequence}
                         </td>
-                        <td>{candidate.gravy ?? "Not available"}</td>
-                        <td>{candidate.net_charge ?? "Not available"}</td>
+                        <td>{formatNumber(candidate.gravy, { fallback: "Not available" })}</td>
+                        <td>{formatSigned(candidate.net_charge, { fallback: "Not available" })}</td>
                         <td>
                           {candidate.overlaps_transmembrane == null
                             ? "Not available"

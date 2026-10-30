@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getAnalysisHistory } from '../services/historyService'
+import ThemeToggle from './ThemeToggle'
 import './LandingPage.css'
 import './Dashboard.css'
 
@@ -98,6 +99,7 @@ function Dashboard({ onLogout }) {
         </nav>
 
         <div className="landing-nav-actions">
+          <ThemeToggle />
           <button
             className="dashboard-logout"
             type="button"

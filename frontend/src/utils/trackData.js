@@ -4,6 +4,8 @@
 // Conserved regions are left out on purpose: the report gives them in
 // alignment columns, which stop matching sequence positions once gaps are
 // inserted.
+import { formatNumber } from './format.js'
+
 
 export const TRACK_COLORS = {
   signal: '#0072B2',
@@ -125,7 +127,7 @@ export function buildTracks(report) {
 
   const antigenic = regions(
     predictions.antigenic_regions?.regions,
-    (item) => `Antigenic region ${item.start}-${item.end} (mean propensity ${item.mean_propensity})`,
+    (item) => `Antigenic region ${item.start}-${item.end} (mean propensity ${formatNumber(item.mean_propensity)})`,
   )
 
   if (antigenic.length) {
@@ -144,7 +146,7 @@ export function buildTracks(report) {
   if (epitopes?.status === 'completed') {
     const bcell = regions(
       epitopes.b_cell?.regions,
-      (item) => `B-cell epitope region ${item.start}-${item.end} (mean score ${item.mean_score})`,
+      (item) => `B-cell epitope region ${item.start}-${item.end} (mean score ${formatNumber(item.mean_score)})`,
     )
 
     if (bcell.length) {

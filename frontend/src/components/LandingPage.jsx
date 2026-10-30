@@ -1,4 +1,5 @@
 
+import ThemeToggle from './ThemeToggle'
 import './LandingPage.css'
 
 function LandingPage({ onLogin, onRegister }) {
@@ -20,6 +21,7 @@ function LandingPage({ onLogin, onRegister }) {
         </nav>
 
         <div className="landing-nav-actions">
+          <ThemeToggle />
           <button className="landing-signin" onClick={onLogin}>
             Sign in
           </button>

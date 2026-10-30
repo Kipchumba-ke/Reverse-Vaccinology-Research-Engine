@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { login } from '../services/authService'
+import ThemeToggle from './ThemeToggle'
 import './Auth.css'
 
 function Login({ onLogin, onRegister }) {
@@ -24,6 +25,7 @@ function Login({ onLogin, onRegister }) {
 
   return (
     <main className="auth-page">
+      <ThemeToggle floating />
       <section className="auth-card" aria-labelledby="login-heading">
         <div className="auth-brand">
           <span className="auth-brand-mark" aria-hidden="true">

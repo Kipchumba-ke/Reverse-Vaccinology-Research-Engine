@@ -1,7 +1,3 @@
-.dashboard-page {
-  --dashboard-soft-green: #f6faf7;
-}
-
 .dashboard-page .dashboard-hero {
   width: 100%;
   max-width: none;
@@ -36,7 +32,7 @@
 }
 
 .dashboard-nav .landing-nav-links .dashboard-nav-active {
-  color: var(--landing-green);
+  color: var(--accent-text);
 }
 
 
@@ -44,14 +40,14 @@
   border: 0;
   padding: 8px 0;
   background: transparent;
-  color: #53685e;
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .dashboard-logout:hover {
-  color: var(--landing-green);
+  color: var(--accent-text);
 }
 
 .dashboard-hero {
@@ -69,7 +65,7 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: var(--landing-green);
+  color: var(--accent-text);
   font-size: 12px;
   font-weight: 750;
   text-decoration: none;
@@ -102,7 +98,7 @@
 
 .dashboard-section-heading h2 {
   margin: 13px 0 9px;
-  color: var(--landing-forest);
+  color: var(--heading);
   font-size: clamp(28px, 3vw, 36px);
   letter-spacing: -1.2px;
   line-height: 1.2;
@@ -124,7 +120,7 @@
   overflow: hidden;
   border: 1px solid var(--landing-border);
   border-radius: 13px;
-  background: #fff;
+  background: var(--card-bg);
 }
 
 .dashboard-analysis-item {
@@ -139,11 +135,11 @@
 }
 
 .dashboard-analysis-item + .dashboard-analysis-item {
-  border-top: 1px solid #eaf1ec;
+  border-top: 1px solid var(--border);
 }
 
 .dashboard-analysis-item:hover {
-  background: #f7fbf8;
+  background: var(--surface-1);
 }
 
 .dashboard-analysis-mark {
@@ -153,8 +149,8 @@
   flex-shrink: 0;
   place-items: center;
   border-radius: 11px;
-  background: #e8f7ee;
-  color: var(--landing-green);
+  background: var(--surface-3);
+  color: var(--accent-text);
   font-size: 18px;
   font-weight: 800;
 }
@@ -169,7 +165,7 @@
 
 .dashboard-analysis-info strong {
   overflow: hidden;
-  color: var(--landing-forest);
+  color: var(--heading);
   font-size: 13px;
   font-weight: 750;
   text-overflow: ellipsis;
@@ -188,10 +184,10 @@
 .dashboard-analysis-status {
   flex-shrink: 0;
   padding: 6px 10px;
-  border: 1px solid #dce8e0;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  background: #f6faf7;
-  color: #53685e;
+  background: var(--surface-2);
+  color: var(--text-secondary);
   font-size: 10px;
   font-weight: 750;
   text-transform: capitalize;
@@ -199,28 +195,28 @@
 
 .dashboard-analysis-status.status-completed,
 .dashboard-analysis-status.status-success {
-  border-color: #c8ead5;
-  background: #eaf8ef;
-  color: #18734f;
+  border-color: var(--border-strong);
+  background: var(--surface-3);
+  color: var(--heading);
 }
 
 .dashboard-analysis-status.status-failed,
 .dashboard-analysis-status.status-error {
-  border-color: #f0d0cc;
-  background: #fff3f1;
-  color: #a13f36;
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .dashboard-analysis-status.status-running,
 .dashboard-analysis-status.status-pending {
-  border-color: #eadfb7;
-  background: #fff9e8;
-  color: #85651a;
+  border-color: var(--warn-border);
+  background: var(--warn-bg);
+  color: var(--warn);
 }
 
 .dashboard-analysis-arrow {
   flex-shrink: 0;
-  color: #7b9083;
+  color: var(--text-secondary);
   font-size: 18px;
   transition: transform 160ms ease;
 }
@@ -240,9 +236,9 @@
 }
 
 .dashboard-feedback-error {
-  border-color: #f0d0cc;
-  background: #fff8f7;
-  color: #8f3932;
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .dashboard-feedback-error p {
@@ -250,7 +246,7 @@
 }
 
 .dashboard-feedback-error a {
-  color: #8f3932;
+  color: var(--danger);
   font-weight: 700;
 }
 
@@ -259,9 +255,9 @@
   align-items: center;
   flex-direction: column;
   padding: 48px 24px;
-  border: 1px dashed #cddfd2;
+  border: 1px dashed var(--border-strong);
   border-radius: 14px;
-  background: #fbfdfb;
+  background: var(--surface-1);
   text-align: center;
 }
 
@@ -271,15 +267,15 @@
   height: 48px;
   place-items: center;
   border-radius: 14px;
-  background: #e8f7ee;
-  color: var(--landing-green);
+  background: var(--surface-3);
+  color: var(--accent-text);
   font-size: 28px;
   font-weight: 400;
 }
 
 .dashboard-empty-state h3 {
   margin: 19px 0 8px;
-  color: var(--landing-forest);
+  color: var(--heading);
   font-size: 18px;
 }
 

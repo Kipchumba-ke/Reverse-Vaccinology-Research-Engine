@@ -1,0 +1,113 @@
+/*
+ * Colour tokens for the light and dark themes.
+ *
+ * The light palette is the app's original pale-green look. The dark palette
+ * is built from the same family (the landing page's forest greens and mint)
+ * rather than a neutral grey. Dark is the default: the tokens on :root are
+ * the dark palette and <html data-theme="light"> switches to the light one.
+ * The theme is set before first paint by a small script in index.html and
+ * afterwards by the ThemeToggle component.
+ */
+:root {
+  color-scheme: dark;
+
+  --page-bg: #0a1f19;
+  --card-bg: #0f2c24;
+  --surface-1: #0d2720;
+  --surface-2: #123329;
+  --surface-3: #173f33;
+  --nav-bg: rgba(10, 31, 25, 0.92);
+
+  --text-primary: #e3f1e9;
+  --text-secondary: #9bb8aa;
+  --heading: #bdf2d5;
+  --accent-text: #6fd3a3;
+
+  --border: #1f4538;
+  --border-strong: #2c5b4a;
+
+  --primary-green: #138050;
+  --primary-green-dark: #0e6a42;
+  --accent-green: #3ca875;
+  --on-primary: #ffffff;
+  --accent-bg: rgba(60, 168, 117, 0.14);
+  --focus-ring: rgba(111, 211, 163, 0.35);
+
+  --danger: #f08d84;
+  --danger-bg: rgba(240, 141, 132, 0.12);
+  --danger-border: rgba(240, 141, 132, 0.4);
+  --warn: #e3bf63;
+  --warn-bg: rgba(227, 191, 99, 0.12);
+  --warn-border: rgba(227, 191, 99, 0.4);
+  --info: #8db8ff;
+  --info-bg: rgba(141, 184, 255, 0.1);
+
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.25);
+
+  --mhc-cell: #a99bff;
+
+  /* aliases used by the landing page and dashboard stylesheets */
+  --landing-text: var(--text-primary);
+  --landing-muted: var(--text-secondary);
+  --landing-border: var(--border);
+  --dashboard-soft-green: var(--surface-1);
+
+  /* legacy names still referenced by older rules */
+  --text: var(--text-secondary);
+  --text-h: var(--text-primary);
+  --bg: var(--page-bg);
+  --code-bg: var(--surface-2);
+}
+
+/* Light: the original palette. */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --page-bg: #f4f8f5;
+  --card-bg: #ffffff;
+  --surface-1: #fbfdfc;
+  --surface-2: #f8fbf9;
+  --surface-3: #edf4ef;
+  --nav-bg: rgba(255, 255, 255, 0.96);
+
+  --text-primary: #17352a;
+  --text-secondary: #5d6f67;
+  --heading: #004d2d;
+  --accent-text: #23845b;
+
+  --border: #d9e5df;
+  --border-strong: #cbd5e1;
+
+  --primary-green: #006b3f;
+  --primary-green-dark: #004d2d;
+  --accent-green: #2e8b57;
+  --on-primary: #ffffff;
+  --accent-bg: rgba(46, 139, 87, 0.1);
+  --focus-ring: rgba(46, 139, 87, 0.2);
+
+  --danger: #b42318;
+  --danger-bg: #fde8e7;
+  --danger-border: #fecaca;
+  --warn: #85651a;
+  --warn-bg: #fff5df;
+  --warn-border: #eadfb7;
+  --info: #1d4ed8;
+  --info-bg: #eff6ff;
+
+  --shadow: 0 8px 24px rgba(23, 53, 42, 0.08);
+  --shadow-soft: 0 4px 16px rgba(23, 53, 42, 0.05);
+
+  --mhc-cell: #332288;
+}
+
+/* Page colours only: fonts and layout stay as the app defined them. */
+html {
+  background: var(--page-bg);
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--text-primary);
+}

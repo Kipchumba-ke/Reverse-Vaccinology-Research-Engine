@@ -1,3 +1,5 @@
+import { formatNumber } from '../utils/format'
+
 const WIDTH = 1000
 const LEFT = 150
 const RIGHT = 20
@@ -83,7 +85,7 @@ function Heatmap({ title, data, length }) {
                 >
                   <title>
                     {allele}, residues {bin * binSize + 1}-{Math.min((bin + 1) * binSize, length)}:
-                    best percentile rank {rank}
+                    best percentile rank {formatNumber(rank)}
                   </title>
                 </rect>
               ))}
@@ -138,7 +140,7 @@ function MhcBindingMap({ report }) {
                     {binder.start}-{binder.end}
                   </td>
                   <td>{binder.allele_count}</td>
-                  <td>{binder.best_percentile_rank}</td>
+                  <td>{formatNumber(binder.best_percentile_rank)}</td>
                 </tr>
               ))}
             </tbody>

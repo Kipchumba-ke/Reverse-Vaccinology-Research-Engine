@@ -23,7 +23,9 @@ import Login from './components/Login'
 import MultiSequenceReport from './components/MultiSequenceReport'
 import LandingPage from './components/LandingPage'
 import Dashboard from './components/Dashboard'
+import ThemeToggle from './components/ThemeToggle'
 import './App.css'
+import './components/AnalysisReport.css'
 
 const ACTIVE_ANALYSIS_KEY = 'activeAnalysisId'
 
@@ -151,6 +153,7 @@ function AuthenticatedLayout({ children, onLogout }) {
           <Link to="/dashboard">Dashboard</Link>
           <Link to="/analyses">New analysis</Link>
           <Link to="/history">Analysis history</Link>
+          <ThemeToggle />
           <button type="button" onClick={handleLogout}>
             Log out
           </button>
