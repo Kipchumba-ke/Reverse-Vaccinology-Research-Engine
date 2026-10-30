@@ -599,7 +599,7 @@ def analyze_fasta_records(
     for record in records:
         record_id = record["id"]
         accession = record.get("accession")
-        organism = record.get("organism")
+        record_organism = record.get("organism") or organism
 
         localization = fetch_localization_result(accession)
         localization_evidence[record_id] = localization["evidence"]
@@ -611,13 +611,16 @@ def analyze_fasta_records(
             sequence=record["sequence"],
             protein_id=record_id,
             accession=accession,
-            organism=organism,
+            organism=record_organism,
             epath_gene_id=epath_gene_id,
             epath_ko_id=epath_ko_id,
             host_reference=host_reference,
         )
 
-        essentiality_evidence[record_id] = external["essentiality_evidence"]
+        essentiality_evidence[record_id] = [
+            *external["essentiality_evidence"],
+            *external.get("epath_essentiality_evidence", []),
+        ]
         host_similarity_evidence[record_id] = external["host_similarity_evidence"]
         external_status[record_id] = {
             "essentiality": external["essentiality"],

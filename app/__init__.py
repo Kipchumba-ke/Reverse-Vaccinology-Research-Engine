@@ -83,6 +83,9 @@ def create_app(repository=None, queue=None):
 
                 result = analyze_fasta_records(
                     records,
+                    organism=request.form.get("organism"),
+                    epath_gene_id=request.form.get("epath_gene_id"),
+                    epath_ko_id=request.form.get("epath_ko_id"),
                     host_reference=request.form.get("host_reference"),
                 )
 
