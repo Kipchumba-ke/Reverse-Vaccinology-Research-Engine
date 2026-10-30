@@ -19,9 +19,14 @@
 .workspace-header {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-3);
-  max-width: 46rem;
   margin-bottom: var(--space-6);
+  text-align: center;
+}
+
+.workspace-header > p {
+  max-width: 54ch;
 }
 
 .workspace-header h1,
@@ -47,7 +52,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-width: 52rem;
+  max-width: 64rem;
+  margin-inline: auto;
   padding-top: var(--space-4);
   border-top: 2px solid var(--ink);
 }
@@ -100,8 +106,8 @@
 /* ---------- status panel ---------- */
 
 .analysis-status-panel {
-  max-width: 52rem;
-  margin: var(--space-6) 0;
+  max-width: 64rem;
+  margin: var(--space-6) auto;
   padding: var(--space-3) 0 var(--space-3) var(--space-4);
   border-left: 3px solid var(--info);
 }
@@ -204,7 +210,6 @@
 .history-list {
   display: flex;
   flex-direction: column;
-  max-width: 62rem;
   border-top: 2px solid var(--ink);
 }
 
@@ -271,7 +276,6 @@
 
 .history-error,
 .history-success {
-  max-width: 62rem;
   margin-bottom: var(--space-4);
   padding: var(--space-2) var(--space-3);
   border-left: 3px solid currentColor;
@@ -316,6 +320,7 @@
 .analysis-report-section > h3 {
   font-size: var(--text-xl);
   line-height: 1.15;
+  text-align: center;
 }
 
 .analysis-report-section > h3::before {
@@ -327,17 +332,21 @@
   letter-spacing: 0.06em;
 }
 
+.analysis-report-section > .section-sub {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-7);
+  margin-inline: auto;
+  text-align: center;
+}
+
 .section-sub {
   max-width: var(--measure);
-  margin-top: var(--space-2);
-  margin-bottom: var(--space-6);
   color: var(--ink-soft);
   font: 400 var(--text-md) / 1.5 var(--font-serif);
 }
 
 /* Everything inside a section is a single readable column */
 .analysis-report-section > :not(h3):not(.section-sub) {
-  max-width: 56rem;
   min-width: 0;
 }
 
@@ -346,7 +355,7 @@
 }
 
 .analysis-report-section p {
-  max-width: var(--measure);
+  max-width: none;
 }
 
 .analysis-report-section strong {
@@ -855,8 +864,14 @@
 
 /* Host similarity: one ruled entry per hit, with a bar for each percentage */
 .host-similarity-grid {
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-5);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-7);
+}
+
+@media (max-width: 899px) {
+  .host-similarity-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .host-hit {
@@ -962,6 +977,28 @@
 .limitation-card {
   padding: var(--space-3) 0;
   border-top: 1px solid var(--rule);
+}
+
+.interpretation-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-6);
+}
+
+.interpretation-card .interpretation-meta {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+@media (max-width: 720px) {
+  .interpretation-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .interpretation-card .interpretation-meta {
+    justify-content: flex-start;
+  }
 }
 
 .limitation-card {

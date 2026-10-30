@@ -18,10 +18,6 @@
   border-top: 1px solid var(--rule);
 }
 
-.hero-evidence > * {
-  max-width: 46rem;
-}
-
 .hero-sources {
   display: grid;
   gap: var(--space-3);
