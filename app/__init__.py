@@ -26,6 +26,7 @@ from app.services.auth_service import AuthService
 from app.repositories.user_repository import UserRepository
 from app.models.user_orm import UserModel
 from app.reporting.pdf_export import generate_report_pdf
+from app.integrations import alphafold
 from app.services.rate_limit import (
     build_default_rules,
     build_rate_limiter_from_environment,
@@ -523,6 +524,22 @@ def create_app(repository=None, queue=None, rate_limiter=None):
             as_attachment=True,
             download_name=filename,
         ), 200
+
+    @app.get("/api/structure/<accession>")
+    def get_structure(accession):
+        try:
+            get_authenticated_user_id(request)
+        except ValueError as error:
+            return {"error": str(error)}, 401
+
+        try:
+            return alphafold.fetch_structure(accession), 200
+        except ValueError as error:
+            return {"error": str(error)}, 400
+        except alphafold.StructureNotFound as error:
+            return {"error": str(error)}, 404
+        except RuntimeError as error:
+            return {"error": str(error)}, 502
 
     @app.get("/api/health")
     def health():

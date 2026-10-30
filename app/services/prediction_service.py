@@ -8,7 +8,7 @@ as the source, so the candidate assessment can compare them with database
 annotations and with each other.
 """
 
-from app.integrations import deeptmhmm, psortb, signalp
+from app.integrations import deeptmhmm, iedb, psortb, signalp
 
 
 def attach_predictions(result) -> dict:
@@ -44,6 +44,16 @@ def attach_predictions(result) -> dict:
                 psortb.to_localization_evidence(
                     prediction, prediction["gram"]
                 )
+            )
+
+    if iedb.is_iedb_enabled():
+        prediction = iedb.fetch_epitope_predictions(result.sequence)
+        result.sequence_predictions["epitopes"] = prediction
+        status["iedb"] = _status(prediction)
+
+        if prediction["status"] == "completed":
+            result.peptide_candidates = iedb.annotate_peptides_with_epitopes(
+                result.peptide_candidates, prediction
             )
 
     return status
