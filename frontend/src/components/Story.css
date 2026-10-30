@@ -30,9 +30,8 @@
 }
 
 .story p {
-  max-width: var(--measure);
-  font-size: var(--text-md);
-  line-height: 1.5;
+  font-size: var(--text-lg);
+  line-height: 1.45;
 }
 
 .story .story-answer {
@@ -68,8 +67,8 @@
 
 .question dl {
   display: grid;
-  gap: var(--space-4);
-  max-width: var(--measure);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
   margin: var(--space-4) 0 0;
 }
 
@@ -98,12 +97,34 @@
 }
 
 .path {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-4);
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-areas:
+    'title list'
+    'ask list'
+    'action list';
+  align-content: start;
+  gap: var(--space-3) var(--space-7);
   padding-top: var(--space-4);
   border-top: 1px solid var(--ink);
+}
+
+.path > h3 {
+  grid-area: title;
+}
+
+.path > .path-ask {
+  grid-area: ask;
+}
+
+.path > ul {
+  grid-area: list;
+}
+
+.path > :last-child:not(ul) {
+  grid-area: action;
+  align-self: start;
+  justify-self: start;
 }
 
 .path-researchers,
@@ -116,7 +137,6 @@
 }
 
 .path-ask {
-  max-width: var(--measure);
   font-size: var(--text-md);
   font-style: italic;
   line-height: 1.4;
@@ -126,10 +146,14 @@
 .claims ul {
   display: grid;
   gap: var(--space-3);
-  max-width: var(--measure);
   margin: 0;
   padding: 0 0 0 1.2em;
   font: 400 var(--text-base) / 1.55 var(--font-sans);
+}
+
+.claims ul {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-7);
 }
 
 /* Claims: two blocks, one under the other */
@@ -152,8 +176,8 @@
 /* Sources */
 .sources-list {
   display: grid;
-  gap: var(--space-4);
-  max-width: var(--measure);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-4) var(--space-6);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -181,8 +205,9 @@
 
 /* Figure */
 .hero-figure {
-  max-width: 46rem;
-  margin: 0 0 var(--space-6);
+  width: 100%;
+  max-width: 52rem;
+  margin: 0 auto var(--space-6);
   padding-top: var(--space-3);
   border-top: 2px solid var(--ink);
 }
@@ -242,7 +267,8 @@
 .hero {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   gap: var(--space-4);
   max-width: var(--page-max);
   margin: 0 auto;
@@ -250,7 +276,7 @@
 }
 
 .hero h1 {
-  max-width: 20ch;
+  max-width: 22ch;
 }
 
 .hero .lede,
@@ -286,9 +312,26 @@
 
 .recent-list li {
   display: grid;
-  gap: var(--space-1);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'title status'
+    'meta  status';
+  align-items: center;
+  gap: var(--space-1) var(--space-5);
   padding: var(--space-4) 0;
   border-bottom: 1px solid var(--rule);
+}
+
+.recent-list li > h3 {
+  grid-area: title;
+}
+
+.recent-list li > .recent-meta {
+  grid-area: meta;
+}
+
+.recent-list li > p:last-child {
+  grid-area: status;
 }
 
 .recent-list h3 {
@@ -327,7 +370,6 @@
 
 .flow li {
   position: relative;
-  max-width: var(--measure);
   padding-left: 3rem;
   counter-increment: step;
   font-size: var(--text-base);
@@ -371,4 +413,20 @@
 .dash-empty p {
   max-width: 46ch;
   color: var(--ink-soft);
+}
+
+@media (max-width: 899px) {
+  .question dl,
+  .claims ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .path {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'title'
+      'ask'
+      'list'
+      'action';
+  }
 }

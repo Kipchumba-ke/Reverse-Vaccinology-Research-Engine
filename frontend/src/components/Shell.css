@@ -114,7 +114,7 @@
 
 /*
  * Sections stack vertically: kicker, heading, sub-heading, then content.
- * Content sits in a readable left-aligned column. Sections are numbered with
+ * Headings are centred and content spans the full page width. Sections are numbered with
  * a CSS counter, so any page can reuse them.
  */
 .sections {
@@ -131,14 +131,16 @@
 
 .section-head,
 .section-body {
-  max-width: 54rem;
+  width: 100%;
 }
 
 .section-head {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-7);
+  text-align: center;
 }
 
 .section-head .kicker::before {
