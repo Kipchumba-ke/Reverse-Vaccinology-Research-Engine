@@ -184,6 +184,8 @@ cd frontend && npm install && npm run dev
 
 The frontend runs at `http://localhost:5173`, the default allowed origin. Set `CORS_ALLOWED_ORIGINS` to allow others.
 
+`--debug` turns on Flask's interactive debugger. Use it only on your own machine and never expose a server started this way to the internet (through a tunnel, a port forward or a public address). To make a local API reachable from outside, run it without `--debug`, for example `gunicorn --bind 127.0.0.1:5000 --workers 2 --timeout 120 "app:create_app()"`.
+
 If a token expires or is rejected, the frontend clears it and returns to the login page.
 
 **Rate limits.** Requests are limited per IP (300/minute by default), login and registration more tightly (10/minute per IP), and analysis submissions per user (30/hour). Limited requests get `429` with a `Retry-After` header. Counters are held in memory per worker unless `RATE_LIMIT_STORAGE_URL` points at Redis. Behind a reverse proxy, set `TRUSTED_PROXY_COUNT` so the real client IP is used. `GET /api/health` reports liveness.
