@@ -14,6 +14,7 @@ BioLib cloud, no local licence or model weights, run with ``pybiolib``:
     SIGNALP_ENABLED=1
     SIGNALP_BACKEND=biolib
     SIGNALP_BIOLIB_APP=DTU/SignalP_6          (optional; this is the default)
+    BIOLIB_TOKEN=...                          (required on a server)
 
 Shared setting:
 
@@ -43,6 +44,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from app.integrations.common import NotConfigured, run_biolib_app
+
 SOURCE = "SignalP 6.0"
 VALID_ORGANISMS = {"other", "eukarya"}
 VALID_BACKENDS = {"local", "biolib"}
@@ -69,12 +72,20 @@ def is_signalp_enabled() -> bool:
 
 
 def _resolve_executable() -> str:
-    executable = (
-        os.environ.get("SIGNALP6_EXECUTABLE") or shutil.which("signalp6")
-    )
+    configured = os.environ.get("SIGNALP6_EXECUTABLE", "").strip()
+    executable = configured or shutil.which("signalp6")
 
-    if not executable:
-        raise RuntimeError("signalp6 executable not found.")
+    if not executable or not (
+        shutil.which(executable) or os.path.isfile(executable)
+    ):
+        raise NotConfigured(
+            "SignalP is switched on but no signalp6 install was found"
+            + (f" at {configured}" if configured else "")
+            + ". SignalP 6.0 is licensed by DTU (academic use is free): "
+            "install it and set SIGNALP6_EXECUTABLE, set "
+            "SIGNALP_BACKEND=biolib to use the BioLib cloud app, or set "
+            "SIGNALP_ENABLED=0."
+        )
 
     return executable
 
@@ -196,36 +207,21 @@ def _run_local(sequence: str, organism: str) -> dict:
 
 
 def _run_biolib(sequence: str, organism: str) -> dict:
-    try:
-        import biolib
-    except ImportError as error:
-        raise RuntimeError(
-            "pybiolib is not installed; run: pip install pybiolib"
-        ) from error
-
     app_name = os.environ.get("SIGNALP_BIOLIB_APP") or DEFAULT_BIOLIB_APP
 
-    with tempfile.TemporaryDirectory(prefix="signalp-") as workdir:
-        previous = os.getcwd()
-        os.chdir(workdir)
+    text = run_biolib_app(
+        app_name,
+        (
+            "--fastafile input.fasta "
+            f"--organism {organism} "
+            "--format txt --mode fast --output_dir output"
+        ),
+        f">query\n{sequence}\n",
+        "prediction_results.txt",
+        "SignalP",
+    )
 
-        try:
-            Path("input.fasta").write_text(f">query\n{sequence}\n")
-            job = biolib.load(app_name).cli(
-                args=(
-                    "--fastafile input.fasta "
-                    f"--organism {organism} "
-                    "--format txt --mode fast --output_dir output"
-                ),
-                blocking=True,
-            )
-            job.save_files(output_dir="results")
-        except Exception as error:  # BioLib raises its own exception types
-            raise RuntimeError(f"SignalP run failed: {error}") from error
-        finally:
-            os.chdir(previous)
-
-        return _read_results(Path(workdir) / "results")
+    return parse_signalp_prediction(text)
 
 
 def run_signalp(sequence: str, organism: str | None = None) -> dict:
@@ -242,6 +238,13 @@ def fetch_signalp_prediction(sequence: str) -> dict:
     """Run SignalP when enabled; report failures instead of raising."""
     try:
         return {"status": "completed", **run_signalp(sequence)}
+    except NotConfigured as error:
+        return {
+            "status": "not_configured",
+            "detected": None,
+            "method": SOURCE,
+            "message": str(error),
+        }
     except (RuntimeError, ValueError, OSError) as error:
         return {
             "status": "lookup_failed",
