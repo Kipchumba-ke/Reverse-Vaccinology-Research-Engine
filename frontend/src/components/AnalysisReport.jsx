@@ -74,6 +74,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
         {report.metadata && (
           <section className="analysis-report-section">
             <h3>Report Metadata</h3>
+            <p className="section-sub">Which version of the pipeline produced this report.</p>
             <dl className="stat-list stat-list-stack">
               <div className="stat">
                 <dt>Report Type</dt>
@@ -93,6 +94,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
 
         <section className="analysis-report-section">
           <h3>Protein Characteristics</h3>
+          <p className="section-sub">The sequence submitted and its basic physical properties.</p>
 
           <dl className="protein-characteristics-grid stat-list">
             <div className="stat">
@@ -153,6 +155,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
 
       <section className="analysis-report-section">
         <h3>Measurements</h3>
+        <p className="section-sub">Charge, composition and hydropathy, computed from the sequence alone.</p>
 
         <div className="measurement-net-charge measurement-card">
           <h4>Net Charge</h4>
@@ -378,6 +381,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
 
       <section className="analysis-report-section">
         <h3>Conservation</h3>
+        <p className="section-sub">How much of the sequence is shared across the strains provided.</p>
 
         {report.conservation?.summary && (
           <div className="conservation-summary measurement-card">
@@ -495,6 +499,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
 
       <section className="analysis-report-section">
         <h3>Evidence</h3>
+        <p className="section-sub">Where the protein sits, whether it is essential, and how it compares with the host.</p>
         {report.evidence_status?.epath_essentiality && (
           <div className="evidence-epath-status evidence-card">
             <h4>ePath Essentiality Lookup</h4>
@@ -666,6 +671,8 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
 
         <h3>Interpretations</h3>
 
+        <p className="section-sub">What the measurements suggest, each with its category and confidence.</p>
+
         {report.interpretations?.length > 0 && (
           <div className="interpretations-list">
             {report.interpretations.map(
@@ -695,6 +702,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
       
       <section className="analysis-report-section">
         <h3>Candidate Assessment</h3>
+        <p className="section-sub">A summary of the case for and against this protein as a target.</p>
 
         {report.candidate_assessment && (
           <div className="candidate-assessment-card">
@@ -765,6 +773,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
 
       <section className="analysis-report-section">
         <h3>Limitations</h3>
+        <p className="section-sub">What this report cannot tell you.</p>
 
         {report.limitations?.length > 0 && (
           <div className="limitations-list">
@@ -784,6 +793,7 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
 
       <section className="analysis-report-section">
         <h3>Peptide Candidates</h3>
+        <p className="section-sub">Short stretches of the protein that may be worth testing.</p>
         {peptideCandidates.length === 0 ? (
           <p>No peptide candidates are available.</p>
         ) : (

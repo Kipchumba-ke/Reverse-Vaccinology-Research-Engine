@@ -1,0 +1,432 @@
+/* Shared story sections (landing page and dashboard). All content is vertical. */
+
+.story,
+.questions,
+.flow,
+.recent-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The problem: three statements, one under the other */
+.story {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.story li {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+  border-left: 1px solid var(--rule-strong);
+}
+
+.story h3 {
+  color: var(--ink-soft);
+  font: 500 var(--text-xs) / 1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.story p {
+  font-size: var(--text-lg);
+  line-height: 1.45;
+}
+
+.story .story-answer {
+  padding-left: calc(var(--space-5) - 2px);
+  border-left: 3px solid var(--accent);
+}
+
+/* Method: one block per question, with its details stacked beneath */
+.questions {
+  display: grid;
+  gap: var(--space-7);
+  counter-reset: question;
+}
+
+.question {
+  counter-increment: question;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--ink);
+}
+
+.question h3 {
+  font-size: var(--text-lg);
+}
+
+.question h3::before {
+  content: 'Q' counter(question);
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--accent);
+  font: 500 var(--text-xs) / 1 var(--font-mono);
+  letter-spacing: 0.06em;
+}
+
+.question dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin: var(--space-4) 0 0;
+}
+
+.question dt {
+  margin-bottom: var(--space-1);
+  color: var(--ink-soft);
+  font: 500 var(--text-xs) / 1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.question dd {
+  margin: 0;
+  font: 400 var(--text-base) / 1.55 var(--font-serif);
+}
+
+.question-limit {
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--accent);
+}
+
+/* Audiences: stacked, each with heading, question, points, action */
+.paths {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.path {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-areas:
+    'title list'
+    'ask list'
+    'action list';
+  align-content: start;
+  gap: var(--space-3) var(--space-7);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--ink);
+}
+
+.path > h3 {
+  grid-area: title;
+}
+
+.path > .path-ask {
+  grid-area: ask;
+}
+
+.path > ul {
+  grid-area: list;
+}
+
+.path > :last-child:not(ul) {
+  grid-area: action;
+  align-self: start;
+  justify-self: start;
+}
+
+.path-researchers,
+.path:first-child {
+  border-top: 3px solid var(--accent);
+}
+
+.path h3 {
+  font-size: var(--text-xl);
+}
+
+.path-ask {
+  font-size: var(--text-md);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.path ul,
+.claims ul {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0 0 0 1.2em;
+  font: 400 var(--text-base) / 1.55 var(--font-sans);
+}
+
+.claims ul {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-7);
+}
+
+/* Claims: two blocks, one under the other */
+.claims {
+  display: grid;
+  gap: var(--space-7);
+}
+
+.claims h3 {
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--rule-strong);
+  font-size: var(--text-lg);
+}
+
+.claims-not h3 {
+  border-bottom-color: var(--accent);
+}
+
+/* Sources */
+.sources-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sources-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-sans);
+  line-height: 1.4;
+}
+
+.sources-list strong {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.sources-list li span {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+/* Figure */
+.hero-figure {
+  width: 100%;
+  max-width: 52rem;
+  margin: 0 auto var(--space-6);
+  padding-top: var(--space-3);
+  border-top: 2px solid var(--ink);
+}
+
+.hero-figure .kicker {
+  margin-bottom: var(--space-2);
+}
+
+.figure-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero-figure figcaption {
+  margin-top: var(--space-3);
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.5 var(--font-sans);
+}
+
+.figure-label {
+  fill: var(--ink-soft);
+  font: 400 11px var(--font-sans);
+}
+
+.figure-tick {
+  fill: var(--ink-faint);
+  font: 400 10px var(--font-mono);
+}
+
+.figure-lane {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.figure-axis {
+  stroke: var(--ink-faint);
+  stroke-width: 1;
+}
+
+.figure-bar {
+  stroke: var(--ink);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+  transition: opacity 0.15s ease;
+}
+
+.figure-svg:hover .figure-bar {
+  opacity: 0.55;
+}
+
+.figure-svg .figure-bar:hover {
+  opacity: 1;
+}
+
+/* Hero blocks, shared by the landing page and the dashboard */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-4);
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--gutter) var(--space-7);
+}
+
+.hero h1 {
+  max-width: 22ch;
+}
+
+.hero .lede,
+.hero .lede-note {
+  max-width: 54ch;
+}
+
+.lede {
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+
+.lede-note {
+  color: var(--ink);
+  font: 500 var(--text-sm) / 1.5 var(--font-sans);
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-3);
+}
+
+/* Dashboard lists */
+.recent-list {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--ink);
+}
+
+.recent-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'title status'
+    'meta  status';
+  align-items: center;
+  gap: var(--space-1) var(--space-5);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.recent-list li > h3 {
+  grid-area: title;
+}
+
+.recent-list li > .recent-meta {
+  grid-area: meta;
+}
+
+.recent-list li > p:last-child {
+  grid-area: status;
+}
+
+.recent-list h3 {
+  font-size: var(--text-md);
+}
+
+.recent-meta {
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.5 var(--font-sans);
+}
+
+.status-tag {
+  font: 500 var(--text-sm) / 1.3 var(--font-sans);
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-tag.status-completed {
+  color: var(--ok);
+}
+
+.status-tag.status-failed {
+  color: var(--bad);
+}
+
+.status-tag.status-pending,
+.status-tag.status-running {
+  color: var(--warn);
+}
+
+.flow {
+  display: grid;
+  gap: var(--space-5);
+  counter-reset: step;
+}
+
+.flow li {
+  position: relative;
+  padding-left: 3rem;
+  counter-increment: step;
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+.flow li::before {
+  content: counter(step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0.15em;
+  color: var(--accent);
+  font: 500 var(--text-sm) / 1.4 var(--font-mono);
+}
+
+.dash-feedback {
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+}
+
+.dash-feedback-error {
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--bad);
+  color: var(--bad);
+}
+
+.dash-feedback-error a {
+  color: var(--ink);
+}
+
+.dash-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
+}
+
+.dash-empty p {
+  max-width: 46ch;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 899px) {
+  .question dl,
+  .claims ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .path {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'title'
+      'ask'
+      'list'
+      'action';
+  }
+}
