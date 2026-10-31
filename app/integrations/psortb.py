@@ -56,7 +56,7 @@ VALID_BACKENDS = {"local", "docker"}
 DEFAULT_DOCKER_IMAGE = "brinkmanlab/psortb_commandline:1.0.2"
 DOCKER_PSORT_PATH = "/usr/local/psortb/bin/psort"
 DOCKER_RESULTS_DIR = "/tmp/results"
-TIMEOUT_SECONDS = 600
+TIMEOUT_SECONDS = 1800
 CONFIDENT_SCORE = 7.5
 
 LOCATION_MAP = {
