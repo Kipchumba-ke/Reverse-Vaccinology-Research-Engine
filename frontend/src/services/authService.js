@@ -1,4 +1,4 @@
-import { apiUrl } from './apiBase'
+import { apiUrl, readJson } from './apiBase'
 
 export async function login(email, password) {
   const response = await fetch(apiUrl('/api/login'), {
@@ -12,7 +12,7 @@ export async function login(email, password) {
     }),
   })
 
-  const result = await response.json()
+  const result = await readJson(response)
 
   if (!response.ok) {
     throw new Error(result.error || 'Login failed')
@@ -36,5 +36,5 @@ export async function register(email, password) {
     }),
   })
 
-  return response.json()
+  return readJson(response)
 }

@@ -1,5 +1,5 @@
 import { handleUnauthorized } from './session'
-import { apiUrl } from './apiBase'
+import { apiUrl, readJson } from './apiBase'
 
 export async function submitAnalysis(sequence, token, metadata = {}) {
   const response = await fetch(apiUrl('/api/analyses'), {
@@ -19,7 +19,7 @@ export async function submitAnalysis(sequence, token, metadata = {}) {
 
   handleUnauthorized(response)
 
-  return response.json()
+  return readJson(response)
 }
 
 export async function submitFastaAnalysis(fastaContent, token, metadata = {}) {
@@ -40,7 +40,7 @@ export async function submitFastaAnalysis(fastaContent, token, metadata = {}) {
 
   handleUnauthorized(response)
 
-  return response.json()
+  return readJson(response)
 }
 
 export async function getAnalysisStatus(analysisId, token) {
@@ -52,7 +52,7 @@ export async function getAnalysisStatus(analysisId, token) {
 
   handleUnauthorized(response)
 
-  return response.json()
+  return readJson(response)
 }
 
 

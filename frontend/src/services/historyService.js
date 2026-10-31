@@ -1,5 +1,5 @@
 import { SESSION_EXPIRED_MESSAGE, handleUnauthorized } from './session'
-import { apiUrl } from './apiBase'
+import { apiUrl, readJson } from './apiBase'
 
 
 export async function getAnalysisHistory(token) {
@@ -9,7 +9,7 @@ export async function getAnalysisHistory(token) {
     },
   })
 
-  const data = await response.json()
+  const data = await readJson(response)
 
   if (handleUnauthorized(response)) {
     throw new Error(SESSION_EXPIRED_MESSAGE)
@@ -34,7 +34,7 @@ export async function deleteAnalysis(analysisId, token) {
     },
   )
 
-  const data = await response.json()
+  const data = await readJson(response)
 
   if (handleUnauthorized(response)) {
     throw new Error(SESSION_EXPIRED_MESSAGE)
