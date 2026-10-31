@@ -1,4 +1,6 @@
 
+from urllib.parse import quote
+
 import requests
 
 
@@ -11,7 +13,7 @@ def fetch_protein_annotation(accession: str) -> dict:
 
     try:
         response = requests.get(
-            f"{UNIPROT_BASE_URL}/{accession}.json",
+            f"{UNIPROT_BASE_URL}/{quote(accession.strip(), safe='')}.json",
             timeout=15,
         )
         response.raise_for_status()

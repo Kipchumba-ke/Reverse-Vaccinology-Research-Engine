@@ -24,6 +24,36 @@ celery_app = Celery(
 )
 
 
+def _seconds(name: str, default: int) -> int:
+    raw = os.environ.get(name, "").strip()
+
+    if not raw:
+        return default
+
+    try:
+        value = int(raw)
+    except ValueError as error:
+        raise RuntimeError(f"{name} must be a whole number of seconds.") from error
+
+    if value <= 0:
+        raise RuntimeError(f"{name} must be greater than zero.")
+
+    return value
+
+
+# An analysis that runs past the soft limit is stopped and marked failed
+# (execute_analysis records the failure). The hard limit then kills the task
+# if it is stuck somewhere that cannot be interrupted, such as a BioLib call.
+# Keep both above the slowest predictor (PSORTB_TIMEOUT_SECONDS).
+_SOFT_LIMIT = _seconds("ANALYSIS_SOFT_TIME_LIMIT_SECONDS", 3300)
+_HARD_LIMIT = max(_seconds("ANALYSIS_TIME_LIMIT_SECONDS", 3600), _SOFT_LIMIT + 60)
+
+celery_app.conf.update(
+    task_soft_time_limit=_SOFT_LIMIT,
+    task_time_limit=_HARD_LIMIT,
+)
+
+
 class CeleryQueue:
     def enqueue(self, job):
         execute_analysis_task.delay(job.analysis_id)

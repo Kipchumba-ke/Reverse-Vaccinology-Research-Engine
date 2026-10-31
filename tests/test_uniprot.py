@@ -203,3 +203,26 @@ def test_fetch_protein_annotation_returns_empty_localizations_when_unavailable(
     annotation = fetch_protein_annotation("P12345")
 
     assert annotation["localization_annotations"] == []
+
+
+def test_accession_cannot_change_the_request_path(monkeypatch):
+    seen = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"primaryAccession": "P12345"}
+
+    def fake_get(url, **kwargs):
+        seen["url"] = url
+        return FakeResponse()
+
+    monkeypatch.setattr("app.integrations.uniprot.requests.get", fake_get)
+
+    fetch_protein_annotation("../idmapping/x?evil=1#")
+
+    assert seen["url"].startswith("https://rest.uniprot.org/uniprotkb/")
+    assert "/../" not in seen["url"]
+    assert "?" not in seen["url"] and "#" not in seen["url"]

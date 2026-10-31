@@ -1118,8 +1118,9 @@ def test_submit_analysis_handles_queue_failure(api_client, auth_token):
     )
 
     assert response.status_code == 500
+    # Internal detail must not reach the client.
     assert response.get_json() == {
-        "error": "Queue unavailable"
+        "error": "The analysis could not be submitted. Please try again later."
     }
 
 
@@ -1150,8 +1151,9 @@ def test_submit_analysis_handles_persistence_failure(api_client, auth_token):
     )
 
     assert response.status_code == 500
+    assert "Database unavailable" not in response.get_data(as_text=True)
     assert response.get_json() == {
-        "error": "Database unavailable"
+        "error": "The analysis could not be submitted. Please try again later."
     }
 
 
@@ -2142,3 +2144,41 @@ def test_health_endpoint_needs_no_authentication(api_client):
 
     assert response.status_code == 200
     assert response.get_json() == {"status": "ok"}
+
+
+
+def test_sync_analyze_can_be_disabled(api_client, auth_headers, monkeypatch):
+    monkeypatch.setenv("SYNC_ANALYZE_ENABLED", "0")
+
+    response = api_client.post(
+        "/api/analyze",
+        headers=auth_headers,
+        json={"sequence": "MKTLLLTLVVVTIVCLDLGYT"},
+    )
+
+    assert response.status_code == 403
+    assert "/api/analyses" in response.get_json()["error"]
+
+
+def test_sync_analyze_still_requires_authentication_when_disabled(
+    api_client, monkeypatch
+):
+    monkeypatch.setenv("SYNC_ANALYZE_ENABLED", "0")
+
+    response = api_client.post("/api/analyze", json={"sequence": "MKT"})
+
+    assert response.status_code == 401
+
+
+def test_registration_can_be_closed(api_client, monkeypatch):
+    monkeypatch.setenv("REGISTRATION_ENABLED", "0")
+
+    response = api_client.post(
+        "/api/register",
+        json={"email": "new.person@example.com", "password": "a-long-password"},
+    )
+
+    assert response.status_code == 403
+    assert response.get_json() == {
+        "error": "Registration is closed on this server."
+    }

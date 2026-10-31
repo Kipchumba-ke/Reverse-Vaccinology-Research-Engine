@@ -36,3 +36,27 @@ First, build the gene-level index:
 
 ```bash
 python -m app.integrations.build_epath_index
+```
+
+This reads `a_Gene_sort.txt` and creates `epath.sqlite3` in this directory.
+
+Then import the experimental essentiality records into the same database:
+
+```bash
+python -m app.integrations.import_epath_evidence
+```
+
+This reads `Combined_KOExpEG.txt` and `Experimental_EG.txt` and adds them to
+`epath.sqlite3`. Both commands accept `--database` and `--data-dir` (and the
+first accepts `--source`) if your files live elsewhere.
+
+## Point the application at it
+
+By default the application looks for `data/reference/essentiality/epath.sqlite3`,
+so you normally set nothing. If you move the database, set
+`ESSENTIALITY_EPATH_DB_PATH` to the **`.sqlite3` file**. Do not point it at one
+of the source `.txt` files: the report then says the database is not set up.
+
+If the database is missing, analyses still complete; the Evidence section shows
+the ePath lookup as not set up. Keep the three source files safe: the database
+can be rebuilt from them, but they cannot be re-downloaded from this repository.

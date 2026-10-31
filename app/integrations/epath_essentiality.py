@@ -62,11 +62,34 @@ def fetch_epath_essentiality_evidence(
         or DEFAULT_DB_PATH
     )
 
+    # Messages name the setting, not the server's file path: the report is
+    # shown to users.
     if not path.is_file():
         return {
             **empty_result,
             "status": "not_configured",
-            "message": f"ePath database not found: {path}",
+            "message": (
+                "The ePath essentiality database is not set up on this "
+                "server."
+            ),
+        }
+
+    try:
+        with path.open("rb") as handle:
+            is_sqlite = handle.read(16) == b"SQLite format 3\x00"
+    except OSError:
+        is_sqlite = False
+
+    if not is_sqlite:
+        return {
+            **empty_result,
+            "status": "not_configured",
+            "message": (
+                "ESSENTIALITY_EPATH_DB_PATH does not point to a built ePath "
+                "SQLite database. Build it as described in "
+                "data/reference/essentiality/README.md and point the setting "
+                "at epath.sqlite3, not at a source .txt file."
+            ),
         }
 
     organism_input = organism.strip()

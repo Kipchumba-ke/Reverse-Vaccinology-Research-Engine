@@ -117,11 +117,13 @@ Create a `.env` file in the repository root. It is git-ignored.
 | `RATE_LIMIT_*`, `TRUSTED_PROXY_COUNT` | Rate limits and proxy depth; see `.env.example` |
 | `MAX_SEQUENCE_LENGTH`, `MAX_FASTA_RECORDS`, `MAX_ALIGNMENT_CELLS`, `MAX_REQUEST_BYTES` | Input caps |
 | `ALIGNMENT_SCORING` | `blosum62` (default) or `identity` for the built-in aligner |
+| `REGISTRATION_ENABLED`, `SYNC_ANALYZE_ENABLED` | Set to `0` to close sign-up or turn off the synchronous `/api/analyze` route (both default to on outside Compose) |
+| `ANALYSIS_SOFT_TIME_LIMIT_SECONDS`, `ANALYSIS_TIME_LIMIT_SECONDS` | Background analysis limits (defaults 3300 and 3600). Keep them above the slowest predictor |
 | `HOST_SIMILARITY_*`, `HOST_PEPTIDE_*` | Host-similarity thresholds and the short-peptide scan |
 | `SIGNALP_ENABLED`, `SIGNALP_BACKEND`, `SIGNALP6_EXECUTABLE`, `SIGNALP_BIOLIB_APP`, `SIGNALP_ORGANISM` | Optional SignalP 6.0 adapter. `SIGNALP_BACKEND` is `local` (default, your own `signalp6` install) or `biolib` (cloud app through `pybiolib`; sends the sequence to BioLib) |
 | `BIOLIB_TOKEN` | BioLib API token, needed on a server for DeepTMHMM and SignalP through BioLib (create it in your BioLib account settings, or run `biolib login` once on a workstation) |
 | `DEEPTMHMM_ENABLED` | Optional DeepTMHMM through BioLib; needs `pip install -r requirements-biolib.txt` and sends the sequence to BioLib |
-| `PSORTB_ENABLED`, `PSORTB_BACKEND`, `PSORTB_DOCKER_IMAGE`, `DOCKER_EXECUTABLE`, `PSORTB_EXECUTABLE`, `PSORTB_GRAM` | Optional PSORTb 3.0. `PSORTB_BACKEND` is `local` (default, a `psort` install) or `docker` (the `brinkmanlab/psortb_commandline` image). `PSORTB_GRAM` is `negative`, `positive` or `archaea` |
+| `PSORTB_ENABLED`, `PSORTB_BACKEND`, `PSORTB_DOCKER_IMAGE`, `DOCKER_EXECUTABLE`, `PSORTB_EXECUTABLE`, `PSORTB_GRAM`, `PSORTB_TIMEOUT_SECONDS` | Optional PSORTb 3.0. `PSORTB_BACKEND` is `local` (default, a `psort` install) or `docker` (the `brinkmanlab/psortb_commandline` image). `PSORTB_GRAM` is `negative`, `positive` or `archaea` |
 | `IEDB_ENABLED`, `IEDB_MHCI_ALLELES`, `IEDB_MHCII_ALLELES`, `IEDB_MHCI_LENGTH`, `IEDB_MHCII_LENGTH`, `IEDB_MHCI_RANK_CUTOFF`, `IEDB_MHCII_RANK_CUTOFF`, `IEDB_MAX_SEQUENCE_LENGTH`, `IEDB_TIMEOUT_SECONDS`, `IEDB_API_BASE` | Optional IEDB epitope and MHC prediction; sends the sequence to IEDB |
 
 Copy `.env.example` as a starting point. `JWT_SECRET_KEY` is required: the app refuses to issue or verify tokens without it. Write each setting as `KEY=value`, with no spaces after the value and no placeholder paths such as `/path/to/psort`: a placeholder is treated as a missing install.
@@ -148,6 +150,22 @@ alembic upgrade head
 ```
 
 The FASTA files and checksums are described in `data/reference/host-proteomes.md`. The ePath essentiality data is optional and must be obtained and built separately; see `data/reference/essentiality/README.md`.
+
+#### How users get at the reference databases
+
+They do not. Users never open or download these files; **the server reads them** while it runs an analysis. In the analysis form, a user picks a **Host Similarity Reference** (None, Human, Mouse or Pig) and may type an **ePath Gene ID** or **KO ID**. Whoever runs the server builds the databases once and keeps them on the server's disk.
+
+| Data | Where it lives | How it is made | If it is missing |
+| --- | --- | --- | --- |
+| Human, mouse and pig BLAST databases | `data/reference/<host>/<host>_proteome_db.*` (git-ignored, rebuildable) | `./scripts/download_host_proteomes.sh`, then `./scripts/build_host_blast_databases.sh` (needs BLAST+ on the machine) | The report says no BLAST database is configured for that host; the rest of the analysis still completes |
+| ePath essentiality (the KO data) | `data/reference/essentiality/epath.sqlite3` (git-ignored) | Put the three ePath source files in that folder, then run `python -m app.integrations.build_epath_index` and `python -m app.integrations.import_epath_evidence` | The report shows the ePath lookup as not set up |
+
+Things to know for a deployment:
+
+- **Build them on the server before the first analysis.** The Docker image does not contain them (`.dockerignore` leaves them out). Compose mounts `./data/reference` read-only into the `api` and `worker` containers at `/srv/app/data/reference`, so run the scripts on the host first; they need BLAST+ installed there (for example `apt install ncbi-blast+`) and internet access to UniProt for the download.
+- **Leave the path settings alone if you can.** The defaults above are found automatically. If you set `HOST_BLAST_DATABASE_HUMAN`, `_MOUSE`, `_PIG` or `ESSENTIALITY_EPATH_DB_PATH`, use absolute paths outside Docker (relative paths are resolved from the process's working directory), and point `ESSENTIALITY_EPATH_DB_PATH` at `epath.sqlite3`, never at a source `.txt` file.
+- **Licences differ.** The UniProt proteomes can be downloaded freely. The ePath files are not committed to Git because their redistribution terms have not been verified; obtain them from their source and keep a copy.
+- **Refreshing.** The download script skips files that already exist; delete a FASTA to fetch a newer proteome, rebuild, and note the new checksums in `data/reference/host-proteomes.md`. Host results change between proteome releases.
 
 ### 6. Run it
 
@@ -269,7 +287,7 @@ Tests that touch BLAST need BLAST+ installed. GitHub Actions runs both suites an
 A checklist for a first deployment. It is not a security audit.
 
 1. **Secrets stay out of git.** `.env` is git-ignored; keep it that way and give the server its own. Commit only `.env.example`. If a real `.env` was ever pasted into a chat, an issue or a screenshot, treat its secrets as exposed and replace them.
-2. **Set your own secrets.** `JWT_SECRET_KEY` should be random and at least 32 characters (`python -c "import secrets; print(secrets.token_urlsafe(48))"`). Changing it signs everyone out. Set `POSTGRES_PASSWORD` instead of the development default `vaccinology_dev`, and update `DATABASE_URL` to match.
+2. **Set your own secrets.** `JWT_SECRET_KEY` must be random and at least 32 characters (shorter values are refused) (`python -c "import secrets; print(secrets.token_urlsafe(48))"`). Changing it signs everyone out. Set `POSTGRES_PASSWORD` instead of the development default `vaccinology_dev`, and update `DATABASE_URL` to match.
 3. **Do not expose the databases.** Compose publishes Postgres and Redis on `127.0.0.1` only. Keep it that way, or remove those `ports` entries, and do not open 5432 or 6379 to the internet.
 4. **Serve over HTTPS.** Put a TLS-terminating reverse proxy in front of the `web` service, set `CORS_ALLOWED_ORIGINS` to your site's origin, and set `TRUSTED_PROXY_COUNT` to the number of proxies in front of the API so rate limits see real client addresses.
 5. **Run migrations** with `alembic upgrade head` before starting a new version (the `migrate` service does this in Compose), and back up the Postgres volume.
@@ -278,6 +296,32 @@ A checklist for a first deployment. It is not a security audit.
 8. **Run the test suites and one real analysis** on the production configuration before inviting users. The tests use stand-ins for the external services.
 
 Analyses and the sequences submitted are stored in your database. Tell users that, and decide how long you keep them.
+
+### Security notes
+
+What the code does today, and what it does not.
+
+**In place**
+- Passwords are hashed with Werkzeug (scrypt). Login tokens are signed HS256 JWTs with a required expiry, and `JWT_SECRET_KEY` must be at least 32 characters. A wrong email and a wrong password give the same message and about the same response time.
+- Every route that reads, downloads or deletes an analysis checks that it belongs to the signed-in user.
+- Requests are size-limited and rate-limited (per IP for sign-in, per user for analyses). Uploads are parsed as FASTA text and are never written to disk or executed.
+- External programs (BLAST+, Clustal Omega, PSORTb, SignalP) are run with argument lists, never through a shell. Outbound requests go only to fixed hosts (UniProt, NCBI, EBI, IEDB, BioLib); the accession in a UniProt request is URL-encoded and AlphaFold accessions are pattern-checked.
+- Text in generated PDFs is escaped. The React app has no raw-HTML rendering.
+- The web container sends a Content-Security-Policy and other security headers (`frontend/nginx.conf`). Internal errors are logged and a generic message is returned.
+- Background analyses stop after a time limit (`ANALYSIS_SOFT_TIME_LIMIT_SECONDS`, `ANALYSIS_TIME_LIMIT_SECONDS`) so a stuck predictor cannot hold a worker forever.
+- Dependabot opens pull requests for dependency updates (`.github/dependabot.yml`).
+
+**Settings for a public deployment**
+- `REGISTRATION_ENABLED=0` closes sign-up once your users have accounts. Open registration lets anyone spend your compute and any BioLib or IEDB quota.
+- `SYNC_ANALYZE_ENABLED=0` (the Compose default) turns off `/api/analyze`, which runs an entire analysis inside a web request. The web app uses `/api/analyses`.
+
+**Known gaps (not fixed)**
+- The login token is kept in the browser's `localStorage`, so any cross-site-scripting flaw would expose it. The Content-Security-Policy reduces that risk but does not remove it. Tokens last 24 hours by default and cannot be revoked before they expire; logging out only forgets the token in that browser.
+- There is no email verification, password reset, account lockout (only the rate limit), multi-factor sign-in or audit log.
+- Email addresses are compared exactly as typed, so `A@x.com` and `a@x.com` are different accounts.
+- Registering with an address that is already taken says so, which reveals that the address has an account.
+- Dependency versions were not scanned for known vulnerabilities in this review. Run `pip-audit -r requirements.txt` and `npm audit` (in `frontend/`) before release and after each update.
+- Docker, nginx and a live server were not exercised in this review; check the site's headers and a full analysis on the real deployment.
 
 ## Limitations and scientific disclaimer
 

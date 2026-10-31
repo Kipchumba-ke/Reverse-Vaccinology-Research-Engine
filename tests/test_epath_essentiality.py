@@ -186,3 +186,33 @@ def test_reports_missing_database(tmp_path):
 
     assert result["status"] == "not_configured"
     assert result["evidence"] == []
+
+
+def test_missing_database_message_does_not_expose_the_server_path(tmp_path):
+    missing = tmp_path / "private-dir" / "missing.sqlite3"
+
+    result = fetch_epath_essentiality_evidence(
+        organism="eco",
+        ko_id="K00005",
+        database_path=str(missing),
+    )
+
+    assert result["status"] == "not_configured"
+    assert "private-dir" not in result["message"]
+
+
+def test_source_text_file_is_not_mistaken_for_the_database(tmp_path):
+    # A common slip: pointing the setting at Experimental_EG.txt instead of
+    # the SQLite file built from it.
+    source = tmp_path / "Experimental_EG.txt"
+    source.write_text("organism\tgene\n")
+
+    result = fetch_epath_essentiality_evidence(
+        organism="eco",
+        ko_id="K00005",
+        database_path=str(source),
+    )
+
+    assert result["status"] == "not_configured"
+    assert "ESSENTIALITY_EPATH_DB_PATH" in result["message"]
+    assert result["evidence"] == []
