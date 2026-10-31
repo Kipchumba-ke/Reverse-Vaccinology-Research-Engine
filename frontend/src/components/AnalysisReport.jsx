@@ -1,5 +1,6 @@
 import { useState } from "react";
 import SequenceInsights from "./SequenceInsights";
+import PredictorStatus from "./PredictorStatus";
 import HydropathyChart from "./HydropathyChart";
 import TransmembraneMap from "./TransmembraneMap";
 import {
@@ -378,6 +379,8 @@ function AnalysisReport({ report, title = 'Analysis Report'  }) {
       </section>
 
       <SequenceInsights report={report} />
+
+      <PredictorStatus report={report} />
 
       <section className="analysis-report-section">
         <h3>Conservation</h3>

@@ -5,6 +5,14 @@
 #   docker compose --profile app up --build
 # It needs JWT_SECRET_KEY in your environment or .env file, and your host
 # BLAST databases under ./data/reference (mounted read-only).
+#
+# Production: set POSTGRES_PASSWORD and JWT_SECRET_KEY to your own values (the
+# defaults here are for local development only), put a TLS-terminating reverse
+# proxy in front of the web service, and set CORS_ALLOWED_ORIGINS to your
+# site's address. Postgres and Redis are published on 127.0.0.1 only; remove
+# those ports entirely if nothing on the host needs them.
+# To use DeepTMHMM or SignalP through BioLib inside the containers, build with
+# INSTALL_BIOLIB=1 and set BIOLIB_TOKEN.
 
 x-backend-environment: &backend-environment
   DATABASE_URL: postgresql+psycopg://vaccinology:${POSTGRES_PASSWORD:-vaccinology_dev}@postgres:5432/reverse_vaccinology
@@ -15,11 +23,26 @@ x-backend-environment: &backend-environment
   TRUSTED_PROXY_COUNT: "1"
   CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8080}
   HOST_PEPTIDE_SCAN: ${HOST_PEPTIDE_SCAN:-0}
-  IEDB_ENABLED: ${IEDB_ENABLED:-0}
+  # Optional predictors (all off unless you switch them on in .env). The
+  # settings below pass straight through; see .env.example for what each does.
+  BIOLIB_TOKEN: ${BIOLIB_TOKEN:-}
   DEEPTMHMM_ENABLED: ${DEEPTMHMM_ENABLED:-0}
   SIGNALP_ENABLED: ${SIGNALP_ENABLED:-0}
   SIGNALP_BACKEND: ${SIGNALP_BACKEND:-local}
+  SIGNALP_BIOLIB_APP: ${SIGNALP_BIOLIB_APP:-DTU/SignalP_6}
   SIGNALP_ORGANISM: ${SIGNALP_ORGANISM:-other}
+  PSORTB_ENABLED: ${PSORTB_ENABLED:-0}
+  PSORTB_BACKEND: ${PSORTB_BACKEND:-local}
+  PSORTB_EXECUTABLE: ${PSORTB_EXECUTABLE:-}
+  PSORTB_GRAM: ${PSORTB_GRAM:-negative}
+  IEDB_ENABLED: ${IEDB_ENABLED:-0}
+  IEDB_MHCI_ALLELES: ${IEDB_MHCI_ALLELES:-}
+  IEDB_MHCII_ALLELES: ${IEDB_MHCII_ALLELES:-}
+  IEDB_MHCI_LENGTH: ${IEDB_MHCI_LENGTH:-9}
+  IEDB_MHCII_LENGTH: ${IEDB_MHCII_LENGTH:-15}
+  IEDB_MHCI_RANK_CUTOFF: ${IEDB_MHCI_RANK_CUTOFF:-1}
+  IEDB_MHCII_RANK_CUTOFF: ${IEDB_MHCII_RANK_CUTOFF:-10}
+  IEDB_MAX_SEQUENCE_LENGTH: ${IEDB_MAX_SEQUENCE_LENGTH:-1500}
   ALIGNMENT_SCORING: ${ALIGNMENT_SCORING:-blosum62}
 
 services:
@@ -31,7 +54,7 @@ services:
       POSTGRES_USER: vaccinology
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vaccinology_dev}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -44,7 +67,7 @@ services:
     image: redis:7
     container_name: reverse-vaccinology-redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -53,7 +76,10 @@ services:
 
   migrate:
     profiles: ["app"]
-    build: .
+    build:
+      context: .
+      args:
+        INSTALL_BIOLIB: ${INSTALL_BIOLIB:-0}
     command: ["alembic", "upgrade", "head"]
     environment: *backend-environment
     depends_on:
@@ -62,7 +88,10 @@ services:
 
   api:
     profiles: ["app"]
-    build: .
+    build:
+      context: .
+      args:
+        INSTALL_BIOLIB: ${INSTALL_BIOLIB:-0}
     environment: *backend-environment
     volumes:
       - ./data/reference:/srv/app/data/reference:ro
@@ -76,7 +105,10 @@ services:
 
   worker:
     profiles: ["app"]
-    build: .
+    build:
+      context: .
+      args:
+        INSTALL_BIOLIB: ${INSTALL_BIOLIB:-0}
     command: ["celery", "-A", "app.services.celery_queue.celery_app", "worker", "--loglevel=info"]
     environment: *backend-environment
     volumes:

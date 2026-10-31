@@ -8,6 +8,9 @@ DeepTMHMM has no plain REST endpoint. DTU publishes it as the BioLib app
 Off by default. Enable it with:
 
     DEEPTMHMM_ENABLED=1
+    BIOLIB_TOKEN=...      (required on a server; create it in your BioLib
+                           account settings, or run ``biolib login`` once on
+                           a workstation)
 
 Your sequence is sent to BioLib's servers, so do not enable it for
 unpublished or confidential sequences. Use is subject to the BioLib and DTU
@@ -26,10 +29,9 @@ produce no localization evidence.
 
 import os
 import re
-import tempfile
-from pathlib import Path
 
 from app.analysis.localization import create_localization_evidence
+from app.integrations.common import NotConfigured, run_biolib_app
 
 SOURCE = "DeepTMHMM"
 APP_NAME = "DTU/DeepTMHMM"
@@ -141,43 +143,27 @@ def to_localization_evidence(prediction: dict) -> list:
 
 def run_deeptmhmm(sequence: str) -> dict:
     """Run DeepTMHMM on BioLib for one sequence."""
-    try:
-        import biolib
-    except ImportError as error:
-        raise RuntimeError(
-            "pybiolib is not installed; run: pip install pybiolib"
-        ) from error
+    text = run_biolib_app(
+        APP_NAME,
+        "--fasta input.fasta",
+        f">query\n{sequence}\n",
+        "*.3line",
+        SOURCE,
+    )
 
-    with tempfile.TemporaryDirectory(prefix="deeptmhmm-") as workdir:
-        previous = os.getcwd()
-        os.chdir(workdir)
-
-        try:
-            Path("input.fasta").write_text(f">query\n{sequence}\n")
-            job = biolib.load(APP_NAME).cli(
-                args="--fasta input.fasta",
-                blocking=True,
-            )
-            job.save_files(output_dir="results")
-        except Exception as error:  # BioLib raises its own exception types
-            raise RuntimeError(f"DeepTMHMM run failed: {error}") from error
-        finally:
-            os.chdir(previous)
-
-        matches = list(
-            (Path(workdir) / "results").rglob("*.3line")
-        )
-
-        if not matches:
-            raise RuntimeError("DeepTMHMM produced no .3line file.")
-
-        return parse_three_line(matches[0].read_text())
+    return parse_three_line(text)
 
 
 def fetch_deeptmhmm_prediction(sequence: str) -> dict:
     """Run DeepTMHMM; report failures instead of raising."""
     try:
         prediction = run_deeptmhmm(sequence)
+    except NotConfigured as error:
+        return {
+            "status": "not_configured",
+            "method": SOURCE,
+            "message": str(error),
+        }
     except (RuntimeError, ValueError, OSError) as error:
         return {
             "status": "lookup_failed",

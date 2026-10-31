@@ -1,0 +1,5 @@
+# Optional: only for the DeepTMHMM and SignalP-on-BioLib adapters.
+# Install with: pip install -r requirements-biolib.txt
+# After installing, pin the version you tested, for example with:
+#   pip freeze | grep -i pybiolib
+pybiolib

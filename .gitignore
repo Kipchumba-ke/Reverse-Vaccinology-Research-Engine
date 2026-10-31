@@ -56,3 +56,5 @@ data/reference/pig/
 data/reference/mouse/*candidate*
 data/reference/essentiality/Combined_KOExpEG.txt
 data/reference/essentiality/Experimental_EG.txt
+# BioLib CLI output
+biolib_results/

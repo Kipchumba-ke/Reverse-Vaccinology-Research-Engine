@@ -18,6 +18,14 @@ OTHER_ROW = (
 )
 
 
+@pytest.fixture
+def fake_signalp(tmp_path):
+    executable = tmp_path / "signalp6"
+    executable.write_text("#!/bin/sh\n")
+    executable.chmod(0o755)
+    return str(executable)
+
+
 def test_signal_peptide_row_is_parsed():
     result = signalp.parse_signalp_prediction(HEADER + SP_ROW)
 
@@ -70,12 +78,22 @@ def test_missing_executable_is_reported(monkeypatch):
 
     result = signalp.fetch_signalp_prediction("MKKLLLLL")
 
-    assert result["status"] == "lookup_failed"
-    assert "not found" in result["message"]
+    assert result["status"] == "not_configured"
+    assert "no signalp6 install was found" in result["message"]
+    assert "SIGNALP_BACKEND=biolib" in result["message"]
 
 
-def test_run_reads_results_written_by_the_tool(monkeypatch):
-    monkeypatch.setenv("SIGNALP6_EXECUTABLE", "/usr/bin/signalp6")
+def test_placeholder_executable_path_is_not_configured(monkeypatch):
+    monkeypatch.setenv("SIGNALP6_EXECUTABLE", "/path/to/signalp6")
+
+    result = signalp.fetch_signalp_prediction("MKKLLLLL")
+
+    assert result["status"] == "not_configured"
+    assert "/path/to/signalp6" in result["message"]
+
+
+def test_run_reads_results_written_by_the_tool(monkeypatch, fake_signalp):
+    monkeypatch.setenv("SIGNALP6_EXECUTABLE", fake_signalp)
     captured = {}
 
     def fake_run(command, **kwargs):
@@ -96,8 +114,8 @@ def test_run_reads_results_written_by_the_tool(monkeypatch):
     assert "--organism" in captured["command"]
 
 
-def test_tool_failure_is_reported(monkeypatch):
-    monkeypatch.setenv("SIGNALP6_EXECUTABLE", "/usr/bin/signalp6")
+def test_tool_failure_is_reported(monkeypatch, fake_signalp):
+    monkeypatch.setenv("SIGNALP6_EXECUTABLE", fake_signalp)
 
     def failing(command, **kwargs):
         raise subprocess.CalledProcessError(1, command, stderr="boom")
@@ -206,7 +224,7 @@ def test_missing_pybiolib_is_reported(monkeypatch):
 
     result = signalp.fetch_signalp_prediction("MKKLLLLL")
 
-    assert result["status"] == "lookup_failed"
+    assert result["status"] == "not_configured"
     assert "pip install pybiolib" in result["message"]
 
 

@@ -10,8 +10,15 @@ RUN apt-get update \
 
 WORKDIR /srv/app
 
-COPY requirements.txt .
+COPY requirements.txt requirements-biolib.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+
+# pybiolib is only needed for DeepTMHMM or SignalP through BioLib.
+#   docker compose --profile app build --build-arg INSTALL_BIOLIB=1
+ARG INSTALL_BIOLIB=0
+RUN if [ "$INSTALL_BIOLIB" = "1" ]; then \
+        pip install --no-cache-dir -r requirements-biolib.txt; \
+    fi
 
 COPY app ./app
 COPY migrations ./migrations

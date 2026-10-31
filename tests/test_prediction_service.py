@@ -165,3 +165,21 @@ def test_iedb_failure_leaves_windows_unchanged(monkeypatch):
 
     assert status["iedb"]["status"] == "lookup_failed"
     assert result.peptide_candidates == before
+
+
+def test_not_configured_is_recorded_as_its_own_status(monkeypatch):
+    monkeypatch.setenv("SIGNALP_ENABLED", "1")
+    monkeypatch.setenv("SIGNALP_BACKEND", "local")
+    monkeypatch.setenv("SIGNALP6_EXECUTABLE", "/path/to/signalp6")
+    monkeypatch.delenv("DEEPTMHMM_ENABLED", raising=False)
+    monkeypatch.delenv("PSORTB_ENABLED", raising=False)
+    monkeypatch.delenv("IEDB_ENABLED", raising=False)
+
+    result = fresh()
+    status = prediction_service.attach_predictions(result)
+
+    assert status["signalp"]["status"] == "not_configured"
+    assert "SIGNALP6_EXECUTABLE" in status["signalp"]["message"] or \
+        "signalp6" in status["signalp"]["message"]
+    assert result.sequence_predictions["signalp"]["status"] == "not_configured"
+    assert result.localization_evidence == []
