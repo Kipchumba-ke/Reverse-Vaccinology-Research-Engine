@@ -1,0 +1,50 @@
+/* Prediction Tools section of the analysis report. */
+
+.predictor-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--ink);
+}
+
+.predictor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 9rem minmax(0, 2fr);
+  align-items: baseline;
+  gap: var(--space-2) var(--space-5);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.predictor-name h4 {
+  margin: 0;
+  color: var(--ink);
+  font: 600 var(--text-md) / 1.3 var(--font-serif);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.predictor-name p,
+.predictor-detail {
+  margin: 0;
+  color: var(--ink-soft);
+  font: 400 var(--text-sm) / 1.5 var(--font-sans);
+}
+
+.predictor-state {
+  margin: 0;
+  font: 500 var(--text-sm) / 1.3 var(--font-mono);
+}
+
+.predictor-completed { color: var(--ok); }
+.predictor-not-configured { color: var(--warn); }
+.predictor-lookup-failed { color: var(--bad); }
+.predictor-not-performed,
+.predictor-not-enabled { color: var(--ink-soft); }
+
+@media (max-width: 720px) {
+  .predictor-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

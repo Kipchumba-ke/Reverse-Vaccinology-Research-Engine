@@ -22,14 +22,14 @@ Most analysis modules exist and are unit-tested. The built-in predictors are sim
 | --- | --- | --- |
 | Sequence properties | Implemented | Composition, molecular weight, isoelectric point, GRAVY, net charge |
 | Hydropathy and transmembrane candidates | Implemented (heuristic) | Kyte-Doolittle sliding window (19 residues, cutoff 1.6); regions of 18–25 residues are flagged, and regions inside a predicted signal peptide are re-labelled `signal_peptide_h_region` |
-| Signal peptide | Implemented (heuristic) + optional SignalP 6.0 | Rule-based screen: charged N-region, hydrophobic core, small residues at the cleavage site (von Heijne -3/-1 rule). The SignalP 6.0 adapter (local install) is off by default |
+| Signal peptide | Implemented (heuristic) + optional SignalP 6.0 | Rule-based screen: charged N-region, hydrophobic core, small residues at the cleavage site (von Heijne -3/-1 rule). The SignalP 6.0 adapter needs your own licensed install or the BioLib cloud app, and is off by default |
 | Antigenic regions | Implemented (heuristic) | Kolaskar-Tongaonkar propensity scale over a 7-residue window. A scale-based screen, not B-cell or T-cell epitope prediction |
 | Epitope and MHC prediction | Optional (IEDB), off by default | `IEDB_ENABLED=1` sends the sequence to the IEDB Analysis Resource for MHC class I and II binding over a configurable HLA allele panel and linear B-cell epitopes (Bepipred-2.0). Results are predictions, with percentile ranks |
 | Peptide windows | Implemented | 15-residue windows with GRAVY, charge, antigenic propensity and overlap flags (`app/analysis/peptide_windows.py`) |
 | Conservation | Implemented | Identity per column plus similarity groups (Clustal-style strong/weak). Uses Clustal Omega when installed, otherwise a built-in star alignment scored with BLOSUM62 |
 | Host similarity | Implemented | BLASTP against local human, mouse or pig proteome databases; interpretation thresholds are configurable |
 | Short-peptide host scan | Implemented, off by default | `HOST_PEPTIDE_SCAN=1` searches peptide windows with BLAST short-query settings and reports matches of 8+ identical residues |
-| Subcellular localization | Database evidence + optional predictors | Records locations from UniProt or NCBI annotations. Optional DeepTMHMM (BioLib cloud) and PSORTb 3.0 (local or Docker install) add predicted compartments as evidence, and the assessment flags when tools agree or conflict. A low-confidence topology hint from the built-in screens is kept apart from evidence |
+| Subcellular localization | Database evidence + optional predictors | Records locations from UniProt or NCBI annotations. Optional DeepTMHMM (BioLib cloud) and PSORTb 3.0 (Docker or local install) add predicted compartments as evidence, and the assessment flags when tools agree or conflict. The report's Prediction Tools section shows whether each tool ran, did not run, or failed, and why. A low-confidence topology hint from the built-in screens is kept apart from evidence |
 | Sequence map and 3-D structure | Implemented | Frontend feature map, MHC heatmaps, and a rotatable backbone view of the AlphaFold DB model when the protein has a UniProt accession. No structure prediction is run |
 | Essentiality | Evidence intake only | Looks up a local ePath database that you must build yourself |
 | Candidate assessment | Implemented | Sorts evidence into supporting, concerns and missing; no score |
@@ -119,11 +119,12 @@ Create a `.env` file in the repository root. It is git-ignored.
 | `ALIGNMENT_SCORING` | `blosum62` (default) or `identity` for the built-in aligner |
 | `HOST_SIMILARITY_*`, `HOST_PEPTIDE_*` | Host-similarity thresholds and the short-peptide scan |
 | `SIGNALP_ENABLED`, `SIGNALP_BACKEND`, `SIGNALP6_EXECUTABLE`, `SIGNALP_BIOLIB_APP`, `SIGNALP_ORGANISM` | Optional SignalP 6.0 adapter. `SIGNALP_BACKEND` is `local` (default, your own `signalp6` install) or `biolib` (cloud app through `pybiolib`; sends the sequence to BioLib) |
-| `DEEPTMHMM_ENABLED` | Optional DeepTMHMM through BioLib; needs `pip install pybiolib` and sends the sequence to BioLib |
-| `PSORTB_ENABLED`, `PSORTB_EXECUTABLE`, `PSORTB_GRAM` | Optional PSORTb 3.0 from a local or Docker install (`negative`, `positive` or `archaea`) |
-| `IEDB_ENABLED`, `IEDB_MHCI_ALLELES`, `IEDB_MHCII_ALLELES`, `IEDB_MHCI_LENGTH`, `IEDB_MHCII_LENGTH`, `IEDB_MHCI_RANK_CUTOFF`, `IEDB_MHCII_RANK_CUTOFF`, `IEDB_MAX_SEQUENCE_LENGTH`, `IEDB_API_BASE` | Optional IEDB epitope and MHC prediction; sends the sequence to IEDB |
+| `BIOLIB_TOKEN` | BioLib API token, needed on a server for DeepTMHMM and SignalP through BioLib (create it in your BioLib account settings, or run `biolib login` once on a workstation) |
+| `DEEPTMHMM_ENABLED` | Optional DeepTMHMM through BioLib; needs `pip install -r requirements-biolib.txt` and sends the sequence to BioLib |
+| `PSORTB_ENABLED`, `PSORTB_BACKEND`, `PSORTB_DOCKER_IMAGE`, `DOCKER_EXECUTABLE`, `PSORTB_EXECUTABLE`, `PSORTB_GRAM` | Optional PSORTb 3.0. `PSORTB_BACKEND` is `local` (default, a `psort` install) or `docker` (the `brinkmanlab/psortb_commandline` image). `PSORTB_GRAM` is `negative`, `positive` or `archaea` |
+| `IEDB_ENABLED`, `IEDB_MHCI_ALLELES`, `IEDB_MHCII_ALLELES`, `IEDB_MHCI_LENGTH`, `IEDB_MHCII_LENGTH`, `IEDB_MHCI_RANK_CUTOFF`, `IEDB_MHCII_RANK_CUTOFF`, `IEDB_MAX_SEQUENCE_LENGTH`, `IEDB_TIMEOUT_SECONDS`, `IEDB_API_BASE` | Optional IEDB epitope and MHC prediction; sends the sequence to IEDB |
 
-Copy `.env.example` as a starting point. `JWT_SECRET_KEY` is required: the app refuses to issue or verify tokens without it.
+Copy `.env.example` as a starting point. `JWT_SECRET_KEY` is required: the app refuses to issue or verify tokens without it. Write each setting as `KEY=value`, with no spaces after the value and no placeholder paths such as `/path/to/psort`: a placeholder is treated as a missing install.
 
 ### 4. Create the database tables
 
@@ -195,21 +196,33 @@ The synchronous `/api/analyze` route also accepts `msa_sequences` for conservati
 
 `GET /api/structure/<accession>` (authenticated) returns the AlphaFold DB model for a UniProt accession: the PDB text, per-residue pLDDT, mean pLDDT and the model's reference sequence. It returns `400` for something that is not a UniProt accession, `404` when AlphaFold DB has no model, and `502` when AlphaFold DB cannot be reached.
 
-When a predictor is enabled, the report gains a `prediction_status` object with one entry per predictor attempted (`completed`, `lookup_failed` or `not_performed`). Predictor output sits under `measurements.sequence_predictions` (`signalp`, `deeptmhmm`, `psortb`, `epitopes`); predicted compartments also appear in `evidence.localization` with the tool as the source.
+When a predictor is enabled, the report gains a `prediction_status` object with one entry per predictor attempted (`completed`, `not_configured`, `lookup_failed` or `not_performed`). Predictor output sits under `measurements.sequence_predictions` (`signalp`, `deeptmhmm`, `psortb`, `epitopes`); predicted compartments also appear in `evidence.localization` with the tool as the source.
 
 ### Optional predictors
 
-Every predictor is off by default and fails soft: a missing install or an unreachable service is reported in `prediction_status` and the rest of the analysis still runs.
+Every predictor is off by default and fails soft: a missing install or an unreachable service never stops the analysis. Each tool's outcome is recorded in `prediction_status` and shown in the report's **Prediction Tools** section, with one of these states:
 
-| Tool | How it runs | Data leaves your server? | Licence |
+| State | Meaning |
+| --- | --- |
+| `completed` | The tool ran and its result is in the report |
+| `not_configured` | Switched on, but its install, package or token is missing; the message says what to set |
+| `lookup_failed` | The tool ran or was called and failed; the message carries the reason |
+| `not_performed` | Skipped on purpose, for example a sequence over `IEDB_MAX_SEQUENCE_LENGTH` |
+| not enabled | Not switched on for this server (shown in the report only) |
+
+| Tool | How it runs | Data leaves your server? | Access and licence |
 | --- | --- | --- | --- |
-| SignalP 6.0 | `local`: your own `signalp6` install. `biolib`: BioLib cloud app `DTU/SignalP_6` through `pybiolib` | `local`: No. `biolib`: Yes, to BioLib | DTU licence (free for academic use, not redistributable); BioLib terms for `biolib` |
-| DeepTMHMM | BioLib cloud app `DTU/DeepTMHMM` through `pybiolib` | Yes, to BioLib | BioLib and DTU terms |
-| PSORTb 3.0 | Local `psort`, for example the `brinkmanlab/psortb_commandline` Docker image | No | Open source |
-| IEDB MHC and B-cell | IEDB Analysis Resource REST API | Yes, to IEDB | IEDB terms |
+| SignalP 6.0 | `local`: your own `signalp6` install. `biolib`: BioLib cloud app `DTU/SignalP_6` through `pybiolib` | `local`: No. `biolib`: Yes, to BioLib | DTU licenses the download to academic users, so the local backend needs that access. The BioLib route avoids the download but is governed by BioLib and DTU terms; check them before commercial use |
+| DeepTMHMM | BioLib cloud app `DTU/DeepTMHMM` through `pybiolib` | Yes, to BioLib | BioLib account and token; BioLib and DTU terms |
+| PSORTb 3.0 | `docker`: the `brinkmanlab/psortb_commandline` image started by the adapter. `local`: a `psort` install | No | Open source, no academic access needed |
+| IEDB MHC and B-cell | IEDB Analysis Resource REST API | Yes, to IEDB | IEDB terms, no account |
 | AlphaFold DB model | EMBL-EBI public API, fetched when you click "Load predicted 3-D structure" | Only the accession | CC BY 4.0 |
 
-The provided Docker image includes BLAST+ and Clustal Omega only. IEDB works in it as is; for SignalP, DeepTMHMM or PSORTb, extend the image (or run the API outside Docker) with the tool or `pybiolib`.
+**SignalP without academic access.** Leave `SIGNALP_ENABLED` unset. The report then shows SignalP as not enabled, and the built-in signal peptide screen (a heuristic, not SignalP) still runs. The adapter is complete, so if you later gain access, install `signalp6` and set `SIGNALP_ENABLED=1` and `SIGNALP6_EXECUTABLE`, or use `SIGNALP_BACKEND=biolib`.
+
+**PSORTb with Docker.** Pull the image once (`docker pull brinkmanlab/psortb_commandline:1.0.2`), then set `PSORTB_ENABLED=1` and `PSORTB_BACKEND=docker`. The adapter runs `docker run` itself, so the process running the analysis (the API or the Celery worker) must be on a host with a Docker daemon it can use. That is the case when the worker runs directly on the host. It is not the case inside the provided worker container; there, install PSORTb into a custom image and use `PSORTB_BACKEND=local`. PSORTb is for bacteria and archaea; do not use it on eukaryotic or viral proteins.
+
+**BioLib in Docker.** The provided image does not include `pybiolib`. Build with `INSTALL_BIOLIB=1` (see `compose.yaml`) and set `BIOLIB_TOKEN`.
 
 Do not enable the services that send data off your server for unpublished or confidential sequences. These adapters were written against published documentation and tested on hand-written output samples; run one real protein through each before relying on it.
 
@@ -251,6 +264,21 @@ cd frontend && npm test
 
 Tests that touch BLAST need BLAST+ installed. GitHub Actions runs both suites and builds the Docker images on every push and pull request (`.github/workflows/ci.yml`). The test counts above predate the latest changes and are recomputed by CI.
 
+## Deploying to production
+
+A checklist for a first deployment. It is not a security audit.
+
+1. **Secrets stay out of git.** `.env` is git-ignored; keep it that way and give the server its own. Commit only `.env.example`. If a real `.env` was ever pasted into a chat, an issue or a screenshot, treat its secrets as exposed and replace them.
+2. **Set your own secrets.** `JWT_SECRET_KEY` should be random and at least 32 characters (`python -c "import secrets; print(secrets.token_urlsafe(48))"`). Changing it signs everyone out. Set `POSTGRES_PASSWORD` instead of the development default `vaccinology_dev`, and update `DATABASE_URL` to match.
+3. **Do not expose the databases.** Compose publishes Postgres and Redis on `127.0.0.1` only. Keep it that way, or remove those `ports` entries, and do not open 5432 or 6379 to the internet.
+4. **Serve over HTTPS.** Put a TLS-terminating reverse proxy in front of the `web` service, set `CORS_ALLOWED_ORIGINS` to your site's origin, and set `TRUSTED_PROXY_COUNT` to the number of proxies in front of the API so rate limits see real client addresses.
+5. **Run migrations** with `alembic upgrade head` before starting a new version (the `migrate` service does this in Compose), and back up the Postgres volume.
+6. **Provide reference data.** The host BLAST databases are not in the repository; build them (step 5 above) and mount `data/reference`. The ePath essentiality database is optional.
+7. **Choose predictors deliberately.** Enable only the ones you have access to and are allowed to send data to (see Optional predictors), and check the Prediction Tools section of a real report after the first deploy.
+8. **Run the test suites and one real analysis** on the production configuration before inviting users. The tests use stand-ins for the external services.
+
+Analyses and the sequences submitted are stored in your database. Tell users that, and decide how long you keep them.
+
 ## Limitations and scientific disclaimer
 
 ReverseVax is for education and research. Its output is a structured set of observations, not a recommendation to develop a vaccine.
@@ -261,7 +289,11 @@ ReverseVax is for education and research. Its output is a structured set of obse
 - **Localization and essentiality are borrowed or predicted by third parties.** Without a predictor enabled, localization evidence reflects UniProt or NCBI records and is missing for proteins without them. DeepTMHMM's compartment assumes a Gram-negative bacterium. The topology hint is a low-confidence guess from the built-in heuristics, kept apart from evidence.
 - **Conservation depends on the alignment.** Similarity groups go beyond exact identity, but the built-in fallback aligner is a star alignment against the first sequence and is weaker than Clustal Omega. Meaning also depends on which sequences you supply.
 - **Host-similarity thresholds are provisional.** The defaults (70% identity, 80% coverage, 30% moderate) are screening conventions with no benchmark behind them. They are configurable and printed in every report. The optional short-peptide scan finds identical stretches of 8 or more residues; a clean result does not show a peptide is absent from the host.
-- **External adapters are unverified against live services.** SignalP, DeepTMHMM, PSORTb and IEDB are tested on hand-written output samples. The IEDB page does not document its response columns, so the parser matches columns by name and reports what it found if one is missing.
+- **External adapters are unverified against live services.** SignalP, DeepTMHMM, PSORTb and IEDB are tested on hand-written output samples and fake services, not on live runs. The IEDB page does not document its response columns, so the parser matches columns by name and reports what it found if one is missing. The BioLib app name for SignalP (`DTU/SignalP_6`) comes from a third-party code sample, and the PSORTb Docker command line was written from the image's published wrapper script.
+- **Some predictors need access this project cannot supply.** SignalP 6.0 is licensed to academic users; PSORTb needs Docker or your own install; DeepTMHMM and the BioLib route for SignalP need a BioLib account and are subject to BioLib and DTU terms. A tool that is not set up is reported as such, and its result is simply absent: do not read the absence of a signal peptide or localization as a negative finding.
+- **Cloud predictors see your sequences.** DeepTMHMM and SignalP on BioLib send the sequence to BioLib, and IEDB sends it to IEDB. Keep them off for unpublished or confidential sequences.
+- **PSORTb is for bacteria and archaea.** It gives no meaningful result for eukaryotic or viral proteins, and its scores below 7.5 of 10 are reported as low confidence.
+- **Predictor runs add time and can fail.** BioLib and IEDB calls depend on those services' availability, queues and rate limits. Each is tried once per analysis, with no retry or caching, and a failure is recorded in the report rather than raised.
 - **Not validated.** The pipeline has not been tested against known vaccine antigens.
 - **Reference data varies by release.** Proteome versions and isoform choices change results; the mouse reference has an unadopted candidate with 8,473 extra isoform-style identifiers.
 
@@ -282,6 +314,7 @@ Nothing here establishes immunogenicity, protection, safety or clinical suitabil
 - [x] Rename the peptide-window module so it is not mistaken for epitope prediction
 - [x] Optional DeepTMHMM, PSORTb and IEDB (MHC-I, MHC-II, B-cell) adapters
 - [x] AlphaFold DB structure viewer coloured by confidence and predicted features
+- [x] Show each predictor's outcome in the report; PSORTb Docker backend; SignalP through BioLib
 - [ ] Verify the SignalP, DeepTMHMM, PSORTb and IEDB adapters against live services
 - [ ] Population-coverage-aware HLA panels and a benchmark of MHC cut-offs
 - [ ] Structure prediction for proteins with no accession (for example ESMFold)

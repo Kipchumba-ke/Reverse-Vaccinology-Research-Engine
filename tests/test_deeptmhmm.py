@@ -99,5 +99,61 @@ def test_missing_biolib_is_reported(monkeypatch):
 
     result = deeptmhmm.fetch_deeptmhmm_prediction(SEQ)
 
-    assert result["status"] == "lookup_failed"
+    assert result["status"] == "not_configured"
     assert "pybiolib" in result["message"]
+
+
+def test_biolib_run_is_parsed_and_uses_the_app_arguments(monkeypatch):
+    import os
+    import sys
+    import types
+
+    calls = {}
+    labels = "I" * 5 + "M" * 20 + "O" * 5
+
+    class _Job:
+        def save_files(self, output_dir):
+            os.makedirs(os.path.join(output_dir, "nested"))
+            path = os.path.join(output_dir, "nested", "predicted_topologies.3line")
+            with open(path, "w") as handle:
+                handle.write(three_line("TM", labels))
+
+    class _App:
+        def cli(self, args, blocking):
+            calls["args"] = args
+            calls["blocking"] = blocking
+            calls["input"] = open("input.fasta").read()
+            return _Job()
+
+    module = types.ModuleType("biolib")
+    module.load = lambda name: calls.setdefault("app", name) and _App()
+    monkeypatch.setitem(sys.modules, "biolib", module)
+    before = os.getcwd()
+
+    result = deeptmhmm.fetch_deeptmhmm_prediction(SEQ)
+
+    assert result["status"] == "completed"
+    assert result["predicted_class"] == "TM"
+    assert calls["app"] == "DTU/DeepTMHMM"
+    assert calls["args"] == "--fasta input.fasta"
+    assert calls["blocking"] is True
+    assert calls["input"] == f">query\n{SEQ}\n"
+    assert os.getcwd() == before
+
+
+def test_biolib_failure_is_a_lookup_failure(monkeypatch):
+    import sys
+    import types
+
+    class _App:
+        def cli(self, args, blocking):
+            raise Exception("not signed in")
+
+    module = types.ModuleType("biolib")
+    module.load = lambda name: _App()
+    monkeypatch.setitem(sys.modules, "biolib", module)
+
+    result = deeptmhmm.fetch_deeptmhmm_prediction(SEQ)
+
+    assert result["status"] == "lookup_failed"
+    assert "not signed in" in result["message"]
