@@ -1,15 +1,12 @@
-
 from io import BytesIO
 from xml.sax.saxutils import escape
 
 from reportlab.graphics.shapes import Drawing, Line, PolyLine, Rect, String
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import (
-    Image,
     KeepTogether,
     PageBreak,
     Paragraph,
@@ -18,13 +15,127 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
+from reportlab.platypus.flowables import HRFlowable
 
 
-NAVY = colors.HexColor("#17365D")
-TEAL = colors.HexColor("#167D75")
-PALE_BLUE = colors.HexColor("#EAF2F8")
-LIGHT_GREY = colors.HexColor("#E5E7EB")
-DARK_GREY = colors.HexColor("#4B5563")
+# The palette is the light ("warm paper") theme of the web app, see
+# frontend/src/theme.css and frontend/DESIGN.md. The PDF is always light so
+# that it prints and reads the same everywhere.
+PAPER = colors.HexColor("#FBF9F4")
+INK = colors.HexColor("#1F1E1D")
+INK_SOFT = colors.HexColor("#504D46")
+INK_FAINT = colors.HexColor("#6B675E")
+RULE = colors.HexColor("#D9D4C5")
+RULE_STRONG = colors.HexColor("#8B877B")
+WASH = colors.HexColor("#EBE7DB")
+ACCENT = colors.HexColor("#A93D19")
+OK = colors.HexColor("#2F6B43")
+WARN = colors.HexColor("#7A5A0E")
+BAD = colors.HexColor("#A4261C")
+
+ACCENT_HEX = "#A93D19"
+
+# Built-in PDF fonts stand in for the web fonts: Times for text (Source
+# Serif), Helvetica for the interface (IBM Plex Sans) and Courier for data
+# (IBM Plex Mono). They need no files and are always available.
+SERIF = "Times-Roman"
+SERIF_BOLD = "Times-Bold"
+SERIF_ITALIC = "Times-Italic"
+SANS = "Helvetica"
+SANS_BOLD = "Helvetica-Bold"
+MONO = "Courier"
+
+PAGE_MARGIN = 17 * mm
+CONTENT_WIDTH = A4[0] - 2 * PAGE_MARGIN
+
+# External predictors, in the order the web report lists them:
+# (key in sequence_predictions, key in prediction_status, name, purpose).
+PREDICTORS = [
+    ("signalp", "signalp", "SignalP 6.0", "Signal peptide and cleavage site."),
+    (
+        "deeptmhmm", "deeptmhmm", "DeepTMHMM",
+        "Transmembrane topology and protein class.",
+    ),
+    ("psortb", "psortb", "PSORTb 3.0", "Subcellular localization in bacteria."),
+    (
+        "epitopes", "iedb", "IEDB",
+        "MHC binding and B-cell epitope predictions.",
+    ),
+]
+
+STATE_LABELS = {
+    "completed": ("Completed", OK),
+    "not_configured": ("Not set up", WARN),
+    "lookup_failed": ("Failed", BAD),
+    "not_performed": ("Not performed", INK_SOFT),
+    "not_enabled": ("Not enabled", INK_SOFT),
+}
+
+
+# Keys whose renderer draws its own heading above a chart.
+SELF_HEADED = {
+    "hydropathy_profile",
+    "composition",
+    "transmembrane_candidates",
+}
+
+
+def _count(container, *path):
+    """Length of a list found by following ``path`` through dicts."""
+    value = container
+    for step in path:
+        if not isinstance(value, dict):
+            return 0
+        value = value.get(step)
+    return len(value) if isinstance(value, list) else 0
+
+
+def summarise_prediction(key, prediction):
+    """One-line result for a completed predictor, as in the web report."""
+    if not isinstance(prediction, dict):
+        return ""
+
+    if key == "signalp":
+        if not prediction.get("detected"):
+            return "No signal peptide predicted."
+        kind = prediction.get("signal_peptide_type") or "Signal peptide"
+        after = prediction.get("cleavage_after")
+        return (
+            f"{kind}; cleavage after residue {after}."
+            if after
+            else f"{kind}."
+        )
+
+    if key == "deeptmhmm":
+        parts = [f"Class {prediction.get('predicted_class')}"]
+        helices = prediction.get("transmembrane_helices") or 0
+        strands = prediction.get("beta_strands") or 0
+        if helices:
+            parts.append(f"{helices} transmembrane helices")
+        if strands:
+            parts.append(f"{strands} beta strands")
+        return "; ".join(parts) + "."
+
+    if key == "psortb":
+        try:
+            score = float(prediction.get("score"))
+        except (TypeError, ValueError):
+            return f"{prediction.get('localization')}."
+        note = ", below the 7.50 confidence cut-off" if score < 7.5 else ""
+        return (
+            f"{prediction.get('localization')}, "
+            f"score {score:.2f} of 10{note}."
+        )
+
+    if key == "epitopes":
+        return (
+            f"{_count(prediction, 'mhc_class_i', 'binders')} MHC-I and "
+            f"{_count(prediction, 'mhc_class_ii', 'binders')} MHC-II binder "
+            f"windows; {_count(prediction, 'b_cell', 'regions')} "
+            "B-cell regions."
+        )
+
+    return ""
 
 
 def generate_report_pdf(report: dict) -> BytesIO:
@@ -43,72 +154,126 @@ def generate_report_pdf(report: dict) -> BytesIO:
     document = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        rightMargin=17 * mm,
-        leftMargin=17 * mm,
+        rightMargin=PAGE_MARGIN,
+        leftMargin=PAGE_MARGIN,
         topMargin=19 * mm,
-        bottomMargin=18 * mm,
+        bottomMargin=20 * mm,
         title="Reverse Vaccinology Research Report",
-        author="Reverse Vaccinology Research Engine",
+        author="ReverseVax",
     )
 
-    styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(
-        name="ReportTitle",
-        parent=styles["Title"],
-        fontSize=21,
-        leading=26,
-        alignment=TA_CENTER,
-        textColor=NAVY,
-        spaceAfter=8 * mm,
-    ))
-    styles.add(ParagraphStyle(
-        name="SectionHeading",
-        parent=styles["Heading2"],
-        fontSize=14,
-        leading=18,
-        textColor=NAVY,
-        spaceBefore=5 * mm,
+    styles = {}
+
+    def add_style(name, **kwargs):
+        styles[name] = ParagraphStyle(name=name, **kwargs)
+
+    add_style(
+        "Kicker",
+        fontName=MONO, fontSize=7.5, leading=10, textColor=ACCENT,
+        spaceBefore=3 * mm, spaceAfter=2 * mm,
+    )
+    add_style(
+        "ReportTitle",
+        fontName=SERIF_BOLD, fontSize=27, leading=30, textColor=INK,
+        spaceAfter=4 * mm,
+    )
+    add_style(
+        "PartTitle",
+        fontName=SERIF_BOLD, fontSize=19, leading=23, textColor=INK,
         spaceAfter=3 * mm,
-        keepWithNext=True,
-    ))
-    styles.add(ParagraphStyle(
-        name="SubHeading",
-        parent=styles["Heading3"],
-        fontSize=10,
-        leading=13,
-        textColor=TEAL,
-        spaceBefore=3 * mm,
-        spaceAfter=2 * mm,
-        keepWithNext=True,
-    ))
-    styles.add(ParagraphStyle(
-        name="ReportBody",
-        parent=styles["BodyText"],
-        fontSize=8.5,
-        leading=11,
-        spaceAfter=3,
-        wordWrap="LTR",
-    ))
-    styles.add(ParagraphStyle(
-        name="SmallNote",
-        parent=styles["BodyText"],
-        fontSize=7.5,
-        leading=10,
-        textColor=DARK_GREY,
-        spaceAfter=3,
-    ))
+    )
+    add_style(
+        "SectionHeading",
+        fontName=SERIF_BOLD, fontSize=15, leading=19, textColor=INK,
+        spaceBefore=2.5 * mm, spaceAfter=3 * mm, keepWithNext=True,
+    )
+    add_style(
+        "SubHeading",
+        fontName=SANS_BOLD, fontSize=8, leading=11, textColor=INK_SOFT,
+        spaceBefore=4 * mm, spaceAfter=1.5 * mm, keepWithNext=True,
+    )
+    add_style(
+        "ReportBody",
+        fontName=SERIF, fontSize=9.5, leading=13, textColor=INK,
+        spaceAfter=3, wordWrap="LTR",
+    )
+    add_style(
+        "SmallNote",
+        fontName=SERIF_ITALIC, fontSize=8.5, leading=11.5,
+        textColor=INK_SOFT, spaceAfter=3,
+    )
+    add_style(
+        "Caption",
+        fontName=SANS, fontSize=7.5, leading=10, textColor=INK_SOFT,
+        spaceBefore=1.5 * mm, spaceAfter=3 * mm,
+    )
+    add_style(
+        "TableHead",
+        fontName=SANS_BOLD, fontSize=7.5, leading=9.5, textColor=INK_SOFT,
+    )
+    add_style(
+        "TableText",
+        fontName=SANS, fontSize=8, leading=10.5, textColor=INK,
+    )
+    add_style(
+        "TableData",
+        fontName=MONO, fontSize=7.8, leading=10.5, textColor=INK,
+    )
+    add_style(
+        "PredictorName",
+        fontName=SANS, fontSize=8, leading=10.5, textColor=INK_SOFT,
+    )
 
     story = [
+        HRFlowable(
+            width="100%", thickness=2, color=INK,
+            spaceBefore=0, spaceAfter=0,
+        ),
+        Paragraph("REVERSEVAX  \u00b7  EVIDENCE REPORT", styles["Kicker"]),
         Paragraph(
             "Reverse Vaccinology<br/>Research Report",
             styles["ReportTitle"],
         ),
         Paragraph(
-            "Computational findings, evidence, interpretations and limitations",
+            "Computational findings, evidence, interpretations and "
+            "limitations. Predictions in this report are screens, not "
+            "validation.",
             styles["SmallNote"],
         ),
-        Spacer(1, 4 * mm),
+        Spacer(1, 3 * mm),
     ]
+
+    counters = {"section": 0, "figure": 0}
+    # The report whose sections are being drawn: the whole report, or one
+    # protein of a multi-FASTA report.
+    current = {"source": report}
+
+    def reset_counters():
+        counters["section"] = 0
+        counters["figure"] = 0
+
+    def section_heading(title):
+        """Rule, numbered kicker and heading, as in the web report."""
+        counters["section"] += 1
+        rule = HRFlowable(
+            width="100%", thickness=0.75, color=INK,
+            spaceBefore=6 * mm, spaceAfter=0,
+        )
+        rule.keepWithNext = True
+        story.append(rule)
+        story.append(Paragraph(
+            f'<font name="{MONO}" size="8" color="{ACCENT_HEX}">'
+            f'{counters["section"]:02d}</font>&nbsp;&nbsp;{escape(title)}',
+            styles["SectionHeading"],
+        ))
+
+    def caption(text):
+        counters["figure"] += 1
+        return Paragraph(
+            f'<font name="{MONO}" color="{ACCENT_HEX}">'
+            f'Fig. {counters["figure"]}</font>&nbsp;&nbsp;{escape(text)}',
+            styles["Caption"],
+        )
 
     def scalar(value):
         if value is None:
@@ -124,7 +289,23 @@ def generate_report_pdf(report: dict) -> BytesIO:
     def paragraph(value, style="ReportBody"):
         return Paragraph(escape(scalar(value)), styles[style])
 
+    def head(*labels):
+        return [Paragraph(escape(label), styles["TableHead"]) for label in labels]
+
+    def cell(value, mono=None):
+        """A table cell; numbers and sequences are set in the data face."""
+        if mono is None:
+            mono = (
+                isinstance(value, (int, float))
+                and not isinstance(value, bool)
+            )
+        return Paragraph(
+            escape(scalar(value)),
+            styles["TableData" if mono else "TableText"],
+        )
+
     def make_table(rows, widths=None):
+        """A ruled table: no fills, a heavy rule above and below."""
         table = Table(
             rows,
             colWidths=widths,
@@ -133,29 +314,34 @@ def generate_report_pdf(report: dict) -> BytesIO:
             splitByRow=1,
         )
         table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), PALE_BLUE),
-            ("TEXTCOLOR", (0, 0), (-1, 0), NAVY),
-            ("GRID", (0, 0), (-1, -1), 0.35, LIGHT_GREY),
+            ("LINEABOVE", (0, 0), (-1, 0), 0.9, INK),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.5, INK),
+            ("LINEBELOW", (0, 1), (-1, -1), 0.25, RULE),
+            ("LINEBELOW", (0, -1), (-1, -1), 0.9, INK),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("LEFTPADDING", (0, 0), (0, -1), 0),
+            ("LEFTPADDING", (1, 0), (-1, -1), 5),
             ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("TOPPADDING", (0, 0), (-1, -1), 3.5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
         ]))
         return table
+
+    def add_field_table(items):
+        rows = [head("Field", "Value")]
+        for key, value in items:
+            rows.append([
+                cell(str(key).replace("_", " ").title(), mono=False),
+                cell(value),
+            ])
+        story.append(make_table(rows, [48 * mm, 112 * mm]))
 
     def add_conserved_regions_table(regions):
         if not regions:
             story.append(paragraph("No conserved regions were reported."))
             return
 
-        rows = [[
-            paragraph("Region"),
-            paragraph("Start"),
-            paragraph("End"),
-            paragraph("Length"),
-            paragraph("Consensus"),
-        ]]
+        rows = [head("Region", "Start", "End", "Length", "Consensus")]
 
         for index, region in enumerate(regions, start=1):
             start = region.get("start")
@@ -167,11 +353,11 @@ def generate_report_pdf(report: dict) -> BytesIO:
             consensus = region.get("consensus", region.get("sequence", "Not available"))
 
             rows.append([
-                paragraph(index),
-                paragraph(start),
-                paragraph(end),
-                paragraph(length),
-                paragraph(consensus),
+                cell(index),
+                cell(start),
+                cell(end),
+                cell(length),
+                cell(consensus, mono=True),
             ])
 
         story.append(make_table(
@@ -188,45 +374,106 @@ def generate_report_pdf(report: dict) -> BytesIO:
             story.append(paragraph("No peptide candidate records are available."))
             return
 
-        rows = [[
-            paragraph("Start"),
-            paragraph("End"),
-            paragraph("Length"),
-            paragraph("Sequence"),
-            paragraph("GRAVY"),
-            paragraph("Net charge"),
-            paragraph("Transmembrane overlap"),
-        ]]
+        rows = [head(
+            "Start", "End", "Length", "Sequence", "GRAVY",
+            "Net charge", "Transmembrane overlap",
+        )]
 
         for candidate in candidates:
             rows.append([
-                paragraph(candidate.get("start")),
-                paragraph(candidate.get("end")),
-                paragraph(candidate.get("length")),
-                paragraph(candidate.get("sequence", "Not available")),
-                paragraph(candidate.get("gravy")),
-                paragraph(candidate.get("net_charge")),
-                paragraph(candidate.get("overlaps_transmembrane")),
+                cell(candidate.get("start")),
+                cell(candidate.get("end")),
+                cell(candidate.get("length")),
+                cell(candidate.get("sequence", "Not available"), mono=True),
+                cell(candidate.get("gravy")),
+                cell(candidate.get("net_charge")),
+                cell(candidate.get("overlaps_transmembrane"), mono=False),
             ])
 
         story.append(make_table(
             rows,
-            [13 * mm, 13 * mm, 15 * mm, 65 * mm, 18 * mm, 20 * mm, 35 * mm],
+            [13 * mm, 13 * mm, 15 * mm, 65 * mm, 18 * mm, 20 * mm, 32 * mm],
         ))
 
     def add_scalar_table(data):
-        rows = [[
-            Paragraph("<b>Field</b>", styles["ReportBody"]),
-            Paragraph("<b>Value</b>", styles["ReportBody"]),
-        ]]
-        for key, value in data.items():
-            if key == "sequence":
-                continue
+        add_field_table(
+            (key, value) for key, value in data.items() if key != "sequence"
+        )
+
+    def add_prediction_tools(source):
+        """Which optional predictors ran, and why any did not."""
+        measurements = source.get("measurements")
+        predictions = (
+            measurements.get("sequence_predictions")
+            if isinstance(measurements, dict)
+            else None
+        )
+        if not isinstance(predictions, dict):
+            return False
+
+        statuses = source.get("prediction_status")
+        if not isinstance(statuses, dict):
+            statuses = {}
+
+        section_heading("Prediction Tools")
+        note = paragraph(
+            "Which optional external predictors ran for this report, and "
+            "why any did not.",
+            "SmallNote",
+        )
+        note.keepWithNext = True
+        story.append(note)
+
+        rows = [head("Tool", "State", "Result or reason")]
+
+        for key, status_key, name, purpose in PREDICTORS:
+            prediction = predictions.get(key)
+            entry = statuses.get(status_key)
+            state = (
+                (entry or {}).get("status")
+                if isinstance(entry, dict)
+                else None
+            ) or (
+                prediction.get("status")
+                if isinstance(prediction, dict)
+                else None
+            )
+            if state not in STATE_LABELS:
+                state = "not_enabled"
+
+            label, colour = STATE_LABELS[state]
+            message = (
+                entry.get("message") if isinstance(entry, dict) else None
+            ) or (
+                prediction.get("message")
+                if isinstance(prediction, dict)
+                else None
+            )
+
+            if state == "completed":
+                detail = summarise_prediction(key, prediction)
+            elif state == "not_enabled":
+                detail = "Not enabled on this server."
+            else:
+                detail = message or ""
+
             rows.append([
-                paragraph(str(key).replace("_", " ").title()),
-                paragraph(value),
+                Paragraph(
+                    f"<b>{escape(name)}</b><br/>"
+                    f'<font color="{INK_FAINT.hexval().replace("0x", "#")}">'
+                    f"{escape(purpose)}</font>",
+                    styles["TableText"],
+                ),
+                Paragraph(
+                    f'<font color="{colour.hexval().replace("0x", "#")}">'
+                    f"<b>{escape(label)}</b></font>",
+                    styles["TableText"],
+                ),
+                cell(detail, mono=False),
             ])
-        story.append(make_table(rows, [48 * mm, 112 * mm]))
+
+        story.append(make_table(rows, [50 * mm, 26 * mm, 84 * mm]))
+        return True
 
     def add_hydropathy_chart(profile):
         """Draw a vector chart from the actual profile points."""
@@ -281,41 +528,43 @@ def generate_report_pdf(report: dict) -> BytesIO:
             py = bottom + fraction * plot_height
             drawing.add(Line(
                 left, py, width - right, py,
-                strokeColor=LIGHT_GREY, strokeWidth=0.5,
+                strokeColor=RULE, strokeWidth=0.5,
             ))
             drawing.add(String(
                 left - 7, py - 3, f"{value:.2f}",
-                textAnchor="end", fontSize=7, fillColor=DARK_GREY,
+                textAnchor="end", fontName=MONO, fontSize=7,
+                fillColor=INK_SOFT,
             ))
 
         if min_y <= 0 <= max_y:
             zero_y = xy(min_x, 0)[1]
             drawing.add(Line(
                 left, zero_y, width - right, zero_y,
-                strokeColor=DARK_GREY, strokeWidth=0.8,
+                strokeColor=INK, strokeWidth=0.8,
             ))
 
         mapped = [xy(x, y) for x, y in points]
         if len(mapped) > 1:
             drawing.add(PolyLine(
                 [coordinate for point in mapped for coordinate in point],
-                strokeColor=TEAL,
+                strokeColor=INK,
                 strokeWidth=1.2,
             ))
         else:
             px, py = mapped[0]
             drawing.add(Rect(
                 px - 2, py - 2, 4, 4,
-                fillColor=TEAL, strokeColor=TEAL,
+                fillColor=INK, strokeColor=INK,
             ))
 
         drawing.add(String(
             width / 2, 7, "Window start position (residue)",
-            textAnchor="middle", fontSize=8, fillColor=DARK_GREY,
+            textAnchor="middle", fontName=SANS, fontSize=8,
+            fillColor=INK_SOFT,
         ))
         drawing.add(String(
-            5, height / 2, "Hydropathy",
-            fontSize=8, fillColor=DARK_GREY,
+            left, height - 9, "Hydropathy",
+            fontName=SANS, fontSize=8, fillColor=INK_SOFT,
         ))
 
         values = [y for _, y in points]
@@ -332,6 +581,7 @@ def generate_report_pdf(report: dict) -> BytesIO:
                 "SmallNote",
             ),
             drawing,
+            caption("Hydropathy profile along the sequence."),
             paragraph(
                 "Interpretation depends on the profile method and window "
                 "size. This chart alone does not establish membrane topology.",
@@ -365,11 +615,7 @@ def generate_report_pdf(report: dict) -> BytesIO:
             ))
             return
 
-        rows = [[
-            Paragraph("<b>Residue</b>", styles["ReportBody"]),
-            Paragraph("<b>Count</b>", styles["ReportBody"]),
-            Paragraph("<b>Percentage</b>", styles["ReportBody"]),
-        ]]
+        rows = [head("Residue", "Count", "Percentage")]
 
         if sequence_length is not None:
             story.append(paragraph(
@@ -395,12 +641,13 @@ def generate_report_pdf(report: dict) -> BytesIO:
                 pass
 
             rows.append([
-                paragraph(residue),
-                paragraph(count),
-                paragraph(
+                cell(residue, mono=True),
+                cell(count),
+                cell(
                     f"{float(percentage):.2f}%"
                     if percentage is not None
-                    else "Not available"
+                    else "Not available",
+                    mono=percentage is not None,
                 ),
             ])
 
@@ -426,30 +673,32 @@ def generate_report_pdf(report: dict) -> BytesIO:
                 y = height - 23 - index * row_height
                 drawing.add(String(
                     2, y, residue,
+                    fontName=MONO,
                     fontSize=8,
-                    fillColor=NAVY,
+                    fillColor=INK,
                 ))
                 drawing.add(Rect(
                     label_width,
                     y - 2,
                     bar_width * value / max_value,
                     9,
-                    fillColor=TEAL,
-                    strokeColor=None,
+                    fillColor=WASH,
+                    strokeColor=INK,
+                    strokeWidth=0.6,
                 ))
                 drawing.add(String(
                     label_width + bar_width + 6,
                     y,
                     f"{value:.2f}%",
+                    fontName=MONO,
                     fontSize=7.5,
-                    fillColor=DARK_GREY,
+                    fillColor=INK_SOFT,
                 ))
 
-            story.append(paragraph(
-                "Top 10 residues by reported percentage.",
-                "SmallNote",
-            ))
             story.append(drawing)
+            story.append(caption(
+                "Top 10 residues by reported percentage."
+            ))
 
         story.append(Spacer(1, 2 * mm))
         story.append(Paragraph(
@@ -538,14 +787,15 @@ def generate_report_pdf(report: dict) -> BytesIO:
             py = bottom + (frequency / 100) * plot_height
             drawing.add(Line(
                 left, py, width - right, py,
-                strokeColor=LIGHT_GREY,
+                strokeColor=RULE,
                 strokeWidth=0.5,
             ))
             drawing.add(String(
                 left - 7, py - 3, f"{frequency}%",
                 textAnchor="end",
+                fontName=MONO,
                 fontSize=7,
-                fillColor=DARK_GREY,
+                fillColor=INK_SOFT,
             ))
 
         mapped = [xy(position, frequency) for position, frequency in points]
@@ -553,23 +803,24 @@ def generate_report_pdf(report: dict) -> BytesIO:
         if len(mapped) > 1:
             drawing.add(PolyLine(
                 [coordinate for point in mapped for coordinate in point],
-                strokeColor=TEAL,
+                strokeColor=INK,
                 strokeWidth=1.1,
             ))
         else:
             px, py = mapped[0]
             drawing.add(Rect(
                 px - 2, py - 2, 4, 4,
-                fillColor=TEAL,
-                strokeColor=TEAL,
+                fillColor=INK,
+                strokeColor=INK,
             ))
 
         drawing.add(String(
             width / 2, 7,
             "Alignment position (residue column)",
             textAnchor="middle",
+            fontName=SANS,
             fontSize=8,
-            fillColor=DARK_GREY,
+            fillColor=INK_SOFT,
         ))
 
         story.append(KeepTogether([
@@ -584,6 +835,7 @@ def generate_report_pdf(report: dict) -> BytesIO:
                 "SmallNote",
             ),
             drawing,
+            caption("Majority-residue frequency per alignment position."),
             paragraph(
                 "Majority-residue frequency is a descriptive alignment "
                 "measure, not a standalone evolutionary conservation "
@@ -661,8 +913,9 @@ def generate_report_pdf(report: dict) -> BytesIO:
         drawing.add(String(
             left, height - 13,
             f"Residue positions (1–{sequence_length})",
+            fontName=SANS,
             fontSize=8,
-            fillColor=DARK_GREY,
+            fillColor=INK_SOFT,
         ))
 
         for index, region in enumerate(valid_regions):
@@ -670,8 +923,8 @@ def generate_report_pdf(report: dict) -> BytesIO:
 
             drawing.add(Rect(
                 left, y, track_width, 9,
-                fillColor=PALE_BLUE,
-                strokeColor=LIGHT_GREY,
+                fillColor=WASH,
+                strokeColor=RULE,
                 strokeWidth=0.4,
             ))
 
@@ -685,15 +938,17 @@ def generate_report_pdf(report: dict) -> BytesIO:
 
             drawing.add(Rect(
                 x1, y, bar_width, 9,
-                fillColor=TEAL,
-                strokeColor=TEAL,
+                fillColor=ACCENT,
+                strokeColor=INK,
+                strokeWidth=0.6,
             ))
 
             drawing.add(String(
                 2, y + 1,
                 f"{region['start']}-{region['end']}",
+                fontName=MONO,
                 fontSize=7,
-                fillColor=NAVY,
+                fillColor=INK,
             ))
 
             label = (
@@ -702,8 +957,9 @@ def generate_report_pdf(report: dict) -> BytesIO:
             )
             drawing.add(String(
                 left, y - 9, label[:72],
+                fontName=SANS,
                 fontSize=7,
-                fillColor=DARK_GREY,
+                fillColor=INK_SOFT,
             ))
 
         story.append(KeepTogether([
@@ -718,6 +974,7 @@ def generate_report_pdf(report: dict) -> BytesIO:
                 "SmallNote",
             ),
             drawing,
+            caption("Candidate transmembrane regions along the sequence."),
         ]))
 
     def add_nested(value, key=None):
@@ -759,7 +1016,7 @@ def generate_report_pdf(report: dict) -> BytesIO:
 
         
         if key == "transmembrane_candidates" and isinstance(value, list):
-            protein = report.get("protein", {})
+            protein = current["source"].get("protein", {})
             sequence_length = (
                 protein.get("length")
                 if isinstance(protein, dict)
@@ -788,6 +1045,24 @@ def generate_report_pdf(report: dict) -> BytesIO:
             add_peptide_candidates_table(value)
             return
 
+        if (
+            key == "limitations"
+            and isinstance(value, list)
+            and value
+            and all(not isinstance(item, (dict, list)) for item in value)
+        ):
+            rows = [[paragraph(item)] for item in value]
+            notes = Table(rows, colWidths=[CONTENT_WIDTH], hAlign="LEFT")
+            notes.setStyle(TableStyle([
+                ("LINEBEFORE", (0, 0), (0, -1), 2, ACCENT),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]))
+            story.append(notes)
+            return
+
 
         if isinstance(value, dict):
             if not value:
@@ -800,20 +1075,28 @@ def generate_report_pdf(report: dict) -> BytesIO:
             )
 
             if scalar_only:
-                rows = [[
-                    Paragraph("<b>Field</b>", styles["ReportBody"]),
-                    Paragraph("<b>Value</b>", styles["ReportBody"]),
-                ]]
-                for child_key, item in value.items():
-                    rows.append([
-                        paragraph(str(child_key).replace("_", " ").title()),
-                        paragraph(item),
-                    ])
-                story.append(make_table(rows, [48 * mm, 112 * mm]))
+                add_field_table(value.items())
                 return
 
             for child_key, item in value.items():
                 if child_key == "sequence":
+                    add_nested(item, key=child_key)
+                    continue
+
+                if child_key == "sequence_predictions" and isinstance(item, dict):
+                    # The four external predictors are summarised in the
+                    # Prediction Tools section; keep the built-in results.
+                    item = {
+                        name: result
+                        for name, result in item.items()
+                        if name not in {key for key, *_ in PREDICTORS}
+                    }
+                    if not item:
+                        continue
+
+                if child_key in SELF_HEADED and (
+                    isinstance(item, (list, dict))
+                ):
                     add_nested(item, key=child_key)
                     continue
 
@@ -856,31 +1139,58 @@ def generate_report_pdf(report: dict) -> BytesIO:
 
         story.append(paragraph(value))
 
+    # Same order as the report on screen.
     sections = [
         ("metadata", "Report Metadata"),
         ("protein", "Protein Characteristics"),
         ("measurements", "Measurements and Charts"),
-        ("peptide_candidates", "Peptide Candidates"),
+        ("prediction_tools", "Prediction Tools"),
         ("conservation", "Conservation Analysis"),
         ("evidence", "Evidence"),
         ("interpretations", "Interpretations"),
         ("candidate_assessment", "Candidate Assessment"),
         ("limitations", "Limitations"),
+        ("peptide_candidates", "Peptide Candidates"),
     ]
+
+    def render_sections(source, skip=()):
+        current["source"] = source
+
+        for key, title in sections:
+            if key in skip:
+                continue
+
+            if key == "prediction_tools":
+                if add_prediction_tools(source):
+                    story.append(Spacer(1, 3 * mm))
+                continue
+
+            if key not in source:
+                continue
+
+            section_heading(title)
+            content = source[key]
+
+            if key == "protein" and isinstance(content, dict):
+                add_scalar_table(content)
+
+                if content.get("sequence"):
+                    story.append(Spacer(1, 2 * mm))
+                    add_nested(content["sequence"], key="sequence")
+            else:
+                add_nested(content, key=key)
+
+            story.append(Spacer(1, 3 * mm))
 
     if is_multi_report:
         shared_conservation = report.get("conservation", {})
-        records = report.get("records", [])
 
         story.append(Paragraph(
             "Multi-FASTA Comparative Analysis",
-            styles["ReportTitle"],
+            styles["PartTitle"],
         ))
 
-        story.append(Paragraph(
-            "Shared Alignment and Conservation",
-            styles["SectionHeading"],
-        ))
+        section_heading("Shared Alignment and Conservation")
 
         sequence_count = shared_conservation.get("sequence_count")
         alignment_length = shared_conservation.get("alignment_length")
@@ -889,7 +1199,7 @@ def generate_report_pdf(report: dict) -> BytesIO:
             "conservation_percentage"
         )
 
-        summary_rows = [["Measurement", "Result"]]
+        summary_rows = [head("Measurement", "Result")]
 
         for label, value in [
             ("Sequences analyzed", sequence_count),
@@ -898,7 +1208,10 @@ def generate_report_pdf(report: dict) -> BytesIO:
             ("Conservation percentage", conservation_percentage),
         ]:
             if value is not None:
-                summary_rows.append([label, str(value)])
+                summary_rows.append([
+                    cell(label, mono=False),
+                    cell(str(value), mono=True),
+                ])
 
         if len(summary_rows) > 1:
             story.append(make_table(
@@ -921,89 +1234,44 @@ def generate_report_pdf(report: dict) -> BytesIO:
             protein_analyses,
             start=1,
         ):
-            report = protein_report
-
-            protein = report.get("protein", {})
+            protein = protein_report.get("protein", {})
             protein_id = (
                 protein.get("id")
-                or report.get("protein_id")
+                or protein_report.get("protein_id")
                 or f"Protein {index}"
             )
 
+            reset_counters()
             story.append(PageBreak())
             story.append(Paragraph(
                 f"Protein Analysis: {escape(str(protein_id))}",
-                styles["ReportTitle"],
+                styles["PartTitle"],
             ))
 
-            for key, title in sections:
-                if key == "conservation":
-                    continue
-
-                if key not in report:
-                    continue
-
-                story.append(Paragraph(
-                    escape(title),
-                    styles["SectionHeading"],
-                ))
-
-                content = report[key]
-
-                if key == "protein" and isinstance(content, dict):
-                    add_scalar_table(content)
-
-                    if content.get("sequence"):
-                        add_nested(
-                            content["sequence"],
-                            key="sequence",
-                        )
-                else:
-                    add_nested(content, key=key)
-
-                story.append(Spacer(1, 4 * mm))
-
+            render_sections(protein_report, skip=("conservation",))
     else:
-        for key, title in sections:
-            if key not in report:
-                continue
-
-            story.append(Paragraph(
-                escape(title),
-                styles["SectionHeading"],
-            ))
-
-            content = report[key]
-
-            if key == "protein" and isinstance(content, dict):
-                add_scalar_table(content)
-
-                if content.get("sequence"):
-                    add_nested(
-                        content["sequence"],
-                        key="sequence",
-                    )
-            else:
-                add_nested(content, key=key)
-
-            story.append(Spacer(1, 4 * mm))
+        render_sections(report)
 
     def draw_page(canvas, doc):
+        page_width, page_height = A4
         canvas.saveState()
-        page_width, _ = A4
-        canvas.setStrokeColor(LIGHT_GREY)
+        canvas.setFillColor(PAPER)
+        canvas.rect(0, 0, page_width, page_height, stroke=0, fill=1)
+        canvas.setStrokeColor(RULE)
+        canvas.setLineWidth(0.5)
         canvas.line(
-            17 * mm, 13 * mm,
-            page_width - 17 * mm, 13 * mm,
+            PAGE_MARGIN, 14 * mm,
+            page_width - PAGE_MARGIN, 14 * mm,
         )
-        canvas.setFont("Helvetica", 7.5)
-        canvas.setFillColor(DARK_GREY)
+        canvas.setFont(MONO, 7)
+        canvas.setFillColor(INK_FAINT)
         canvas.drawString(
-            17 * mm, 8 * mm,
-            "Reverse Vaccinology Research Engine | Research report",
+            PAGE_MARGIN, 9.5 * mm,
+            "ReverseVax  \u00b7  Evidence report  \u00b7  "
+            "predictions are screens, not validation",
         )
         canvas.drawRightString(
-            page_width - 17 * mm, 8 * mm,
+            page_width - PAGE_MARGIN, 9.5 * mm,
             f"Page {doc.page}",
         )
         canvas.restoreState()

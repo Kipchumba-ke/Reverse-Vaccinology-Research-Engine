@@ -14,6 +14,11 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # This site has no API behind it, so say so on the landing and sign-in
+  # pages. Delete the next line when you connect a real API (see
+  # docs/DEPLOYMENT.md). To link a screen recording, add the environment
+  # variable VITE_DEMO_VIDEO_URL (an https:// address) in Netlify.
+  VITE_DEMO_NOTICE = "true"
 
 # Single-page app: unknown paths fall back to index.html.
 [[redirects]]

@@ -226,6 +226,21 @@ The frontend updates itself on Netlify.
 | A predictor shows "Not set up" or "Failed" | The Prediction Tools section gives the reason; for BioLib, check `BIOLIB_TOKEN` and that the image was built with `INSTALL_BIOLIB=1` |
 | `docker compose up` says a password is wrong for the database | `POSTGRES_PASSWORD` was changed after the first start. Restore the old value, or reset the database volume if it holds nothing you need |
 
+## Interface-only demo site (no backend)
+
+If you want the Netlify site online without paying for a server, build it as a demo. The React app then shows a notice on the landing, sign-in and register pages saying the analysis server is not hosted, and links the code and (optionally) a screen recording.
+
+It is controlled by two build-time settings, both read by `frontend/src/components/DemoNotice.jsx`:
+
+| Setting | Effect |
+| --- | --- |
+| `VITE_DEMO_NOTICE=true` | Shows the notice. `netlify.toml` sets it. **Delete that line when you connect a real API**, or the notice will keep showing |
+| `VITE_DEMO_VIDEO_URL=https://...` | Adds a "Watch the demo" link. Optional; only `https://` addresses are used. Set it in Netlify under **Site configuration → Environment variables**, then redeploy |
+
+Sign-in and analyses still cannot work without an API: the notice is the explanation, not a workaround. Never publish real credentials or a `.env` to make the demo "work".
+
+To record a demo from your own machine, see [`DEMO.md`](DEMO.md).
+
 ## What this setup does not give you
 
 No monitoring or alerting, no automatic off-server backups, a single server with no failover, and no staging environment. For a portfolio or small research group that is a reasonable start; add them if real users depend on it.
