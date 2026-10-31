@@ -10,6 +10,11 @@ from app.services.password_service import (
 from app.services.token_service import create_token
 
 
+# Checked when the email is unknown, so a missing account takes about as long
+# to reject as a wrong password and the response time does not reveal which
+# emails are registered.
+_UNKNOWN_USER_HASH = hash_password("not-a-real-password")
+
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MAX_EMAIL_LENGTH = 254
 MIN_PASSWORD_LENGTH = 8
@@ -66,6 +71,7 @@ class AuthService:
         user = self.repository.find_by_email(email)
 
         if user is None:
+            verify_password(password, _UNKNOWN_USER_HASH)
             raise ValueError("Invalid email or password.")
 
         if not verify_password(password, user.password_hash):

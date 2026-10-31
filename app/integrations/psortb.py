@@ -56,7 +56,7 @@ VALID_BACKENDS = {"local", "docker"}
 DEFAULT_DOCKER_IMAGE = "brinkmanlab/psortb_commandline:1.0.2"
 DOCKER_PSORT_PATH = "/usr/local/psortb/bin/psort"
 DOCKER_RESULTS_DIR = "/tmp/results"
-TIMEOUT_SECONDS = 1800
+DEFAULT_TIMEOUT_SECONDS = 1800
 CONFIDENT_SCORE = 7.5
 
 LOCATION_MAP = {
@@ -68,6 +68,25 @@ LOCATION_MAP = {
     "Cellwall": "extracellular",
     "Unknown": "unknown",
 }
+
+
+def _timeout_seconds() -> int:
+    raw = os.environ.get("PSORTB_TIMEOUT_SECONDS", "").strip()
+
+    if not raw:
+        return DEFAULT_TIMEOUT_SECONDS
+
+    try:
+        value = int(raw)
+    except ValueError as error:
+        raise ValueError(
+            "PSORTB_TIMEOUT_SECONDS must be a whole number of seconds."
+        ) from error
+
+    if value <= 0:
+        raise ValueError("PSORTB_TIMEOUT_SECONDS must be greater than zero.")
+
+    return value
 
 
 def is_psortb_enabled() -> bool:
@@ -226,7 +245,7 @@ def run_psortb(sequence: str, gram: str | None = None) -> dict:
                 text=True,
                 capture_output=True,
                 check=True,
-                timeout=TIMEOUT_SECONDS,
+                timeout=_timeout_seconds(),
             )
         except subprocess.TimeoutExpired as error:
             raise RuntimeError("PSORTb timed out.") from error

@@ -251,3 +251,37 @@ def test_unknown_backend_is_reported(monkeypatch):
 
     assert result["status"] == "lookup_failed"
     assert "PSORTB_BACKEND" in result["message"]
+
+
+def test_timeout_defaults_to_thirty_minutes(monkeypatch):
+    monkeypatch.delenv("PSORTB_TIMEOUT_SECONDS", raising=False)
+
+    assert psortb._timeout_seconds() == 1800
+
+
+def test_timeout_can_be_configured_and_is_passed_to_the_tool(
+    monkeypatch, fake_psort
+):
+    monkeypatch.setenv("PSORTB_TIMEOUT_SECONDS", "90")
+    seen = {}
+
+    def fake_run(command, **kwargs):
+        seen["timeout"] = kwargs["timeout"]
+        return subprocess.CompletedProcess(
+            command, 0, "query\tCytoplasmic\t9.0\n", ""
+        )
+
+    monkeypatch.setattr(psortb.subprocess, "run", fake_run)
+
+    assert psortb.fetch_psortb_prediction("MKK")["status"] == "completed"
+    assert seen["timeout"] == 90
+
+
+@pytest.mark.parametrize("value", ["abc", "0", "-5"])
+def test_bad_timeout_is_reported(monkeypatch, fake_psort, value):
+    monkeypatch.setenv("PSORTB_TIMEOUT_SECONDS", value)
+
+    result = psortb.fetch_psortb_prediction("MKK")
+
+    assert result["status"] == "lookup_failed"
+    assert "PSORTB_TIMEOUT_SECONDS" in result["message"]

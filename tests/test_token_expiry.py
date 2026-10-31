@@ -127,3 +127,10 @@ def test_missing_secret_key_is_rejected(monkeypatch):
 
     with pytest.raises(RuntimeError, match="JWT_SECRET_KEY"):
         create_token(User(email="a@example.com"))
+
+
+def test_short_secret_key_is_rejected(monkeypatch):
+    monkeypatch.setenv("JWT_SECRET_KEY", "too-short")
+
+    with pytest.raises(RuntimeError, match="at least 32"):
+        create_token(User(email="a@example.com"))

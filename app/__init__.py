@@ -1,3 +1,4 @@
+import logging
 import os
 
 from flask import Flask, g, request, send_file, jsonify
@@ -36,6 +37,19 @@ from app.utils.limits import get_max_request_bytes
 
 
 DEFAULT_CORS_ORIGIN = "http://localhost:5173"
+
+
+logger = logging.getLogger(__name__)
+
+
+def _env_flag(name: str, default: bool) -> bool:
+    """Read an on/off setting; unset or empty means ``default``."""
+    raw = os.environ.get(name, "").strip().lower()
+
+    if not raw:
+        return default
+
+    return raw in {"1", "true", "yes", "on"}
 
 
 def _get_allowed_origins() -> list[str]:
@@ -172,7 +186,17 @@ def create_app(repository=None, queue=None, rate_limiter=None):
         except ValueError as error:
             return {"error": str(error)}, 401
 
-        
+        # The synchronous route runs the whole analysis inside a web worker,
+        # which can take minutes with the optional predictors on. The web app
+        # does not use it; production should submit to /api/analyses.
+        if not _env_flag("SYNC_ANALYZE_ENABLED", True):
+            return {
+                "error": (
+                    "Synchronous analysis is disabled on this server. "
+                    "Submit the sequence to /api/analyses instead."
+                )
+            }, 403
+
         if "file" in request.files:
             uploaded_file = request.files["file"]
 
@@ -266,6 +290,9 @@ def create_app(repository=None, queue=None, rate_limiter=None):
 
     @app.post("/api/register")
     def register():
+        if not _env_flag("REGISTRATION_ENABLED", True):
+            return {"error": "Registration is closed on this server."}, 403
+
         repository = app.config["ANALYSIS_REPOSITORY"]
         user_repository = UserRepository(repository.session)
 
@@ -399,9 +426,13 @@ def create_app(repository=None, queue=None, rate_limiter=None):
             repository.session.rollback()
             return {"error": str(error)}, 400
 
-        except RuntimeError as error:
+        except RuntimeError:
+            # Internal detail (queue or database errors) stays in the log.
+            logger.exception("Could not submit analysis")
             repository.session.rollback()
-            return {"error": str(error)}, 500
+            return {
+                "error": "The analysis could not be submitted. Please try again later."
+            }, 500
 
         return {
             "analysis_id": str(analysis_id),

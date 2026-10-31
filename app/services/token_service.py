@@ -6,6 +6,7 @@ import jwt
 
 
 DEFAULT_TOKEN_LIFETIME_MINUTES = 60 * 24
+MIN_SECRET_KEY_LENGTH = 32
 
 
 def _get_secret_key() -> str:
@@ -14,6 +15,13 @@ def _get_secret_key() -> str:
     if not secret_key.strip():
         raise RuntimeError(
             "JWT_SECRET_KEY must be set to a non-empty value."
+        )
+
+    if len(secret_key.strip()) < MIN_SECRET_KEY_LENGTH:
+        raise RuntimeError(
+            f"JWT_SECRET_KEY must be at least {MIN_SECRET_KEY_LENGTH} "
+            "characters. Generate one with: "
+            'python -c "import secrets; print(secrets.token_urlsafe(48))"'
         )
 
     return secret_key
