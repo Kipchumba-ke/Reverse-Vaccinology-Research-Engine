@@ -37,6 +37,15 @@ def test_globular_protein_has_no_segments():
     assert result["segments"] == []
 
 
+def test_live_service_spelling_of_globular_is_accepted():
+    # The live DeepTMHMM output labels globular proteins "GLOB".
+    result = deeptmhmm.parse_three_line(three_line("GLOB", "I" * len(SEQ)))
+
+    assert result["predicted_class"] == "GLOBULAR"
+    assert result["segments"] == []
+    assert deeptmhmm.to_localization_evidence(result) == []
+
+
 @pytest.mark.parametrize("text", [
     "",
     ">query | TM\nMKK\n",

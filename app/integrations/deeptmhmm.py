@@ -22,9 +22,10 @@ DeepTMHMM labels each residue. This adapter reads the label string:
 S signal peptide, M alpha-helical transmembrane, B beta strand (outer
 membrane barrel), I inside, O outside, P periplasmic.
 
-Whole-protein classes are SP, TM, SP+TM, GLOBULAR and BETA. Only TM, SP+TM
-and BETA say anything about a compartment; SP and GLOBULAR do not, so they
-produce no localization evidence.
+Whole-protein classes are SP, TM, SP+TM, GLOB and BETA. The live service
+writes the globular class as ``GLOB``; this adapter stores it as
+``GLOBULAR``. Only TM, SP+TM and BETA say anything about a compartment; SP
+and GLOBULAR do not, so they produce no localization evidence.
 """
 
 import os
@@ -36,6 +37,9 @@ from app.integrations.common import NotConfigured, run_biolib_app
 SOURCE = "DeepTMHMM"
 APP_NAME = "DTU/DeepTMHMM"
 VALID_CLASSES = {"SP", "TM", "SP+TM", "GLOBULAR", "BETA"}
+
+# Spellings seen in the service's output, mapped to the class stored here.
+_CLASS_ALIASES = {"GLOB": "GLOBULAR"}
 
 _SEGMENT_TYPES = {
     "S": "signal_peptide",
@@ -82,6 +86,7 @@ def parse_three_line(text: str) -> dict:
         )
 
     predicted_class = header.rsplit("|", 1)[-1].strip()
+    predicted_class = _CLASS_ALIASES.get(predicted_class, predicted_class)
 
     if predicted_class not in VALID_CLASSES:
         raise ValueError(
