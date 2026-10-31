@@ -118,7 +118,7 @@ Create a `.env` file in the repository root. It is git-ignored.
 | `MAX_SEQUENCE_LENGTH`, `MAX_FASTA_RECORDS`, `MAX_ALIGNMENT_CELLS`, `MAX_REQUEST_BYTES` | Input caps |
 | `ALIGNMENT_SCORING` | `blosum62` (default) or `identity` for the built-in aligner |
 | `HOST_SIMILARITY_*`, `HOST_PEPTIDE_*` | Host-similarity thresholds and the short-peptide scan |
-| `SIGNALP_ENABLED`, `SIGNALP6_EXECUTABLE`, `SIGNALP_ORGANISM` | Optional SignalP 6.0 adapter |
+| `SIGNALP_ENABLED`, `SIGNALP_BACKEND`, `SIGNALP6_EXECUTABLE`, `SIGNALP_BIOLIB_APP`, `SIGNALP_ORGANISM` | Optional SignalP 6.0 adapter. `SIGNALP_BACKEND` is `local` (default, your own `signalp6` install) or `biolib` (cloud app through `pybiolib`; sends the sequence to BioLib) |
 | `DEEPTMHMM_ENABLED` | Optional DeepTMHMM through BioLib; needs `pip install pybiolib` and sends the sequence to BioLib |
 | `PSORTB_ENABLED`, `PSORTB_EXECUTABLE`, `PSORTB_GRAM` | Optional PSORTb 3.0 from a local or Docker install (`negative`, `positive` or `archaea`) |
 | `IEDB_ENABLED`, `IEDB_MHCI_ALLELES`, `IEDB_MHCII_ALLELES`, `IEDB_MHCI_LENGTH`, `IEDB_MHCII_LENGTH`, `IEDB_MHCI_RANK_CUTOFF`, `IEDB_MHCII_RANK_CUTOFF`, `IEDB_MAX_SEQUENCE_LENGTH`, `IEDB_API_BASE` | Optional IEDB epitope and MHC prediction; sends the sequence to IEDB |
@@ -203,7 +203,7 @@ Every predictor is off by default and fails soft: a missing install or an unreac
 
 | Tool | How it runs | Data leaves your server? | Licence |
 | --- | --- | --- | --- |
-| SignalP 6.0 | Local `signalp6` install | No | DTU licence; free for academic use, not redistributable |
+| SignalP 6.0 | `local`: your own `signalp6` install. `biolib`: BioLib cloud app `DTU/SignalP_6` through `pybiolib` | `local`: No. `biolib`: Yes, to BioLib | DTU licence (free for academic use, not redistributable); BioLib terms for `biolib` |
 | DeepTMHMM | BioLib cloud app `DTU/DeepTMHMM` through `pybiolib` | Yes, to BioLib | BioLib and DTU terms |
 | PSORTb 3.0 | Local `psort`, for example the `brinkmanlab/psortb_commandline` Docker image | No | Open source |
 | IEDB MHC and B-cell | IEDB Analysis Resource REST API | Yes, to IEDB | IEDB terms |

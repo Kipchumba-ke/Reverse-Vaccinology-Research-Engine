@@ -1,18 +1,35 @@
-"""Optional SignalP 6.0 integration (local command-line install).
+"""Optional SignalP 6.0 integration.
 
-Off by default. Enable it by installing SignalP 6.0 on the machine that
-runs the analysis and setting:
+Off by default. Two backends; pick one with SIGNALP_BACKEND.
+
+Local install (default), no data leaves the machine:
 
     SIGNALP_ENABLED=1
+    SIGNALP_BACKEND=local
     SIGNALP6_EXECUTABLE=/path/to/signalp6     (optional if on PATH)
+
+BioLib cloud, no local licence or model weights, run with ``pybiolib``:
+
+    pip install pybiolib
+    SIGNALP_ENABLED=1
+    SIGNALP_BACKEND=biolib
+    SIGNALP_BIOLIB_APP=DTU/SignalP_6          (optional; this is the default)
+
+Shared setting:
+
     SIGNALP_ORGANISM=other                    (other or eukarya; default
                                                other, which covers
                                                bacteria)
 
-SignalP is licensed separately by DTU and is not bundled or redistributed
-with this project. This adapter has been tested against a hand-written
-sample of the prediction_results.txt layout, not against a live SignalP
-installation, so run one real protein through it before relying on it.
+The BioLib backend sends your sequence to BioLib's servers, so do not use it
+for unpublished or confidential sequences. Use is subject to the BioLib and
+DTU terms. SignalP is licensed separately by DTU and is not bundled or
+redistributed with this project.
+
+Both backends read the same ``prediction_results.txt``. The parser is tested
+against a hand-written sample of that layout, and the BioLib app name and
+arguments come from a third-party code sample, not from a run of this
+project, so run one real protein through the adapter before relying on it.
 
 A signal peptide says a protein enters the secretory pathway. It does not
 say which compartment the protein ends up in, so the result is stored as a
@@ -28,6 +45,8 @@ from pathlib import Path
 
 SOURCE = "SignalP 6.0"
 VALID_ORGANISMS = {"other", "eukarya"}
+VALID_BACKENDS = {"local", "biolib"}
+DEFAULT_BIOLIB_APP = "DTU/SignalP_6"
 TIMEOUT_SECONDS = 300
 
 # Prediction labels in the SignalP 6.0 summary table.
@@ -107,8 +126,19 @@ def parse_signalp_prediction(text: str) -> dict:
     }
 
 
-def run_signalp(sequence: str, organism: str | None = None) -> dict:
-    """Run SignalP 6.0 on one sequence and return the parsed prediction."""
+def _resolve_backend() -> str:
+    backend = os.environ.get("SIGNALP_BACKEND", "local").strip().lower()
+
+    if backend not in VALID_BACKENDS:
+        raise ValueError(
+            "SIGNALP_BACKEND must be one of: "
+            + ", ".join(sorted(VALID_BACKENDS))
+        )
+
+    return backend
+
+
+def _resolve_organism(organism: str | None) -> str:
     organism = organism or os.environ.get("SIGNALP_ORGANISM", "other")
 
     if organism not in VALID_ORGANISMS:
@@ -117,6 +147,19 @@ def run_signalp(sequence: str, organism: str | None = None) -> dict:
             + ", ".join(sorted(VALID_ORGANISMS))
         )
 
+    return organism
+
+
+def _read_results(output_dir: Path) -> dict:
+    matches = sorted(output_dir.rglob("prediction_results.txt"))
+
+    if not matches:
+        raise RuntimeError("SignalP produced no prediction_results.txt.")
+
+    return parse_signalp_prediction(matches[0].read_text())
+
+
+def _run_local(sequence: str, organism: str) -> dict:
     executable = _resolve_executable()
 
     with tempfile.TemporaryDirectory(prefix="signalp-") as workdir:
@@ -149,12 +192,50 @@ def run_signalp(sequence: str, organism: str | None = None) -> dict:
                 else "SignalP execution failed."
             ) from exc
 
-        results = output_dir / "prediction_results.txt"
+        return _read_results(output_dir)
 
-        if not results.is_file():
-            raise RuntimeError("SignalP produced no prediction_results.txt.")
 
-        return parse_signalp_prediction(results.read_text())
+def _run_biolib(sequence: str, organism: str) -> dict:
+    try:
+        import biolib
+    except ImportError as error:
+        raise RuntimeError(
+            "pybiolib is not installed; run: pip install pybiolib"
+        ) from error
+
+    app_name = os.environ.get("SIGNALP_BIOLIB_APP") or DEFAULT_BIOLIB_APP
+
+    with tempfile.TemporaryDirectory(prefix="signalp-") as workdir:
+        previous = os.getcwd()
+        os.chdir(workdir)
+
+        try:
+            Path("input.fasta").write_text(f">query\n{sequence}\n")
+            job = biolib.load(app_name).cli(
+                args=(
+                    "--fastafile input.fasta "
+                    f"--organism {organism} "
+                    "--format txt --mode fast --output_dir output"
+                ),
+                blocking=True,
+            )
+            job.save_files(output_dir="results")
+        except Exception as error:  # BioLib raises its own exception types
+            raise RuntimeError(f"SignalP run failed: {error}") from error
+        finally:
+            os.chdir(previous)
+
+        return _read_results(Path(workdir) / "results")
+
+
+def run_signalp(sequence: str, organism: str | None = None) -> dict:
+    """Run SignalP 6.0 on one sequence and return the parsed prediction."""
+    organism = _resolve_organism(organism)
+
+    if _resolve_backend() == "biolib":
+        return _run_biolib(sequence, organism)
+
+    return _run_local(sequence, organism)
 
 
 def fetch_signalp_prediction(sequence: str) -> dict:
