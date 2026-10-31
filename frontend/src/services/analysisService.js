@@ -1,7 +1,8 @@
 import { handleUnauthorized } from './session'
+import { apiUrl } from './apiBase'
 
 export async function submitAnalysis(sequence, token, metadata = {}) {
-  const response = await fetch('/api/analyses', {
+  const response = await fetch(apiUrl('/api/analyses'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -22,7 +23,7 @@ export async function submitAnalysis(sequence, token, metadata = {}) {
 }
 
 export async function submitFastaAnalysis(fastaContent, token, metadata = {}) {
-  const response = await fetch('/api/analyses', {
+  const response = await fetch(apiUrl('/api/analyses'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -43,7 +44,7 @@ export async function submitFastaAnalysis(fastaContent, token, metadata = {}) {
 }
 
 export async function getAnalysisStatus(analysisId, token) {
-  const response = await fetch(`/api/analyses/${analysisId}`, {
+  const response = await fetch(apiUrl(`/api/analyses/${analysisId}`), {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -57,7 +58,7 @@ export async function getAnalysisStatus(analysisId, token) {
 
 export async function downloadAnalysisReport(analysisId, token) {
   const response = await fetch(
-    `/api/analyses/${analysisId}/report.pdf`,
+    apiUrl(`/api/analyses/${analysisId}/report.pdf`),
     {
       headers: {
         Authorization: `Bearer ${token}`,

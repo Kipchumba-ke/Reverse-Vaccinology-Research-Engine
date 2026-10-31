@@ -1,7 +1,8 @@
 import { handleUnauthorized } from './session'
+import { apiUrl } from './apiBase'
 
 export async function fetchStructure(accession, token) {
-  const response = await fetch(`/api/structure/${encodeURIComponent(accession)}`, {
+  const response = await fetch(apiUrl(`/api/structure/${encodeURIComponent(accession)}`), {
     headers: { Authorization: `Bearer ${token}` },
   })
 

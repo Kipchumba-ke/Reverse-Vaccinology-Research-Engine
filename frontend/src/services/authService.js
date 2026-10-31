@@ -1,5 +1,7 @@
+import { apiUrl } from './apiBase'
+
 export async function login(email, password) {
-  const response = await fetch('/api/login', {
+  const response = await fetch(apiUrl('/api/login'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -23,7 +25,7 @@ export async function login(email, password) {
   return result
 }
 export async function register(email, password) {
-  const response = await fetch('/api/register', {
+  const response = await fetch(apiUrl('/api/register'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
