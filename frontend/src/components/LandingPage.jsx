@@ -1,4 +1,5 @@
 import ThemeToggle from './ThemeToggle'
+import DemoNotice from './DemoNotice'
 import { EvidenceStory, ExampleFigure, SourcesList } from './EvidenceStory'
 import './Shell.css'
 import './LandingPage.css'
@@ -36,6 +37,8 @@ function LandingPage({ onLogin, onRegister }) {
           </div>
         </div>
       </header>
+
+      <DemoNotice />
 
       <main id="main" className="sections">
         <section className="hero" aria-labelledby="hero-title">

@@ -6,6 +6,12 @@ Oct 29, 2026 · @Kipchumba
 
 > **Status:** active development, started 19 September 2026. Not a validated vaccine-candidate predictor.
 
+## Demo
+
+- **Screen recording (2–3 minutes):** a full analysis from protein sequence to downloaded PDF report. The link will be added here once the recording is uploaded; [`docs/DEMO.md`](docs/DEMO.md) has the shot list.
+- **Interface-only site:** [reversevax.netlify.app](https://reversevax.netlify.app) hosts the React app. The analysis server (API, database, worker and reference data) is **not** hosted online, so signing in, registering and running analyses do not work there, and the site says so on its landing and sign-in pages. This is a deliberate choice, not an outage.
+- **Run it yourself:** follow [Getting started](#getting-started). Everything, including the PDF export, works locally.
+
 ## Overview
 
 Reverse vaccinology starts from a pathogen's protein sequences, not from laboratory culture, and asks which proteins are worth testing as vaccine targets. ReverseVax takes a protein sequence, runs sequence-level analyses on it, gathers external evidence about it, and returns a report that lists supporting evidence, concerns and missing evidence.
@@ -33,7 +39,7 @@ Most analysis modules exist and are unit-tested. The built-in predictors are sim
 | Sequence map and 3-D structure | Implemented | Frontend feature map, MHC heatmaps, and a rotatable backbone view of the AlphaFold DB model when the protein has a UniProt accession. No structure prediction is run |
 | Essentiality | Evidence intake only | Looks up a local ePath database that you must build yourself |
 | Candidate assessment | Implemented | Sorts evidence into supporting, concerns and missing; no score |
-| Report and PDF export | Implemented | Structured report per analysis, downloadable as PDF |
+| Report and PDF export | Implemented | Structured report per analysis, downloadable as PDF. The PDF follows the on-screen report: same section order and numbering, the Prediction Tools table, figure captions, and the same warm-paper, serif-and-ruled-table look in print |
 | Accounts and history | Implemented | Register, login, per-user history, delete; owner-only access |
 | Background jobs | Wired, needs setup | Celery and Redis queue; requires a running worker |
 | TMHMM 2.0, BepiPred-3.0, NetMHC standalone, ESMFold | Not integrated | TMHMM and BepiPred-3.0 have no public API and licensed downloads; see roadmap |
@@ -288,7 +294,7 @@ Tests that touch BLAST need BLAST+ installed. GitHub Actions runs both suites an
 
 ## Deploying to production
 
-For a step-by-step walkthrough with the React app on Netlify and the API on your own server, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Netlify can host only the frontend; the API, database, worker and reference data need a server of their own. The checklist below applies to any deployment. It is not a security audit.
+For a step-by-step walkthrough with the React app on Netlify and the API on your own server, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). That guide also covers the interface-only demo site, which needs no server. Netlify can host only the frontend; the API, database, worker and reference data need a server of their own. The checklist below applies to any deployment. It is not a security audit.
 
 1. **Secrets stay out of git.** `.env` is git-ignored; keep it that way and give the server its own. Commit only `.env.example`. If a real `.env` was ever pasted into a chat, an issue or a screenshot, treat its secrets as exposed and replace them.
 2. **Set your own secrets.** `JWT_SECRET_KEY` must be random and at least 32 characters (shorter values are refused) (`python -c "import secrets; print(secrets.token_urlsafe(48))"`). Changing it signs everyone out. Set `POSTGRES_PASSWORD` instead of the development default `vaccinology_dev`, and update `DATABASE_URL` to match.

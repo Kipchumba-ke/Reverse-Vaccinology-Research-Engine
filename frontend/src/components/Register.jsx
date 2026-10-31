@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { register } from '../services/authService'
 import ThemeToggle from './ThemeToggle'
+import DemoNotice from './DemoNotice'
 import './Auth.css'
 
 function Register({ onRegister, onLogin }) {
@@ -39,6 +40,7 @@ function Register({ onRegister, onLogin }) {
           Computational screens to decide which proteins go to the bench
           first. Not experimental validation.
         </p>
+        <DemoNotice />
       </aside>
       <section id="auth-form-region" className="auth-card" aria-labelledby="register-heading">
 
