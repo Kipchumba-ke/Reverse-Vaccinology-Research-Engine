@@ -447,7 +447,7 @@ describe('App', () => {
     }
   })
 
-    it('displays the analysis report when the analysis is completed', async () => {
+       it('displays the analysis report when the analysis is completed', async () => {
       submitAnalysis.mockResolvedValueOnce({
         analysis_id: '123',
         status: 'pending',
@@ -613,7 +613,7 @@ it('rejects an empty FASTA file without submitting an analysis', async () => {
   ).toBeInTheDocument()
   })
 
-  it('displays report metadata from the analysis report', async () => {
+    it('displays report metadata from the analysis report', async () => {
     getAnalysisStatus.mockResolvedValue({
       analysis_id: '123',
       status: 'completed',
