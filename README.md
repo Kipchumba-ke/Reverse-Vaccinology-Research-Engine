@@ -117,6 +117,8 @@ Create a `.env` file in the repository root. It is git-ignored.
 | `RATE_LIMIT_*`, `TRUSTED_PROXY_COUNT` | Rate limits and proxy depth; see `.env.example` |
 | `MAX_SEQUENCE_LENGTH`, `MAX_FASTA_RECORDS`, `MAX_ALIGNMENT_CELLS`, `MAX_REQUEST_BYTES` | Input caps |
 | `ALIGNMENT_SCORING` | `blosum62` (default) or `identity` for the built-in aligner |
+| `API_DOMAIN` | Public hostname of the API for the Caddy HTTPS service (frontend hosted elsewhere) |
+| `VITE_API_BASE_URL` | Frontend build setting: the API's public address when the app is served from a different host, for example Netlify. Empty means same origin |
 | `REGISTRATION_ENABLED`, `SYNC_ANALYZE_ENABLED` | Set to `0` to close sign-up or turn off the synchronous `/api/analyze` route (both default to on outside Compose) |
 | `ANALYSIS_SOFT_TIME_LIMIT_SECONDS`, `ANALYSIS_TIME_LIMIT_SECONDS` | Background analysis limits (defaults 3300 and 3600). Keep them above the slowest predictor |
 | `HOST_SIMILARITY_*`, `HOST_PEPTIDE_*` | Host-similarity thresholds and the short-peptide scan |
@@ -284,7 +286,7 @@ Tests that touch BLAST need BLAST+ installed. GitHub Actions runs both suites an
 
 ## Deploying to production
 
-A checklist for a first deployment. It is not a security audit.
+For a step-by-step walkthrough with the React app on Netlify and the API on your own server, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Netlify can host only the frontend; the API, database, worker and reference data need a server of their own. The checklist below applies to any deployment. It is not a security audit.
 
 1. **Secrets stay out of git.** `.env` is git-ignored; keep it that way and give the server its own. Commit only `.env.example`. If a real `.env` was ever pasted into a chat, an issue or a screenshot, treat its secrets as exposed and replace them.
 2. **Set your own secrets.** `JWT_SECRET_KEY` must be random and at least 32 characters (shorter values are refused) (`python -c "import secrets; print(secrets.token_urlsafe(48))"`). Changing it signs everyone out. Set `POSTGRES_PASSWORD` instead of the development default `vaccinology_dev`, and update `DATABASE_URL` to match.

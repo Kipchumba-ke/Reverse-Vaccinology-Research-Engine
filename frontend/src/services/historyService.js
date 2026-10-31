@@ -1,8 +1,9 @@
 import { SESSION_EXPIRED_MESSAGE, handleUnauthorized } from './session'
+import { apiUrl } from './apiBase'
 
 
 export async function getAnalysisHistory(token) {
-  const response = await fetch('/api/analyses', {
+  const response = await fetch(apiUrl('/api/analyses'), {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -24,7 +25,7 @@ export async function getAnalysisHistory(token) {
 
 export async function deleteAnalysis(analysisId, token) {
   const response = await fetch(
-    `/api/analyses/${encodeURIComponent(analysisId)}`,
+    apiUrl(`/api/analyses/${encodeURIComponent(analysisId)}`),
     {
       method: 'DELETE',
       headers: {

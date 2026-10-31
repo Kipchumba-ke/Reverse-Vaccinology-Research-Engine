@@ -1,0 +1,22 @@
+# HTTPS in front of the API. Caddy gets and renews the certificate itself.
+# Needs: a DNS A record for API_DOMAIN pointing at this server, and ports
+# 80 and 443 open. Set API_DOMAIN in .env (for example api.example.com).
+
+{$API_DOMAIN} {
+	encode zstd gzip
+
+	request_body {
+		max_size 2MB
+	}
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Cache-Control "no-store"
+	}
+
+	# Caddy adds X-Forwarded-For with the real client address; the API trusts
+	# exactly one proxy (TRUSTED_PROXY_COUNT=1), so rate limits see real users.
+	reverse_proxy api:8000
+}
