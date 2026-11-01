@@ -8,7 +8,8 @@ Oct 29, 2026 · @Kipchumba
 
 ## Demo
 
-- **Screen recording (2–3 minutes):** a full analysis from protein sequence to downloaded PDF report. The link will be added here once the recording is uploaded; [`docs/DEMO.md`](docs/DEMO.md) has the shot list.
+- **Screen recording (2–3 minutes):** a full analysis from protein sequence to downloaded PDF report [Live Demo:Youtube](https://youtu.be/uGIL8URuSzE)
+
 - **Interface-only site:** [reversevax.netlify.app](https://reversevax.netlify.app) hosts the React app. The analysis server (API, database, worker and reference data) is **not** hosted online, so signing in, registering and running analyses do not work there, and the site says so on its landing and sign-in pages. This is a deliberate choice, not an outage.
 - **Run it yourself:** follow [Getting started](#getting-started). Everything, including the PDF export, works locally.
 
@@ -292,20 +293,6 @@ cd frontend && npm test
 
 Tests that touch BLAST need BLAST+ installed. GitHub Actions runs both suites and builds the Docker images on every push and pull request (`.github/workflows/ci.yml`). The test counts above predate the latest changes and are recomputed by CI.
 
-## Deploying to production
-
-For a step-by-step walkthrough with the React app on Netlify and the API on your own server, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). That guide also covers the interface-only demo site, which needs no server. Netlify can host only the frontend; the API, database, worker and reference data need a server of their own. The checklist below applies to any deployment. It is not a security audit.
-
-1. **Secrets stay out of git.** `.env` is git-ignored; keep it that way and give the server its own. Commit only `.env.example`. If a real `.env` was ever pasted into a chat, an issue or a screenshot, treat its secrets as exposed and replace them.
-2. **Set your own secrets.** `JWT_SECRET_KEY` must be random and at least 32 characters (shorter values are refused) (`python -c "import secrets; print(secrets.token_urlsafe(48))"`). Changing it signs everyone out. Set `POSTGRES_PASSWORD` instead of the development default `vaccinology_dev`, and update `DATABASE_URL` to match.
-3. **Do not expose the databases.** Compose publishes Postgres and Redis on `127.0.0.1` only. Keep it that way, or remove those `ports` entries, and do not open 5432 or 6379 to the internet.
-4. **Serve over HTTPS.** Put a TLS-terminating reverse proxy in front of the `web` service, set `CORS_ALLOWED_ORIGINS` to your site's origin, and set `TRUSTED_PROXY_COUNT` to the number of proxies in front of the API so rate limits see real client addresses.
-5. **Run migrations** with `alembic upgrade head` before starting a new version (the `migrate` service does this in Compose), and back up the Postgres volume.
-6. **Provide reference data.** The host BLAST databases are not in the repository; build them (step 5 above) and mount `data/reference`. The ePath essentiality database is optional.
-7. **Choose predictors deliberately.** Enable only the ones you have access to and are allowed to send data to (see Optional predictors), and check the Prediction Tools section of a real report after the first deploy.
-8. **Run the test suites and one real analysis** on the production configuration before inviting users. The tests use stand-ins for the external services.
-
-Analyses and the sequences submitted are stored in your database. Tell users that, and decide how long you keep them.
 
 ### Security notes
 
