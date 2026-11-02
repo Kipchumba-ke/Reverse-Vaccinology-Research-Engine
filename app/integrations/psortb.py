@@ -95,32 +95,78 @@ def is_psortb_enabled() -> bool:
     }
 
 
+def _snippet(text: str, limit: int = 300) -> str:
+    shown = text.strip()
+
+    if not shown:
+        return "(empty)"
+
+    return repr(shown[:limit] + ("..." if len(shown) > limit else ""))
+
+
+def _split_row(line: str) -> list[str]:
+    if "\t" in line:
+        return [field.strip() for field in line.split("\t")]
+
+    return line.split()
+
+
+def _as_score(value: str) -> float | None:
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
 def parse_terse_output(text: str) -> dict:
-    """Parse ``--output terse`` output for a single sequence."""
-    rows = [
-        line.split("\t")
-        for line in text.splitlines()
-        if line.strip()
-    ]
+    """Parse ``--output terse`` output for a single sequence.
 
-    if rows and rows[0][0].strip() == "SeqID":
-        rows = rows[1:]
+    Tolerant of what real installs print: ``#`` comment lines, a header
+    (with or without a leading ``#``), extra trailing columns such as the
+    PSORTb version, spaces instead of tabs, and unrelated log lines. A row
+    is a line whose third field is a number. When the output has no usable
+    row, the error quotes the start of the output so it can be diagnosed.
+    """
+    rows = []
 
-    if len(rows) != 1 or len(rows[0]) < 3:
+    for line in text.splitlines():
+        stripped = line.strip()
+
+        if not stripped or stripped.startswith("#"):
+            continue
+
+        fields = _split_row(stripped)
+
+        if fields[0].lower() == "seqid":
+            continue
+
+        if len(fields) >= 3 and _as_score(fields[2]) is not None:
+            rows.append(fields)
+
+    if not rows:
         raise ValueError(
-            "Expected one SeqID/Localization/Score row in PSORTb output."
+            "Expected a SeqID/Localization/Score row in PSORTb output, "
+            f"but found none. Output began: {_snippet(text)}"
         )
 
-    _, localization, score = (field.strip() for field in rows[0][:3])
+    if len({row[0] for row in rows}) != 1:
+        raise ValueError(
+            "PSORTb output has rows for more than one sequence, but one "
+            f"was submitted. Output began: {_snippet(text)}"
+        )
 
-    if localization not in LOCATION_MAP:
-        raise ValueError(f"Unrecognised PSORTb localization: {localization}")
+    known = {name.lower(): name for name in LOCATION_MAP}
+    best = max(rows, key=lambda row: float(row[2]))
+    localization = known.get(best[1].lower())
+
+    if localization is None:
+        raise ValueError(f"Unrecognised PSORTb localization: {best[1]}")
 
     return {
         "method": SOURCE,
         "localization": localization,
         "location": LOCATION_MAP[localization],
-        "score": float(score),
+        "score": float(best[2]),
     }
 
 
@@ -258,15 +304,33 @@ def run_psortb(sequence: str, gram: str | None = None) -> dict:
 
         # PSORTb writes its report into the results directory; fall back to
         # standard output for wrappers that print it instead. The input
-        # FASTA lives in the same directory and is not a report.
-        report_files = sorted(results.glob("*terse*")) or sorted(
-            path for path in results.glob("*.txt")
-        )
-        output = (
-            report_files[0].read_text() if report_files else completed.stdout
+        # FASTA lives in the same directory and is not a report. Try each
+        # candidate in turn so stray log files cannot hide the report.
+        candidates = [
+            path.read_text(errors="replace")
+            for path in sorted(results.glob("*terse*"))
+            + sorted(results.glob("*.txt"))
+        ]
+        candidates.append(completed.stdout or "")
+
+    prediction = None
+    first_error = None
+
+    for output in candidates:
+        if not output.strip():
+            continue
+
+        try:
+            prediction = parse_terse_output(output)
+            break
+        except ValueError as error:
+            first_error = first_error or error
+
+    if prediction is None:
+        raise first_error or ValueError(
+            "PSORTb finished but produced no output to read."
         )
 
-    prediction = parse_terse_output(output)
     prediction["gram"] = gram
     prediction["backend"] = backend
     return prediction
