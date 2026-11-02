@@ -35,6 +35,54 @@ def test_unexpected_output_is_rejected(text):
         psortb.parse_terse_output(text)
 
 
+def test_comment_lines_and_hash_header_are_ignored():
+    result = psortb.parse_terse_output(
+        "# PSORTb run\n#SeqID\tLocalization\tScore\n"
+        "query\tPeriplasmic\t8.8\n"
+    )
+
+    assert result["location"] == "periplasm"
+
+
+def test_extra_trailing_columns_are_ignored():
+    result = psortb.parse_terse_output(
+        "query\tCytoplasmic\t2.0\t\tPSORTb version 3.0\t\n"
+    )
+
+    assert result["localization"] == "Cytoplasmic"
+    assert result["score"] == 2.0
+
+
+def test_spaces_instead_of_tabs_are_accepted():
+    result = psortb.parse_terse_output("query   OuterMembrane   9.93\n")
+
+    assert result["location"] == "outer_membrane"
+
+
+def test_log_lines_around_the_row_are_ignored():
+    result = psortb.parse_terse_output(
+        "Loading models...\nquery\tExtracellular\t9.5\nDone.\n"
+    )
+
+    assert result["location"] == "extracellular"
+
+
+def test_several_rows_for_the_query_use_the_highest_score():
+    result = psortb.parse_terse_output(
+        "query\tCytoplasmic\t3.0\nquery\tPeriplasmic\t6.5\n"
+    )
+
+    assert result["location"] == "periplasm"
+    assert result["score"] == 6.5
+
+
+def test_error_quotes_the_start_of_unreadable_output():
+    with pytest.raises(ValueError) as error:
+        psortb.parse_terse_output("psort: could not open model file\n")
+
+    assert "could not open model file" in str(error.value)
+
+
 @pytest.mark.parametrize("category,expected", [
     ("Cytoplasmic", "cytoplasm"),
     ("Periplasmic", "periplasm"),
@@ -285,3 +333,36 @@ def test_bad_timeout_is_reported(monkeypatch, fake_psort, value):
 
     assert result["status"] == "lookup_failed"
     assert "PSORTB_TIMEOUT_SECONDS" in result["message"]
+
+
+def test_unreadable_report_file_does_not_hide_the_real_report(
+    monkeypatch, fake_psort
+):
+    def fake_run(command, **kwargs):
+        results = command[command.index("-r") + 1]
+        with open(f"{results}/00_log.txt", "w") as handle:
+            handle.write("started\n")
+        return subprocess.CompletedProcess(
+            command, 0, "query\tPeriplasmic\t9.1\n", ""
+        )
+
+    monkeypatch.setattr(psortb.subprocess, "run", fake_run)
+
+    assert psortb.fetch_psortb_prediction("MKK")["location"] == "periplasm"
+
+
+def test_run_with_no_readable_output_reports_what_it_saw(
+    monkeypatch, fake_psort
+):
+    monkeypatch.setattr(
+        psortb.subprocess,
+        "run",
+        lambda command, **kwargs: subprocess.CompletedProcess(
+            command, 0, "model files missing\n", ""
+        ),
+    )
+
+    result = psortb.fetch_psortb_prediction("MKK")
+
+    assert result["status"] == "lookup_failed"
+    assert "model files missing" in result["message"]
