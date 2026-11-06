@@ -11,7 +11,7 @@ designed as a **ledger / lab notebook / journal figure**, not a SaaS dashboard.
 What that means in practice:
 
 - **Warm paper and ink.** Off-white page, near-black text, hairline rules.
-  Dark mode is a warm charcoal in the family of Claude's own dark theme, not a
+  Light is the default; dark mode (a switch in the header) is a warm charcoal in the family of Claude's own dark theme, not a
   blue-black or a green-black.
 - **Rules instead of cards.** Sections are separated by 1px rules and a
   numbered margin, the way a printed paper is. No floating cards, shadows,
@@ -85,3 +85,15 @@ All colours are tokens in `src/theme.css`. To change the accent, edit
   Scroll-wheel zoom needs Ctrl/⌘, so the page never traps scrolling.
 - No third-party trackers. The only external request is the font stylesheet
   (see above to remove it).
+
+## Hero blocks (landing page and dashboard)
+
+The first block on `/` and `/dashboard` fills the screen below the header. Three
+Unsplash photographs (a DNA double helix, a molecular model and a helical
+structure) cross-fade behind it, six seconds each, under a dark scrim that is
+heaviest on the left. The text is left-aligned and spreads across the width:
+kicker and headline on top, the lede on the left and the evidence note on the
+right, then the actions. With reduced motion requested, the first photo stays
+still. The photos are loaded from `images.unsplash.com`, which the
+Content-Security-Policy in `netlify.toml` and `nginx.conf` allows for `img-src`.
+The rest of each page is unchanged.

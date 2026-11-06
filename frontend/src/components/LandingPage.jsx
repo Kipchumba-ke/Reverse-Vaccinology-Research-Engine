@@ -1,5 +1,6 @@
 import ThemeToggle from './ThemeToggle'
 import DemoNotice from './DemoNotice'
+import HeroSlides from './HeroSlides'
 import { EvidenceStory, ExampleFigure, SourcesList } from './EvidenceStory'
 import './Shell.css'
 import './LandingPage.css'
@@ -42,24 +43,27 @@ function LandingPage({ onLogin, onRegister }) {
 
       <main id="main" className="sections">
         <section className="hero" aria-labelledby="hero-title">
-          <p className="kicker">Reverse vaccinology · research prototype</p>
-          <h1 id="hero-title">Shortlist vaccine targets with evidence you can audit.</h1>
-          <p className="lede">
-            A pathogen’s genome encodes thousands of proteins; a lab can test
-            only a handful. ReverseVax reads a protein sequence and returns a
-            sourced report on whether it is a promising target.
-          </p>
-          <p className="lede-note">
-            Every claim in the report carries its source, its confidence and
-            its limits.
-          </p>
-          <div className="hero-actions">
-            <button type="button" className="btn btn-primary" onClick={onRegister}>
-              Get started
-            </button>
-            <a className="link-arrow" href="#method">
-              See how a report is built →
-            </a>
+          <HeroSlides />
+          <div className="hero-inner">
+            <p className="kicker">Reverse vaccinology · research prototype</p>
+            <h1 id="hero-title">Shortlist vaccine targets with evidence you can audit.</h1>
+            <p className="lede">
+              A pathogen’s genome encodes thousands of proteins; a lab can test
+              only a handful. ReverseVax reads a protein sequence and returns a
+              sourced report on whether it is a promising target.
+            </p>
+            <p className="lede-note">
+              Every claim in the report carries its source, its confidence and
+              its limits.
+            </p>
+            <div className="hero-actions">
+              <button type="button" className="btn btn-primary" onClick={onRegister}>
+                Get started
+              </button>
+              <a className="link-arrow" href="#method">
+                See how a report is built →
+              </a>
+            </div>
           </div>
         </section>
 

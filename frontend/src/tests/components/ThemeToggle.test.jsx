@@ -9,38 +9,38 @@ describe('ThemeToggle', () => {
     document.documentElement.removeAttribute('data-theme')
   })
 
-  it('defaults to the dark theme', () => {
+  it('defaults to the light theme', () => {
     render(<ThemeToggle />)
 
-    expect(DEFAULT_THEME).toBe('dark')
-    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(DEFAULT_THEME).toBe('light')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
     expect(
-      screen.getByRole('button', { name: /switch to light theme/i }),
+      screen.getByRole('button', { name: /switch to dark theme/i }),
     ).toBeInTheDocument()
   })
 
-  it('switches to light, remembers the choice, and switches back', () => {
+  it('switches to dark, remembers the choice, and switches back', () => {
     render(<ThemeToggle />)
-
-    fireEvent.click(screen.getByRole('button', { name: /switch to light theme/i }))
-
-    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
-    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('light')
 
     fireEvent.click(screen.getByRole('button', { name: /switch to dark theme/i }))
 
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark')
+
+    fireEvent.click(screen.getByRole('button', { name: /switch to light theme/i }))
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('light')
   })
 
-  it('restores a saved light theme on the next visit', () => {
-    localStorage.setItem(THEME_STORAGE_KEY, 'light')
+  it('restores a saved dark theme on the next visit', () => {
+    localStorage.setItem(THEME_STORAGE_KEY, 'dark')
 
     render(<ThemeToggle />)
 
-    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
     expect(
-      screen.getByRole('button', { name: /switch to dark theme/i }),
+      screen.getByRole('button', { name: /switch to light theme/i }),
     ).toBeInTheDocument()
   })
 
@@ -49,6 +49,6 @@ describe('ThemeToggle', () => {
 
     render(<ThemeToggle />)
 
-    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
   })
 })

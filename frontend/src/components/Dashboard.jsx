@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getAnalysisHistory } from '../services/historyService'
 import ThemeToggle from './ThemeToggle'
+import HeroSlides from './HeroSlides'
 import { EvidenceStory, ExampleFigure, Section, SourcesList } from './EvidenceStory'
 import './Shell.css'
 import './Dashboard.css'
@@ -115,18 +116,21 @@ function Dashboard({ onLogout }) {
 
       <main id="main" className="dashboard-page sections">
         <section className="hero dash-intro" aria-labelledby="dash-title">
-          <p className="kicker">Workbench</p>
-          <h1 id="dash-title">From protein sequences to evidence you can audit.</h1>
-          <p className="lede">
-            Submit a sequence, wait for the pipeline, then read each result
-            beside its source and its limits.
-          </p>
-          <p className="lede-note">
-            Findings are computational screens that need laboratory follow-up.
-          </p>
-          <div className="hero-actions">
-            <Link className="btn btn-primary" to="/analyses">New analysis</Link>
-            <Link className="link-arrow" to="/history">All saved analyses →</Link>
+          <HeroSlides />
+          <div className="hero-inner">
+            <p className="kicker">Workbench</p>
+            <h1 id="dash-title">From protein sequences to evidence you can audit.</h1>
+            <p className="lede">
+              Submit a sequence, wait for the pipeline, then read each result
+              beside its source and its limits.
+            </p>
+            <p className="lede-note">
+              Findings are computational screens that need laboratory follow-up.
+            </p>
+            <div className="hero-actions">
+              <Link className="btn btn-primary" to="/analyses">New analysis</Link>
+              <Link className="link-arrow" to="/history">All saved analyses →</Link>
+            </div>
           </div>
         </section>
 
