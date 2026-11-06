@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 export const THEME_STORAGE_KEY = 'theme'
-export const DEFAULT_THEME = 'dark'
+export const DEFAULT_THEME = 'light'
 const THEMES = ['dark', 'light']
 
 export function readStoredTheme() {
@@ -17,7 +17,7 @@ export function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme)
 }
 
-/** Dark is the default; the user's choice is persisted in localStorage. */
+/** Light is the default; the user's choice is persisted in localStorage. */
 export function useTheme() {
   const [theme, setThemeState] = useState(readStoredTheme)
 

@@ -263,25 +263,94 @@
   opacity: 1;
 }
 
-/* Hero blocks, shared by the landing page and the dashboard */
+/* Hero blocks, shared by the landing page and the dashboard.
+ * Full-bleed, as tall as the screen below the header, with a photo slideshow
+ * behind left-aligned text that spreads across the width. The text is light
+ * in both themes because it always sits on the dark scrim. */
 .hero {
+  --header-h: 4.25rem;
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: var(--space-4);
+  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100svh - var(--header-h));
+  overflow: hidden;
+  color: #f6f3ec;
+}
+
+/* The demo banner sits above the hero on the landing page of the demo site. */
+.shell:has(.demo-notice) .hero {
+  min-height: calc(100vh - var(--header-h) - 8.3rem);
+  min-height: calc(100svh - var(--header-h) - 8.3rem);
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-areas:
+    'kicker kicker'
+    'title  title'
+    'lede   note'
+    'actions actions';
+  align-items: start;
+  gap: var(--space-5) var(--space-8);
+  width: 100%;
   max-width: var(--page-max);
   margin: 0 auto;
-  padding: var(--space-8) var(--gutter) var(--space-7);
+  padding: var(--space-8) var(--gutter) var(--space-9);
+  text-align: left;
+}
+
+.hero .kicker {
+  grid-area: kicker;
+  color: rgba(246, 243, 236, 0.82);
 }
 
 .hero h1 {
-  max-width: 22ch;
+  grid-area: title;
+  max-width: 32ch;
+  color: #ffffff;
 }
 
-.hero .lede,
-.hero .lede-note {
+.hero .lede {
+  grid-area: lede;
   max-width: 54ch;
+  color: rgba(246, 243, 236, 0.92);
+}
+
+.hero .lede-note {
+  grid-area: note;
+  max-width: 38ch;
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--accent);
+  color: #ffffff;
+}
+
+.hero .hero-actions {
+  grid-area: actions;
+}
+
+.hero .link-arrow {
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'kicker'
+      'title'
+      'lede'
+      'note'
+      'actions';
+    padding-bottom: var(--space-8);
+  }
+
+  .hero h1 {
+    max-width: 16ch;
+  }
 }
 
 .lede {

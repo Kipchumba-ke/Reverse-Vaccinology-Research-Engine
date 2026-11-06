@@ -2,9 +2,10 @@
  * ReverseVax design system — tokens, type, base elements.
  * Concept and rules: see frontend/DESIGN.md ("the evidence ledger").
  *
- * Two themes share one structure. Dark is the default (a warm charcoal in the
- * family of Claude's own dark theme); <html data-theme="light"> switches to
- * warm paper. Only colour changes between themes.
+ * Two themes share one structure. Light (warm paper) is the default, set
+ * before first paint by public/theme-init.js; <html data-theme="dark"> switches
+ * to a warm charcoal in the family of Claude's own dark theme. Only colour
+ * changes between themes.
  */
 
 :root {
