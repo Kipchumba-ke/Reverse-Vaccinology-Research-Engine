@@ -8,7 +8,7 @@ Oct 29, 2026 · @Kipchumba
 
 ## Demo
 
-- **Screen recording (2–3 minutes):** a full analysis from protein sequence to downloaded PDF report [Live Demo:Youtube](https://youtu.be/uGIL8URuSzE)
+- **Screen recording:** a full analysis from protein sequence to downloaded PDF report [Live Demo:Youtube](https://youtu.be/uGIL8URuSzE)
 
 - **Interface-only site:** [reversevax.netlify.app](https://reversevax.netlify.app) hosts the React app. The analysis server (API, database, worker and reference data) is **not** hosted online, so signing in, registering and running analyses do not work there, and the site says so on its landing and sign-in pages. This is a deliberate choice, not an outage.
 - **Run it yourself:** follow [Getting started](#getting-started). Everything, including the PDF export, works locally.
